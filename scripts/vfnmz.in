@@ -1,0 +1,108 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# vfnmz - program to preview search result with NMZ.field.* and NMZ.result.*
+#
+# Copyright (C) 1999 Satoru Takabayashi  All rights reserved.
+# Copyright (C) 2001-2004 Namazu Project  All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+use strict;
+
+my $INDEX  = undef;
+my $RESULT = "NMZ.result.normal";
+my %FIELD_ALIASES = ('title' => 'subject', 'author' => 'from');
+
+sub compose($$);
+
+if (@ARGV == 0) {
+    print <<EOFusage;
+usage: vfnmz <index> [NMZ.result.foobar]
+EOFusage
+    exit(1);
+}
+
+if (defined($ARGV[0])) {
+    $INDEX = $ARGV[0];
+} 
+
+if (defined($ARGV[1])) {
+    $RESULT = $ARGV[1];
+}
+$RESULT = "$INDEX/$RESULT" unless $RESULT =~ m!/!;
+
+open(RESULT, "$RESULT") || die "$! : $RESULT\n";
+chdir $INDEX;
+
+print <<EOM;
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"
+        "http://www.w3.org/TR/REC-html40/strict.dtd">
+<HTML>
+<HEAD>
+<TITLE>$INDEX</TITLE>
+</HEAD>
+<BODY LANG="ja">
+<H1>$INDEX</H1>
+<HR>
+<DL>
+EOM
+
+my $template = join '', <RESULT>;
+
+my $num = (-s "NMZ.t") / 4;
+for (my $i = 0; $i < $num; $i++) {
+    my $composed = compose($template, $i);
+    print $composed;
+}
+
+sub compose($$) {
+    my ($template, $idx) = @_;
+
+    $template =~ s/\$\{([\w:]+)\}/getfield($1, $idx)/ge;
+    return $template;
+}
+
+sub getfield($$) {
+    my ($field, $idx) = @_;
+    my $buf = undef;
+
+    if ($field =~ /namazu::counter/) {
+	return $idx;
+    } elsif ($field =~ /:/) {
+	return "???";
+    }
+
+    my $aliases_regex = 
+	join('|', sort {length($b) <=> length($a)} keys %FIELD_ALIASES);
+
+    if ($field =~ /^($aliases_regex)$/o) {
+	$field = $FIELD_ALIASES{$field};
+    }
+
+    open(FIELD, "NMZ.field.$field") || die "$! : NMZ.field.$field\n";
+    open(FIDX, "NMZ.field.$field.i") || die "$! : NMZ.field.$field.i\n";
+    seek(FIDX, $idx * 4, 0);
+    read(FIDX, $buf, 4);
+    my $ptr = unpack "N", $buf;
+    seek(FIELD, $ptr, 0);
+    my $line = <FIELD>;
+    chomp $line;
+    $line =~ s/&/&amp;/g;    # &amp; should be processed first
+    $line =~ s/</&lt;/g;
+    $line =~ s/>/&gt;/g;
+    close(FIELD);
+    close(FIDX);
+    return $line;
+}
+
+print <<EOM;
+</DL>
+<HR>
+<P>
+(bottom)
+</P>
+</BODY>
+</HTML>
+EOM
+close(RESULT);
+

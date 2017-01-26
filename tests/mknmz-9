@@ -1,0 +1,51 @@
+#! /bin/sh
+#
+# Test for receiving TERM signal.
+#
+
+LOG=`pwd`/test-log
+TARGET=`$srcdir/select-data`
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d idx11; then
+    mkdir idx11
+else
+    rm -f idx11/NMZ.*
+fi
+
+TMPDATA=`pwd`/tmp-data
+
+if test ! -d $TMPDATA; then
+    mkdir $TMPDATA
+else
+    rm -fr $TMPDATA/* 2> /dev/null
+fi
+
+for i in 00 01 02 03 04 05 06 07 08 09
+do
+    SUBDIR=$TMPDATA/$i
+    mkdir $SUBDIR
+    cp -r $TARGET $SUBDIR
+done
+
+../scripts/mknmz -O idx11 $TMPDATA >> $LOG 2>&1 &
+
+i=20
+while test $i -gt 0
+do {
+    i=`expr $i - 1`
+    if test -r idx11/NMZ.log ; then
+    	grep '^\[Base\]' idx11/NMZ.log > /dev/null && exit 77 
+	fi
+    if test -r idx11/NMZ.lock2
+    then {
+        kill -TERM `cat idx11/NMZ.lock2`
+        wait
+        grep '^\[Base\]' idx11/NMZ.log >> $LOG && exit 0
+        exit 1
+    }
+    fi
+    sleep 1
+}
+done
+exit 1

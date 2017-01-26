@@ -1,0 +1,80 @@
+#! /bin/sh
+#
+# Test for cross-site scripting vulnerability with IE6,IE7 and wrong EUC-JP chracter code.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+EXEC=no
+
+lc_all=$LC_ALL
+lc_ctype=$LC_CTYPE
+lang=$LANG
+
+for ctype in "$lc_all" "$lc_ctype" "$lang"; do
+    if test -n "$ctype" -a "$ctype" = "C"; then
+        ctype="en"
+        break
+    fi
+    cand=`echo "$ctype" | LC_ALL="C" perl -nle 'print $1 if /^(..)/'`
+    if test -n "$cand"; then
+        ctype=$cand
+        break
+    fi
+done
+
+case $ctype in 
+	ja*)
+		EXEC=yes
+		;;
+esac
+if [ $EXEC = 'no' ]
+then
+        echo "Skipping because of LANG does not begin with ja: $0" >> $LOG
+	exit 77
+fi
+
+unset LANGUAGE
+unset LC_ALL
+unset LC_MESSAGES
+unset LC_CTYPE
+unset LANG
+
+
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index ../tests/idx1" > $tmprc
+echo "Lang jaJP.eucJP" >> $tmprc
+duprcs
+cd ../src
+
+perl << 'TEST'  >> $LOG
+	my $query  = 'query=%8F%EF%9C/%8F%EF%9E%20%8F%EF%9C';
+	$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+        $ENV{'QUERY_STRING'} = $query;
+	my $cmd    = "./namazu.cgi";
+	my $result = `$cmd 2>&1`;
+
+        my $ascii = '[\x00-\x7F]';
+        my $twoBytes = '(?:[\x8E\xA1-\xFE][\xA1-\xFE])';
+        my $threeBytes = '(?:\x8F[\xA1-\xFE][xA1-\xFE])';
+        my $character = "(?:$ascii|$twoBytes|$threeBytes)";
+        $result =~ s/$character//g;
+        $result =~ s/[\n\r]//g;
+        print "\"$result\"\n";
+        exit  1 if $result;
+
+        $query = 'query=%8F%AF%82%20';
+        $ENV{'QUERY_STRING'} = $query;
+	$result = `$cmd 2>&1`;
+        $result =~ s/$character//g;
+        $result =~ s/[\n\r]//g;
+        print "\"$result\"\n";
+        exit  1 if $result;
+
+	exit 0;
+TEST
+result=$?
+rm -f $tmprc
+exit $result

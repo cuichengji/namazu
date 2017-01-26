@@ -1,0 +1,94 @@
+$Id: TODO-namazu-2.0,v 1.1 2001-05-20 08:15:16 rug Exp $
+
+検討項目
+
+  * [namazu-dev 948] が未決…。これが決まらないとライブラリ
+    の仕様が固まらない。
+
+  * NMZ.slog はライブラリが出力するものなのか? (要検討)
+
+
+即急に取り組むべき課題
+
+  * まともな libraryとして整備する
+
+  * test suite を作る - make check (automakeのdefault target)
+
+
+難しいができればやりたい課題
+
+  * インデックス作成の効率化 [namazu-dev 1088]
+
+  * zlib でインデックスを圧縮 [namazu-dev 1048]
+
+  * mknmz -n を実装
+    - make -n と同じ意味
+
+  * <a name="..."> や <xxx id="..."> に対応
+
+  * queryの「かっこ」の前後にスペースをいれなくても OK にする [namazu 1229]
+
+
+しばらく先の課題
+
+  * 国際化にまじめに取り組む
+
+  * UTF-8化 (Perl 5.6 が公開されたら)
+
+  * コード変換に iconv(3) を用いる
+
+  * 画像・音声ファイルのコメント情報を元にインデックスを作る
+
+  * URI指定に対応  [namazu-dev 914]
+
+  * 日付をキーにしたless than, greater thanの指定検索。(たかく氏 [616])
+	( 1999年1月以降の記事 OR 1998年1月以前の記事 AND "TERM" )
+	といった検索をしたい。
+
+  * 英語の語形変化を検索時にうまく扱う
+    e.g. study/studies, eat/ate/eaten
+
+  * データ構造を見直す
+    - TODO-satoru を参照のこと
+
+  * Glib を採用するとどうだろう?
+
+  * boehm GC <http://reality.sgi.com/boehm/gc.html> を導入す
+    るとどうだろう?
+
+
+常にこころがけること
+
+  * 雑なルーチンをきれいに書き直す - 特に FIXME つきの関数
+
+  * エラー処理をきちんとしよう
+
+  * simplicity, clarity, generality を大切にしょう :-)
+
+  * ad-hoc な手法は極力避けるようにしよう
+
+藤原のつけ足し (2000/01/10)
+ ** mknmz
+
+ ** Manual
+  * manual (document)
+    (provide NMZ.* as well = mknmz "document" in package ) ?
+  
+    package may contain the result of mknmz "document",
+    this feature is only allowed with this type of application
+   (nothing required other than this package).
+  
+    Or may include mknmz-doc target in Makefile 
+  
+    This does not fit the existing manual.html version, for
+    it is the large one file, thus either
+    (1) support <A NAME="XXYY"> tag 
+    or
+    (2) fragment manual file
+  
+  * test suite for releasing
+    出荷時の動作確認用のしくみ
+  
+
+
+

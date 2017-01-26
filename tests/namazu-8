@@ -1,0 +1,22 @@
+#! /bin/sh
+#
+# Test for namazu.  Searching an updated index created with --html-split.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+
+# `amarok' should be found.
+cd ../src
+./namazu -l 'amarok' ../tests/idx10 | grep '1\.html#quux' > /dev/null || exit 1
+
+# `xyzzy' should NOT be found.
+hitnum=`./namazu -c xyzzy  ../tests/idx10`
+echo xyzzy $hitnum >> $LOG
+test "$hitnum" != "0" && exit 1  # error if not equal
+
+# `orabidoo' should NOT be found.
+hitnum=`./namazu -c orabidoo  ../tests/idx10`
+echo orabidoo $hitnum >> $LOG
+test "$hitnum" != "0" && exit 1  # error if not equal
+
+exit 0

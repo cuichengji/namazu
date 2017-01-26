@@ -1,0 +1,334 @@
+#!%PERL% -w
+#
+# $Id: namazu-6.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+
+#
+# Test for namazu. Query operation.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx8";
+my $NAMAZU = pltests::binpath('namazu');
+$ENV{'NAMAZUNORC'} = 'ALL';
+
+my @cmd;
+
+sub win32_driveletter ($) {
+    my ($filenameref) = @_;
+    $$filenameref =~ s#^([A-Z]):(/|\\)(.*)#/$1|/$3#i;
+}
+
+my $failed = 0;
+my $passed = 0;
+sub assert_equal ($$$) {
+    my ($expected, $actual, $message) = @_;
+    if ($expected ne $actual) {
+	pltests::putline($LOG, "failed:  $message");
+	# print "faild: $message\n>>>\n$expected\n---\n$actual\n<<<\n";
+	$failed++;
+    }else {
+	pltests::putline($LOG, "passed: $message");
+	$passed++;
+    }
+};
+
+
+pltests::putline($LOG, "  *** starting $0");
+
+open IN, "<$INDEX/NMZ.r";
+my $m0 = "";	# no hit
+my $m1 = <IN>;	# 1.txt "foo bar baz qux quux"
+my $m2 = <IN>;	# 2.txt     "bar baz qux quux corge"
+my $m3 = <IN>;	# 3.txt         "baz qux quux corge grault"
+close(IN);
+
+chomp $m1;
+chomp $m2;
+chomp $m3;
+
+if ($^O eq "MSWin32"){
+    win32_driveletter(\$m1);
+    win32_driveletter(\$m2);
+    win32_driveletter(\$m3);
+}
+
+my $m12 = $m1 . $m2;	# 1.txt and 2.txt
+my $m13 = $m1 . $m3;	# 1.txt and 3.txt
+my $m23 = $m2 . $m3;	# 2.txt and 3.txt
+my $m123 = $m12 . $m3;	# 1.txt and 2.txt 3.txt
+
+#
+# Check WORD searching.
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "foo", "$INDEX");
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+my $tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check WORD searching.
+# Matches: 1.txt 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+#
+# Check PHRASE searching.
+# Matches: 1.txt 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "\"bar baz\"", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+
+# isomorphism
+@cmd = ("$NAMAZU", "-l", "{bar baz}", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+#
+# Check PHRASE searching.
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "\"foo bar baz qux quux\"", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check PHRASE searching.
+# Matches: no hit
+#
+@cmd = ("$NAMAZU", "-l", "'\"bar foo\"'", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m0, $tmp, join(" ", @cmd));
+
+#
+# Check PHRASE searching.
+# Matches: no hit
+#
+@cmd = ("$NAMAZU", "-l", "'\"foo bar qux\"'", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m0, $tmp, join(" ", @cmd));
+
+#
+# Check WORD searching.
+# Matches: 1.txt 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", "baz", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m123, $tmp, join(" ", @cmd));
+
+#
+# Check PREFIX searching.
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "f*", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check SUFFIX searching.
+# Matches: 3.txt
+#
+@cmd = ("$NAMAZU", "-l", "*ult", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m3, $tmp, join(" ", @cmd));
+
+#
+# Check SUBSTRING searching.
+# Matches: 1.txt and 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", "*u*", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m123, $tmp, join(" ", @cmd));
+
+#
+# Check REGEX searching.
+# Matches: 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", '"/c.*e/"', "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m23, $tmp, join(" ", @cmd));
+
+#
+# Check REGEX searching.
+# Matches: 1.txt 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", '"/(foo|corge|grault)/"', "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m123, $tmp, join(" ", @cmd));
+
+#
+# Check FIELD-specified searching.
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "+subject:foo", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check FIELD-specified searching.
+# Matches: 1.txt 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", '+to:test@namazu.org', "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m123, $tmp, join(" ", @cmd));
+
+#
+# Check FIELD-specified searching with REGEX.
+# Matches: 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", '"+from:/test@(bar|baz).namazu.org/"', "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m23, $tmp, join(" ", @cmd));
+
+#
+# Check AND searching.
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "foo bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+# isomorphism
+@cmd = ("$NAMAZU", "-l", "foo & bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+# isomorphism
+@cmd = ("$NAMAZU", "-l", "foo and bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check OR searching.
+# Matches: 1.txt, 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "foo or bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+# isomorphism
+@cmd = ("$NAMAZU", "-l", "foo | bar", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+#
+# Check NOT searching. 
+# Matches: 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "bar not foo", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m2, $tmp, join(" ", @cmd));
+
+# isomorphism
+@cmd = ("$NAMAZU", "-l", "bar ! foo", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m2, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: 1.txt
+#
+@cmd = ("$NAMAZU", "-l", "( foo or baz ) and foo", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m1, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "( foo or bar ) not foo", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m2, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: 1.txt 2.txt
+#
+@cmd = ("$NAMAZU", "-l", "( foo or baz ) not grault", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m12, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: 3.txt
+#
+@cmd = ("$NAMAZU", "-l", "( foo or baz ) not foo and grault", "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m3, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: no hit
+#
+@cmd = ("$NAMAZU", "-l", '( foo or bar or baz ) and foo and corge', "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m0, $tmp, join(" ", @cmd));
+
+#
+# Check complex searching. 
+# Matches: 1.txt 2.txt 3.txt
+#
+@cmd = ("$NAMAZU", "-l", '"( /(foo|grault)/ or ( bar and corge ) ) and /q.*x/"'  , "$INDEX");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$tmp = join("", sort split(/\s+/, $result));
+assert_equal($m123, $tmp, join(" ", @cmd));
+
+pltests::putline($LOG, "passed $passed, failed $failed\n");
+exit 1 if ($failed > 0);
+
+exit 0;

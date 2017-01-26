@@ -1,0 +1,61 @@
+#! /bin/sh
+#
+# Test for buffer overflow
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd/idx19" > $tmprc
+duprcs
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+SCRIPT_NAME='namazu.cgi'
+export SCRIPT_NAME
+
+# long cgi paramater (should be chopped by QUERY_MAX)
+QUERY_STRING='query='`perl -e 'print "x" x 2048'`
+export QUERY_STRING
+cd ../src
+
+RESULTS=`./namazu.cgi 2>> $LOG | grep -i 'too long' | wc -l`
+test $RESULTS -ne 1 && exit 1
+
+QUERY_STRING='query=+'`perl -e 'print "x" x 2048'`':foobar'
+export QUERY_STRING
+RESULTS=`./namazu.cgi 2>> $LOG | grep -i 'too long' | wc -l`
+test $RESULTS -ne 1 && exit 1
+
+QUERY_STRING='query=/'`perl -e 'print "x" x 2048'`'/'
+export QUERY_STRING
+RESULTS=`./namazu.cgi 2>> $LOG | grep -i 'too long' | wc -l`
+test $RESULTS -ne 1 && exit 1
+
+# long SCRIPT_NAME environment variable
+QUERY_STRING='query=namazu'
+export QUERY_STRING
+SCRIPT_NAME='namazu-l'`perl -e 'print "o" x 2048'`'ng.cgi'
+export SCRIPT_NAME
+./namazu.cgi >> $LOG 2>&1
+test $? -ne 0 && exit 1
+
+# long HOME environment variable
+HOME='/home/l'`perl -e 'print "o" x 2048'`'ong-dir'
+export HOME
+env NAMAZUNORC='SYSCONFIG' ./namazu.cgi >> $LOG 2>&1
+test $? -ne 0 && exit 1
+
+# long LANG environment variable
+LANG='ja_JP.eucJP-l'`perl -e 'print "o" x 2048'`'ong' >> $LOG 2>&1
+export LANG >> $LOG 2>&1
+./namazu.cgi >> $LOG 2>&1
+test $? -ne 0 && exit 1
+
+exit 0

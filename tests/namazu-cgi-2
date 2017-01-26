@@ -1,0 +1,29 @@
+#! /bin/sh
+#
+# Test for namazu.cgi. Two indices are searched at once.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+docnum=`perl -lne 'print $1 if /^files (\d+)/' "idx1/NMZ.status"`
+docnum=`expr $docnum + $docnum`
+
+pwd=`pwd`
+
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+echo "Template $pwd/idx1" >> $tmprc
+duprcs
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=namazu&idxname=idx1&idxname=idx2'
+export SCRIPT_NAME QUERY_STRING
+
+cd ../src
+hitnum=`./namazu.cgi | perl -ne 'print $1 if /<!-- HIT -->(\d+)<!-- HIT -->/'`
+rm -f $tmprc
+
+echo "docnum:" $docnum, "hitnum:" $hitnum >> $LOG
+test "$docnum" != "$hitnum" && exit 1  # error if not equal
+exit 0

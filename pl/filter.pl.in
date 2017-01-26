@@ -1,0 +1,260 @@
+#
+# -*- Perl -*-
+# filter.pl - class for filter
+#
+# $Id: filter.pl.in,v 1.5.2.3 2009-02-17 08:53:35 opengl2772 Exp $
+#
+# Copyright (C) 2004 Yukio USUDA All rights reserved.
+# Copyright (C) 2000-2004 Namazu Project All rights reversed.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+
+package mknmz::filter;
+
+use strict;
+use English;
+require 'util.pl';
+require 'codeconv.pl';
+require 'var.pl';
+
+my $MMagic = undef;
+
+my %REQUIRE_ACTIONS = ();
+my %RECURSIVE_ACTIONS = ();
+my %REQUIRE_PRE_CODECONV = ('text/plain' => 1,);
+my %REQUIRE_POST_CODECONV = ('text/plain' => 0,);
+my %Supported = ('text/plain' => "yes",);
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+my $filterdir  = $PKGDATADIR . "/filter"; # directory where filters are in.
+
+
+sub new {
+    my $self = {};
+    my $proto = shift @_;
+    my $class = ref($proto) || $proto;
+    bless($self, $class);
+
+    return $self;
+}
+
+sub init {
+    my $self = shift @_;
+    $MMagic = shift @_;
+
+    if (defined $conf::FILTERDIR && -d $conf::FILTERDIR) {
+	$filterdir = $conf::FILTERDIR
+    };
+
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+	if ($filterdir !~ /^[A-Z]:|^\\\\/i && $0 =~ m#^([A-Z]:)(/|\\)#i) {
+	    $filterdir = $1 . $filterdir ;
+	}
+        util::win32_yen_to_slash(\$filterdir);
+    }
+
+    #
+    # Windows modules must be loaded first.
+    # Because OLE filters have low precedence over normal ones.
+    #
+    _load_filtermodules($filterdir);
+}
+
+sub apply_filter {
+    my $self = shift @_;
+    my $orig_cfile = shift @_;
+    my $contentref = shift @_;
+    my $mtype = shift @_;
+    $self->{'_lang'} = shift @_;
+    my $fields_ref = shift @_;
+
+    $self->{'weighted_str'} = "";
+    $self->{'headings'} = "";
+
+    # Pre code conversion.
+    if ($REQUIRE_PRE_CODECONV{$mtype}) {
+	util::dprint("pre_codeconv\n");
+	_codeconv_document($contentref);
+    }
+
+    util::vprint("mtype = $mtype\n");
+
+    if (! $Supported{$mtype} ||
+	$Supported{$mtype} ne 'yes') {
+	util::vprint(_("Unsupported media type ")."$mtype\n");
+	return (0, "$mtype; x-system=unsupported");
+    }
+
+    if ($REQUIRE_ACTIONS{$mtype}) {
+	util::vprint(_("Using ")."$REQUIRE_ACTIONS{$mtype}.pl\n");
+	require $REQUIRE_ACTIONS{$mtype}.'.pl'
+	    || die _("unable to require ") .
+	     "\"$REQUIRE_ACTIONS{$mtype}.pl\"\n";
+	my $err = undef;
+
+	{
+	    local $SIG{'PIPE'} = \&trapintr;
+	    my $eval_txt = '$err = ' . $REQUIRE_ACTIONS{$mtype} .
+	      '::filter($orig_cfile, $contentref,' .
+	      ' \$self->{\'weighted_str\'}, ' .
+	      ' \$self->{\'headings\'}, $$fields_ref);';
+	    eval $eval_txt;
+	}
+	if ($err) {
+	    if ($err =~ m/; x-system=unsupported$/) {
+		return (0, $err);
+	    }
+	    return (0, "$mtype; x-error=$err");
+	}
+	if ($@) {
+	    util::vprint(_("Failed to call ")."$REQUIRE_ACTIONS{$mtype}\n$@\n");
+	    return (0, "$mtype; x-error=$@");
+	}
+
+	# Post code conversion.
+	if ($REQUIRE_POST_CODECONV{$mtype}) {
+	    util::dprint("post_codeconv\n");
+	    _codeconv_document($contentref);
+	}
+
+	if ($RECURSIVE_ACTIONS{$mtype}) {
+	    my $uri;
+	    my $Document = undef;
+	    $Document = mknmz::document->new();
+	    $Document->init_doc($uri, $orig_cfile, $contentref, undef);
+	    $contentref= $Document->get_filtered_contentref();
+	    $self->{'weighted_str'} .= $Document->get_weighted_str();
+	    $self->{'headings'} .= $Document->get_headings();
+	}
+    }
+    return ($self->{'weighted_str'}, $self->{'headings'});
+}
+
+
+sub get_info {
+    my $self = shift @_;
+    my $name = shift @_;
+    if ($name eq 'filter_dir') {
+        return $filterdir;
+    } elsif ($name eq 'all_types') {
+        return $self->_get_all_types;
+    } elsif ($name eq 'supported_types') {
+        return $self->_get_supported_list;
+    } elsif ($name eq 'supported_list') {
+        return $self->_get_supported_list;
+    }
+}
+
+#######################################################
+sub _get_all_types {
+    my $self = shift @_;
+    my @all_types = keys %Supported;
+    return @all_types;
+}
+
+sub _get_supported_types {
+    my $self = shift @_;
+    my @supported = sort grep { $Supported{$_} eq "yes" } $self->_get_all_types;
+    return @supported;
+}
+
+sub _get_supported_list {
+    my $self = shift @_;
+    my $num_supported = $self->_get_supported_types();
+    my $num_unsupported = $self->_get_all_types() - $num_supported;
+    my $list = _("Supported media types:   ") . "($num_supported)\n";
+    $list .= _("Unsupported media types: ") . "($num_unsupported) " . _("marked with minus (-) probably missing application in your \$path.\n");
+    my $supported_list = "";
+    for my $mtype (sort keys %Supported) {
+	my $yn = $Supported{$mtype};
+	if ($yn eq 'yes') { $yn = ' ' } else {$yn = '-'};
+	$supported_list .= "$yn $mtype";
+	if ($REQUIRE_ACTIONS{$mtype}) {
+	    $supported_list .= ": $REQUIRE_ACTIONS{$mtype}.pl";
+	}
+	$supported_list .= "\n";
+    }
+    $list .= $supported_list;
+    return $list;
+}
+
+sub _codeconv_document ($) {
+    my ($textref) = @_;
+    #codeconv::to_inner_encoding($textref, 'unknown');
+    codeconv::toeuc($textref);
+    $$textref =~ s/\r\n/\n/g;
+    $$textref =~ s/\r/\n/g;
+    $$textref =~ tr/\x01-\x08\x0b-\x0c\x0e-\x1f\x7f/ /; # Remove control char.
+}
+
+sub _load_filtermodules ($) {
+    my $filterdir = shift @_;
+    unshift @INC, $filterdir;
+
+    # Check filter modules
+    my @filters = ();
+    @filters = glob "$filterdir/*.pl";
+
+    #
+    # Windows modules must be check only when Active Perl environment.
+    # Because OLE filters use Win32::OLE module.
+    #
+    if ($English::OSNAME eq "MSWin32") {
+	@filters = (@filters, glob "$filterdir/win32/*.pl");
+	unshift @INC, "$filterdir/win32";
+    }
+
+    _load_filters(@filters);
+}
+
+sub _load_filters ($) {
+    my @filters = @_;
+
+    for my $filter (@filters) {
+	$filter =~ m!([-\w]+)\.pl$!;
+	my $module = $1;
+	require "$module.pl" || die "unable to require \"$module.pl\"\n";;
+	my (@mtypes, $status, $recursive, $pre_codeconv, $post_codeconv);
+
+	eval "\@mtypes =    ${module}::mediatype();";
+	die $@ if $@;  # eval error
+	eval "\$status =    ${module}::status();";
+	die $@ if $@;
+	eval "\$recursive = ${module}::recursive();";
+	die $@ if $@;
+	eval "\$pre_codeconv  = ${module}::pre_codeconv();";
+	die $@ if $@;
+	eval "\$post_codeconv  = ${module}::post_codeconv();";
+	die $@ if $@;
+
+	my $tmp = ref \$MMagic; # I don't know why this line is needed.
+	eval "${module}::add_magic(\$MMagic);";
+	die $@ if $@;
+
+	for my $mt (@mtypes) {
+        next if (defined $Supported{$mt} &&
+                 $Supported{$mt} eq 'yes' && $status eq 'no');
+	    $Supported{$mt} = $status;
+	    $REQUIRE_ACTIONS{$mt} = $module;
+	    $RECURSIVE_ACTIONS{$mt} = $recursive;
+	    $REQUIRE_PRE_CODECONV{$mt} = $pre_codeconv;
+	    $REQUIRE_POST_CODECONV{$mt} = $post_codeconv;
+	}
+    }
+}
+
+1;

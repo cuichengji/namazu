@@ -1,0 +1,12 @@
+2002-04-25  Ryuji Abe  <rug@namazu.org>
+
+	* contrib/Makefile.am: New file.
+
+2002-01-08  NOKUBI Takatsugu  <knok@daionet.gr.jp>
+
+	* contrib/spreadexcel.pl: Added a new file.
+	(Contributed by Mineo Kasai, thanks.)
+
+2007-02-23  Tadamasa Teranishi  <yw3t-trns@asahi-net.or.jp>
+
+        * contrib/xps.pl: Added a new file.

@@ -1,0 +1,96 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-5.pl.in,v 1.1.4.3 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu.cgi with "ContentType" directive.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+delete $ENV{'LANG'};
+$ENV{'LANGUAGE'} = 'C';
+$ENV{'LC_ALL'} = 'C';
+delete $ENV{'LC_MESSAGE'};
+delete $ENV{'LC_CTYPE'};
+delete $ENV{'NAMAZURC'};
+
+$ENV{'SERVER_SOFTWARE'} = 'Microsoft-';
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::putline($RC, 'ContentType "text/x-hdml"');
+pltests::duprcs($RC);
+
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1&lang=C';
+
+@cmd = ("$NAMAZU");
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+
+my $count = 0;
+foreach my $line (split(/\n/, $result)) {
+    my $pattern = quotemeta('text/x-hdml');
+    if ($line =~ /$pattern/) {
+        $count++;
+    }
+}
+
+pltests::putline($LOG, "QUERY_STRING='" . $ENV{'QUERY_STRING'} . "' count: $count");
+pltests::putline($LOG, "");
+pltests::putline($LOG, substr($result, 0, 80));
+pltests::putline($LOG, "");
+
+if ($count == 0) {
+    exit 1;
+}
+
+if (-f $RC) {
+    unlink("$RC");
+}
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

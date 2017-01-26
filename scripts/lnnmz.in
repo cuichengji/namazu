@@ -1,0 +1,202 @@
+#! %PERL% -w
+# -*- Perl -*-
+# lnnmz - program to make NMZ.field.link
+# $Id: lnnmz.in,v 1.1.4.5 2005-09-24 12:25:07 opengl2772 Exp $
+#
+# Copyright (C) 2000 osamu2001@livedoor.com  All rights reserved.
+# Copyright (C) 2000 furukawa@tcp-ip.or.jp  All rights reserved.
+# Copyright (C) 2001 Hajime BABA  All rights reserved.
+# Copyright (C) 2001-2005 Namazu Project  All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+package lnnmz;
+
+use strict;
+use English;
+use Cwd;
+use File::Spec;
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+push(@INC, $PKGDATADIR . "/pl");
+require 'nmzidx.pl';
+
+sub rel2abs($;$);
+
+# for example
+my %inv_replace = (
+	       "http://www.apache.org" => "/home/httpd/html",
+	       );
+
+my $backup;
+while (@ARGV && $ARGV[0] =~ s/^\-//){
+    my $argv = shift;
+
+    &usage, exit if $argv eq '-help';
+    $backup = 0, next if $argv eq '-no-backup';
+
+    while ($argv =~ s/^(.)//){
+        $backup = 0 if $1 eq 'b';
+    }
+}
+
+if (@ARGV){
+    for my $argv (@ARGV){
+        $argv =~ s/NMZ$// unless -d $argv;
+        $argv = '.' if $argv eq '';
+        &lnnmz($argv, $backup);
+    }
+} else {
+    &lnnmz('.', $backup);
+}
+
+exit(0);
+
+
+# main routine
+sub lnnmz{
+    my ($dir, $backup) = @_;
+
+    if (! -f "$dir/NMZ.i") {
+        print "Cannot open index. : $dir\n";
+        return;
+    }
+    my $nmzi = new nmzidx($dir, 'r');
+    my $fh = $nmzi->open_flist;
+    unless (defined $fh->{'t'}) {
+        $fh->close;
+        $nmzi->close;
+        return;
+    }
+    my $nmzo = new nmzidx($dir, 'w');
+    my $fo = $nmzo->open_field('link');
+    my %list_f;
+    while (defined $fh->read(\%list_f)){
+        my $fname = $list_f{'r'};
+#	print "@@ $fname\n";
+
+        open(F, $fname) || die;
+	my @href = get_href($fname, <F>);
+	close(F);
+
+	my $tmp = join(" ", @href);
+	$fo->{'link'}->putline("$tmp\n");
+#	print "@@ $tmp\n";
+    }
+    $nmzo->replace_db($backup);
+    $nmzi->close;
+}
+
+# mmm... tooooooooo dirty, but it seems to work good. X-(
+# Pls clean up the code!
+sub get_href {
+    my ($fname, @lines) = @_;
+    my ($basedir, $file) = splitpath($fname);
+    my (@href, %count);
+
+    foreach my $line (@lines) {
+	if ($line =~ /<a\s[^>]*href=([\"\'])(.*?)\1/ig) { #"
+	    my $href = $2;
+	    next if ($href =~ /^(ftp|mailto):/); # only http: or file:
+	    if (($href !~ m:^/:) && ($href !~ m/^http:/)) {
+		$href = rel2abs($href, $basedir);
+		$href = canonpath($href) ;
+	    }
+	    $href =~ s/#.*$//g;
+	    $href =~ s:([^/]*)/\.\.::g;
+	    foreach my $url (sort keys %inv_replace) {
+		my $dir = $inv_replace{$url};
+		$href =~ s:^$url:$dir:g;
+		$href =~ s:^/$:$dir/index.html:g;
+	    }
+	    $href =~ s:/$:/index.html:g;
+	    $href =~ s:/\.$:/index.html:g;
+	    if ($href !~ m/^http:/) {
+		$href = canonpath($href) ;
+	    }
+	    push(@href, $href) unless $count{$href};
+	    $count{$href}++;
+	}
+    }
+    {
+	# uniq and sort
+	my %count;
+	@href = grep(!$count{$_}++, @href);
+	@href = sort {$count{$a} <=> $count{$b}} @href;
+    }
+    return @href;
+}
+
+
+# Splits a path into directory and filename portions.
+sub splitpath($) {
+    my ($path) = @_;
+    my ($dir, $file) = ('', '');
+
+    $path =~ m|^ ( (?: .* / (?: \.\.?\z )? )? ) ([^/]*) |xs;
+    $dir  = $1;
+    $file = $2;
+#    print "dir=$dir, file=$file\n";
+    return ($dir, $file);
+}
+
+# Converts a relative path to an absolute path. 
+sub rel2abs($;$) {
+    my ($path,$base ) = @_;
+
+    # Clean up $path
+    if ( ! File::Spec->file_name_is_absolute( $path ) ) {
+        # Figure out the effective $base and clean it up.
+        if ( !defined( $base ) || $base eq '' ) {
+            $base = cwd() ;
+        }
+        elsif ( ! File::Spec->file_name_is_absolute( $base ) ) {
+            $base = rel2abs( $base ) ;
+        }
+        else {
+            $base = canonpath( $base ) ;
+        }
+
+        # Glom them together
+        $path = File::Spec->catdir( $base, $path ) ;
+    }
+
+    return canonpath( $path ) ;
+}
+
+sub canonpath {
+    my ($path) = @_;
+    $path =~ s|/+|/|g unless($English::OSNAME eq 'cygwin'); # xx////xx  -> xx/xx
+    $path =~ s|(/\.)+/|/|g;                        # xx/././xx -> xx/xx
+    $path =~ s|^(\./)+||s unless $path eq "./";    # ./xx      -> xx
+    $path =~ s|^/(\.\./)+|/|s;                     # /../../xx -> xx
+    $path =~ s|/\z|| unless $path eq "/";          # xx/       -> xx
+    return $path;
+}
+
+sub usage{
+    print
+        ("Usage: lnnmz [options] <target(s)>\n" .
+         "  --help              show this help and exit.\n" .
+         "  -b, --no-backup     do not backup original file.\n" 
+         );
+}
+
+# EOF

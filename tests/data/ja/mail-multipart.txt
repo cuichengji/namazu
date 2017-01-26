@@ -1,0 +1,29 @@
+To: bug-namazu@namazu.org
+Subject: Namazu =?iso-2022-jp?B?GyRCJE4lRiU5JUgbKEI=?=
+Message-Id: <20000226103443E.test@namazu.org>
+Date: Sat, 26 Feb 2000 10:34:43 +0900
+From: test@namazu.org
+Content-Type: Multipart/Mixed;
+ boundary="--Next_Part(Sat_Feb_26_10:34:38_2000_300)--"
+Content-Transfer-Encoding: 7bit
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)--
+Content-Type: Text/Plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+Namazu は手軽に使えることを第一に目指した日本語全文検索
+システムです。このファイルはテスト用です。
+
+test@namazu.org
+
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)--
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="plain.txt.gz"
+
+H4sICDgMpDgAA3BsYWluLnR4dADzS8xNrCpVkFZxUvFTdVO1VPWQ1nDi4vJDCPvbZJlHqXhbe6ho
+qGSrGKt4qBQ5ZRjkqHj7xFhHqJir2LvVeMdY5DiaeFlYKFqVg7QDtamaA81yU01QcVexVFQGavNT
+DVVVVFVRzVbxh9jjGwiRA9tXklpc4pAHtlQvvyidCwCjXB8ElwAAAA==
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)----

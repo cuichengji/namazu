@@ -1,0 +1,36 @@
+#! %PERL% -w
+#
+# -*- Perl -*-
+#
+# rfnmz - Reindex NMZ.field.* files.
+#
+# Copyright (C) 2000 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+
+use strict;
+use FileHandle;
+die "usage: rfnmz <index>\n" if @ARGV == 0;
+
+my $target = $ARGV[0];
+die "invalid target: $target\n" unless -d $target;
+
+chdir $target;
+my @fields = grep {! /\.i$/} glob 'NMZ.field.*';
+
+for my $field (@fields) {
+    my $fh_in = new FileHandle;
+    $fh_in->open($field) || die "$field: $!";
+    binmode($fh_in);
+
+    my $fh_out = new FileHandle;
+    $fh_out->open(">$field.i") || die "$field: $!";
+    binmode($fh_out);
+
+    my $ptr = 0;
+    while (<$fh_in>) {
+	print $fh_out pack 'N', $ptr;
+	$ptr += length;
+    }
+}
+

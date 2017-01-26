@@ -1,0 +1,17 @@
+
+
+
+
+
+
+Network Working Group                                  test@namazu.org
+Request for Comments: 0000                              Namazu Project
+Category: Standards Track                                February 2000
+
+
+         Namazu のテスト
+
+Abstract
+
+   Namazu は手軽に使えることを第一に目指した日本語全文検索
+   システムです。このファイルはテスト用です。

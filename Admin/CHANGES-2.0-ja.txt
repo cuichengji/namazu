@@ -1,0 +1,94 @@
+1.3.0.x からの変更点
+
+機能に関する変更点
+
+  * インデックスの互換性はまったくない
+    - 新規に作り直そう
+
+  * インデックスが小さくなった (全体で 1/2 くらい)
+
+  * NKF, Text::Kakasi, Text::ChaSen1 perlモジュールに対応した
+    - <ftp://ftp.ie.u-ryukyu.ac.jp/pub/software/kono/nkf171.shar>
+    - <http://www.daionet.gr.jp/~knok/kakasi/>
+    - <http://www.daionet.gr.jp/~knok/chasen/>
+
+  * 長い名前のコマンドライン引数を使えるようにした
+    - getopt.c, getopt1.c 
+
+  * 任意のフィールドで検索結果をソートできるようにした
+    - NMZ.field.* を利用する
+
+  * 検索結果の中のキーワードを強調表示 (赤) するようにした
+    - CSS1 を使っています
+
+  * 検索結果の書式を自由に変えられるようにした
+    - NMZ.result.* の導入
+
+  * mknmz のコマンドライン引数で複数のディレクトリ・ファイル
+    を指定できるようにした [namazu-dev 282]
+
+  * mknmz における URI置換の方法を変更した [namazu-dev 282]
+    - --replace=code オプションを使う
+
+  * インデックスの更新が簡単になった [namazu-dev 281]
+    - mknmz --update=index で OK.
+
+  * mknmz にチェックポイント機能 (-s オプション) をつけた
+    - 自分自身をときどき exec し直し、プロセスの膨張を防ぐ
+
+  * namazu, mknmz のコマンドライン引数を変更
+    - いくつかのコマンドライン引数を廃止した
+    - いくつかのコマンドライン引数を追加した
+    - いくつかのコマンドライン引数の名前を変えた
+    - 詳しくは namazu --help, mknmz --help を参照
+
+  * Word文書, PDF用のフィルタを用意した
+    - mswordview, pdftotext が必要
+
+  * namazu.conf を namazurc に名前を変えた
+
+  * namazurc において区切り文字に空白文字を使
+    えるようにした (TABじゃなければダメという仕様は廃止)
+
+  * 何もヒットしなかったときに NMZ.tips を表示するようにした
+
+  * NMZ.access を導入した
+    - IPアドレス・ホスト名・ドメイン名によるアクセス制限がイ
+    ンデックス単位で行える
+
+  * configure が賢くなった
+    - webmaster のメイルアドレスをホスト名から類推する
+
+
+実装に関する変更点
+
+  * autoconf + automake 化が徹底された
+
+  * gettext化された
+    - ja.po, ja_JP.SJIS.po, ja_JP.JIS7.po を用意しています
+
+  * library化
+    - とりあえず library の形になったが、まだまだ改良が必要
+
+  * mknmz のソースコードを整理した
+    - mknmz を分割した
+    - require 5.004 にした
+    - File::MMagic perlモジュールを採用した
+    - フィルタを整理し、 filter ディレクトリにまとめた
+    - 命名規則を見直した
+    - コメントをすべて英訳した
+
+  * namazu のソースコードを整理した
+    - プロトタイプ宣言を徹底した
+    - nmz_mergesort() を廃して qsort を導入した [namazu-dev 334]
+    - 名前付け規則を見直した
+    - コメントをすべて英訳した
+
+  * インデックスの構造の変更
+    - NMZ.i と NMZ.p の記録に pack 'w' を導入した
+    - NMZ.i と NMZ.p を差分式に記録するようにした [namazu-dev 121]
+    - NMZ.h を廃止
+    - NMZ.f を廃止し、 NMZ.field.* へ統合
+    - NMZ.i と NMZ.w を統合し、NMZ.i を小さくした
+    - NMZ.{keys,total} を廃止して NMZ.status に対応
+    - NMZ.head.{en,ja} の CGI変数の名前を変更

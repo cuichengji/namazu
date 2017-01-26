@@ -1,0 +1,26 @@
+#! /bin/sh
+#
+# Test for namazu.cgi.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+docnum=`perl -lne 'print $1 if /^files (\d+)/' "idx1/NMZ.status"`
+
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+duprcs
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=namazu&idxname=idx1'
+export SCRIPT_NAME QUERY_STRING
+
+cd ../src
+hitnum=`./namazu.cgi | perl -ne 'print $1 if /<!-- HIT -->(\d+)<!-- HIT -->/'`
+rm -f $tmprc
+
+echo "docnum:" $docnum, "hitnum:" $hitnum >> $LOG
+test "$docnum" != "$hitnum" && exit 1  # error if not matched
+exit 0

@@ -1,0 +1,43 @@
+#! /bin/sh
+#
+# Test for updating documents in an index.
+#
+LOG=`pwd`/test-log
+TARGET=`$srcdir/select-data`
+TMPDATA=`pwd`/tmp-data
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d idx7; then
+    mkdir idx7
+else
+    rm -f idx7/NMZ.*
+fi
+
+# Copy docments.
+if test -d tmp-data; then
+    rm -rf tmp-data
+fi
+cp -rp $TARGET tmp-data
+
+# Simple indexing.
+
+../scripts/mknmz -O idx7 $TMPDATA >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+prevdocnum=`perl -lne 'print $1 if /^files (\d+)/' idx7/NMZ.status`
+
+# Update some documents. Add `xyzzy' to each document.
+cd $TMPDATA
+find . -type f -print | egrep '(plain|mail)\.txt$' | \
+    perl -nle 'system "echo xyzzy >> $_"'
+cd ../
+
+# Update the index.
+../scripts/mknmz --update=idx7 --check-filesize >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+postdocnum=`perl -lne 'print $1 if /^files (\d+)/' idx7/NMZ.status`
+
+echo "predocnum:" $prevdocnum, "postdocnum:" $postdocnum >> $LOG
+test $prevdocnum != $postdocnum && exit 1  # error if prev != post
+exit 0

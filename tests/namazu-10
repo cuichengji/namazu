@@ -1,0 +1,24 @@
+#! /bin/sh
+#
+# Test for index version check.
+#
+LOG=`pwd`/test-log
+IDX=`pwd`/idx8
+echo '  *** starting ' $0 >>$LOG
+
+MSG="Present index is old type. it's unsupported."
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+mv $IDX/NMZ.wi $IDX/NMZ.wi.org
+
+../src/namazu 'namazu' $IDX | grep "$MSG" > /dev/null || exit 1
+
+mv $IDX/NMZ.wi.org $IDX/NMZ.wi
+
+exit 0

@@ -1,0 +1,72 @@
+$Id: TODO-satoru,v 1.1 2001-05-20 08:15:16 rug Exp $
+やるべきことの備忘録 by 高林
+
+手っ取り早く片づける仕事
+
+  * 存在しないファイル、ディレクトリの処理を改善
+
+  * fread, fclose のエラーチェックをすべし
+
+  * nmz/libnamazu.c を廃止 (中の関数は適切なファイルに移動する)
+
+  * nmz/libnamazu.h -> nmz/libnmz.h
+
+  * var.[ch] の扱いはどうすべきか (廃止したいが NMZ は残したい)
+
+  * 文書整備
+
+  
+書き直すべきコードたち (全部書き直せという話も…)
+
+  * output.c: print は不要では?
+
+  * search.c: nmz_binsearch() を左端を検索するようにする
+    prefix_match() は後戻りしない
+    - Programming Pearls 2nd ed. p. 93 のコードが使える
+
+  * query.c を書き直す 
+    - まともに字句解析すべし
+    - データ構造はリストがよかろう
+    - one true awk の lex.c が参考になる
+    - queryの「かっこ」の前後にスペースをいれなくても OK にする [namazu 1229]
+
+  * parser.c を書き直す
+    - query.c でまともに字句解析されたデータ構造 (リスト) を扱う
+    - できるだけ汎用的なコードにする
+    - 演算子ごとに関数ポインタを評価する?
+
+  * 一対多の alias に対応する。例: Alias all-ml foo bar baz quux
+    - 今の struct nmz_indices の構造では難しい
+
+  * idxnames.c: インデックスの数の制限を廃止する (リスト構造?)
+    - struct nmz_indices をリスト構造にすべし
+
+  * NmzResult(旧HLIST) 関連の処理 -> 戻り値をポインタでもらう
+    NULLポインタでエラーを返す。エラー処理を整理せよ。
+
+  * NmzResult と struct nmz_hitnumlist が別々のデータ構造な
+    のは変。エラー処理はぐちゃぐちゃ。統合して整理すべし。
+
+  * NmzResult, struct nmz_hitnumlist, struct struct
+    nmz_indices, nmz_query を統合して一つのデータ構造 Namazu にすべし。
+    
+      Namazu foo = nmz_create(query_foo);
+      Namazu bar = nmz_create(query_bar);
+      foo->add_index(foo, "/where/foo/index/is");
+      bar->add_index(bar, "/where/bar/index/is");
+          :
+      foo->destroy(foo);
+      bar->destroy(bar);
+
+   といった感じ?
+
+  * hlist と名のつく関数の名前を変える
+
+  * extern 関数を吟味する -> できるだけ減らす (static にする)
+
+
+将来の構想
+
+  * 3.0 は一から書き直したい、という野望はあるけれど…
+    - まだまだプログラミングについて勉強不足
+    - 書き直している時間が取れるか疑問

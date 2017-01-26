@@ -1,0 +1,39 @@
+000000003F1A075C 000000003F1A06D2 000000003F1A0769 0000000000000001 000000003F1A075C 000000003F1A075C 0000000000000153
+X-URL: http://localhost/tests/data/en/html.html
+Accept: text/*, image/jpeg, image/png, image/*, */*
+Accept-Charset: iso-8859-1, utf-8;q=0.5, *;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate, identity
+Accept-Language: ja, en
+Connection: close
+Host: localhost
+User-Agent: Mozilla/5.0 (compatible; Konqueror/3.1; FreeBSD)
+
+HTTP/1.1 200 OK
+Date: Sun, 20 Jul 2003 03:07:08 GMT
+Server: Apache/1.3.27 (Unix)
+Last-Modified: Sun, 20 Jul 2003 03:04:50 GMT
+ETag: "a3a2f-153-3f1a06d2"
+Accept-Ranges: bytes
+Content-Length: 339
+Content-Type: text/html
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Test for Namazu</title>
+</head>
+<body>
+<h1>Test for Namazu</h1>
+
+<p>
+Namazu is a full-text search system intended for easy
+use.  This file is for testing.
+</p>
+
+<hr>
+<address>
+test@namazu.org
+</address>
+</body>
+</html>

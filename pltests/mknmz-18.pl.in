@@ -1,0 +1,107 @@
+#!%PERL% -w
+#
+# $Id: mknmz-18.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for simple indexing.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = pltests::selectdata();
+my $INDEX = "$cwd/idx21";
+my $TMPDATA = "$cwd/tmp-data";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+sub touch_r ($$) {
+    my($file1,$file2) = @_;
+
+    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks) = stat($file1);
+    utime $atime, $mtime, $file2;
+}
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+# create temporary data
+if (-d "$TMPDATA") {
+    unlink(<$TMPDATA/*>);
+} else {
+    mkdir("$TMPDATA", 0755);
+}
+pltests::putline("$TMPDATA/tmp1.txt", "namazu 1");
+pltests::putline("$TMPDATA/tmp2.txt", "namazu 2");
+
+touch_r("$TMPDATA/tmp1.txt", "$TMPDATA/tmp2.txt");
+
+@cmd = ("$MKNMZ", "-O", "$INDEX", "$TMPDATA");
+pltests::putline($LOG, join(" ",@cmd) . "\n");
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result);
+
+# update tmporary data
+if (-f "$TMPDATA/tmp2.txt") {
+    unlink "$TMPDATA/tmp2.txt";
+}
+pltests::putline("$TMPDATA/tmp2.txt", "namazu 02");
+
+touch_r("$TMPDATA/tmp1.txt", "$TMPDATA/tmp2.txt");
+@cmd = ("$MKNMZ", "-O", "$INDEX", "$TMPDATA");
+pltests::putline($LOG, join(" ",@cmd) . "\n");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result);
+my $result1 = $result;
+
+#
+@cmd = ("$MKNMZ", "-O", "$INDEX", "-z", "$TMPDATA");
+pltests::putline($LOG, join(" ",@cmd) . "\n");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result);
+my $result2 = $result;
+
+exit 1 if ($result1 eq $result2);
+
+exit 0;

@@ -1,0 +1,1320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Namazu User's Manual</title>
+</head>
+<body lang="ja">
+<h1>全文検索システム Namazu 説明書</h1>
+<hr>
+
+<p>
+Namazu の最新情報は <a
+href="http://www.namazu.org/">http://www.namazu.org/</a> か
+ら入手できます。Namazuは <a href="http://www.gnu.org/copyleft/gpl.html">
+GNU General Public License version 2</a> に
+従ったフリーソフトウェアです。完全に無保証です。
+</p>
+
+<h2>目次</h2>
+
+<ul>
+<li><a href="#components">Namazuの基本構成</a></li>
+<li><a href="#mknmz">mknmzコマンド</a>
+  <ul>
+  <li><a href="#mknmz-option">mknmzコマンド行引数</a></li>
+  <li><a href="#mknmzrc">mknmzrcの設定</a></li>
+  <li><a href="#doc-filter">文書フィルタ</a></li>
+  </ul>
+</li>
+<li><a href="#namazu">namazuコマンド</a>
+  <ul>
+  <li><a href="#namazu-option">namazuコマンド行引数</a></li>
+  <li><a href="#namazurc">namazurcの設定</a></li>
+  <li><a href="#default-index">基本インデックス</a></li>
+  </ul>
+</li>
+<li><a href="#cgi">namazu.cgi</a>
+  <ul>
+  <li><a href="#setting">namazu.cgiの設置</a></li>
+  <li><a href="#.namazurc">.namazurc の設定</a></li>
+  <li><a href="#template">雛形ファイル</a></li>
+  <li><a href="#form">formの設定</a></li>
+  <li><a href="#form-idxname">インデックスを選択する</a></li>
+  <li><a href="#form-idxnames">複数のインデックスを選択する</a></li>
+  <li><a href="#form-subquery">補助検索式の利用法</a></li>
+  <li><a href="#form-lang">検索結果の言語を選択する</a></li>
+  </ul>
+</li>
+<li><a href="#tools">付属ツール</a>
+  <ul>
+  <li><a href="#bnamazu">bnamazu</a></li>
+  <li><a href="#nmzgrep">nmzgrep</a></li>
+  <li><a href="#gcnmz">gcnmz</a></li>
+  <li><a href="#mailutime">mailutime</a></li>
+  <li><a href="#vfnmz">vfnmz</a></li>
+  <li><a href="#rfnmz">rfnmz</a></li>
+  <li><a href="#lnnmz">lnnmz</a></li>
+  <li><a href="#adnmz">adnmz</a></li>
+  <li><a href="#kwnmz">kwnmz</a></li>
+  <li><a href="#nmzmerge">nmzmerge</a></li>
+  <li><a href="#nmzegrep">nmzegrep</a></li>
+  <li><a href="#nmzcat">nmzcat</a></li>
+  </ul>
+</li>
+<li><a href="#query">検索式</a>
+  <ul>
+  <li><a href="#query-term">単一単語検索</a></li>
+  <li><a href="#query-and">AND検索</a></li>
+  <li><a href="#query-or">OR検索</a></li>
+  <li><a href="#query-not">NOT検索</a></li>
+  <li><a href="#query-grouping">グループ化</a></li>
+  <li><a href="#query-phrase">フレイズ検索</a></li>
+  <li><a href="#query-substring">部分一致検索</a></li>
+  <li><a href="#query-regex">正規表現検索</a></li>
+  <li><a href="#query-field">フィールド指定の検索</a></li>
+  <li><a href="#query-notes">特記事項</a></li>
+  </ul>
+</li>
+</ul>
+
+<h2><a name="components">Namazuの基本構成</a></h2>
+
+<p>
+Namazuは全文検索システムです。Namazu はインデックスの作成を
+行う mknmz コマンドと、検索を行う namazuコマンドから構成され
+ています。
+</p>
+
+<p>
+大量の文書を高速に検索するためには、どの単語がどの文書で使わ
+れているかを記録した索引ファイル (インデックス) をあらかじめ
+作成する必要があります。インデックスはちょうど書籍の索引と似
+ています。
+</p>
+
+<p>
+インデックスを作成するには mknmz コマンドを用います。mknmz
+の引数にインデックス作成の対象とするディレクトリ名を与えます。
+たとえば、 /home/foo/public_html を対象とするなら
+ば
+</p>
+
+<p><code>% mknmz</code> /home/foo/public_html
+</p>
+
+<p>
+と実行します。すると、 /home/foo/public_html 以下
+の *.html *.txt といったファイルについて索引づけを行い、
+mknmz を実行したディレクトリに NMZ.* というファイルを作成し
+ます。この NMZ.* ファイルが Namazu のインデックスです。
+</p>
+
+<p>
+作成されたインデックスに対して検索を行うには
+<code>namazu</code>コマンドを用います。
+</p>
+
+<p><code>% namazu</code> bar /home/foo/Namazu/foobar</p>
+
+<p>
+と実行すれば、/home/foo/Namazu/foobar にあるインデック
+スに対してキーワード bar を検索します。
+</p>
+
+
+<h2><a name="mknmz">mknmzコマンド</a></h2>
+
+<h3><a name="mknmz-option">mknmzコマンド行引数</a></h3>
+
+<!-- mknmz-option -->
+<pre>
+    mknmz 2.0.X, Namazu のインデックス作成プログラム
+
+    使い方: mknmz [オプション] &lt;対象&gt;...
+
+    対象ファイル:
+      -a, --all                すべてのファイルを対象とする
+      -t, --media-type=MTYPE   対象ファイルの文書形式を指定する
+      -h, --mailnews           --media-type='message/rfc822' と同じ
+          --mhonarc            --media-type='text/html; x-type=mhonarc' と同じ
+      -F, --target-list=FILE   インデックス対象のファイルのリストを読み込む
+          --allow=PATTERN      対象とするファイル名の正規表現を指定する
+          --deny=PATTERN       拒絶するファイル名の正規表現を指定する
+          --exclude=PATTERN    除外するパス名の正規表現を指定する
+      -e, --robots             次の記述を含む HTMLファイルを除外する
+                               &lt;meta name="ROBOTS" content="NOINDEX"&gt;
+      -M, --meta               HTMLの metaタグをフィールド指定検索に用いる
+      -r, --replace=CODE       URIを置換するためのコードを指定する
+          --html-split         HTMLファイルを &lt;a name="..."&gt; 単位で分割処理する
+          --mtime=NUM          変更日制限 find(1) の -mtime と同じ規則
+                               例: -50 で 50 日以内、+50 で 50 日より古いものだけ
+
+    形態素解析:
+      -b, --use-mecab          日本語の単語のわかち書きに MeCab を用いる
+      -c, --use-chasen         日本語の単語のわかち書きに ChaSen を用いる
+      -k, --use-kakasi         日本語の単語のわかち書きに KAKASI を用いる
+      -m, --use-chasen-noun    名詞のみを抽出する
+      -L, --indexing-lang=LANG インデックス時に言語に特化した処理を行なう
+
+    文字列処理:
+      -E, --no-edge-symbol     単語の両端の記号は削除する
+      -G, --no-okurigana       送り仮名を削除する
+      -H, --no-hiragana        平仮名のみの単語は登録しない
+      -K, --no-symbol          記号をすべて削除する
+          --decode-base64      添付されたBase64エンコード部分をデコードする
+
+    要約:
+      -U, --no-encode-uri      URIのencodeを行わない
+      -x, --no-heading-summary HTML のヘディングによる要約作成を行わない
+
+
+    インデックス作成:
+          --update=INDEX       更新するインデックスを指定する
+      -z, --check-filesize     サイズが変わったファイルも対象とする
+      -Y, --no-delete          削除された文書の検出を行わない
+      -Z, --no-update          文書の更新・削除を反映しない
+
+    その他:
+      -s, --checkpoint         チェックポイント機構を作動させる
+      -C, --show-config        現在の設定を表示する
+      -f, --config=FILE        設定ファイルを指定する
+      -I, --include=FILE       カスタマイズ用ファイルを読み込む
+      -O, --output-dir=DIR     インデックスの出力先を指定する
+      -T, --template-dir=DIR   NMZ.{head,foot,body}.* のディレクトリを指定する
+      -q, --quiet              インデックス処理の最中にメッセージを表示しない
+      -v, --version            ヴァージョンを表示する
+      -V, --verbose            口やかましいモード
+      -d, --debug              デバッグモード
+          --help               このヘルプを表示する
+          --norc               設定ファイルを読み込まない
+          --                   オプションリストを終了する
+
+    バグ報告は &lt;http://www.namazu.org/trac-namazu/trac.cgi&gt;
+    または &lt;bug-namazu@namazu.org&gt; へどうぞ
+</pre>
+<!-- mknmz-option -->
+
+
+<h3><a name="mknmzrc">mknmzrcの設定</a></h3>
+<p>
+mknmzrc および .mknmzrc ではいくつかの設定が行えます。
+mknmz は
+</p>
+
+<ol>
+<li><code>$(sysconfdir)/$(PACKAGE)/mknmzrc</code><br>
+通常は /usr/local/etc/namazu/mknmzrc
+</li>
+<li>~/.mknmzrc</li>
+<li>-f, --config=FILE オプションで FILE に指定した mknmzrc(等)</li>
+</ol>
+
+<p>
+の順で設定ファイルを探して読み込みます。複数、見つかった場合
+はすべて読み込みます。
+</p>
+
+<p>
+インストール直後の状態では
+<code>$(sysconfdir)/$(PACKAGE)/mknmzrc-sample</code> という
+サンプルファイルが用意されています。これを
+<code>$(sysconfdir)/$(PACKAGE)/mknmzrc</code> にコピーする、
+あるいは自分のホームディレクトリに ~/.mknmzrc としてコピーし
+て利用します。
+</p>
+
+<p>
+mknmzrc の設定項目の説明は mknmzrc-sample ファイルにコメント
+として書かれています。
+</p>
+
+
+<h3><a name="doc-filter">文書フィルタ</a></h3>
+
+<p>
+mknmz は対象ファイルの文書形式を自動で判別して、適切なフィル
+タ処理を行います。たとえば、 HTML文書では &lt;title&gt; の抽
+出や、HTMLタグの除去を行います。この処理は
+<code>$(datadir)/$(PACKAGE)/filter</code> に置かれる文書フィ
+ルタによって行われます。標準で用意されている文書フィルタは次
+の通りです。
+</p>
+
+<dl>
+<dt>apachecache.pl</dt>
+<dd>Apacheのキャッシュファイルを扱う</dd>
+<dd>必需品: なし</dd>
+<dd>注意: 元のURIへ置き換える場合は mknmzに次のオプションを使用、
+ --replace=apachecache::replacecode</dd>
+
+<dt>bzip2.pl</dt>
+<dd>bzip2で圧縮されたファイルを扱う</dd>
+<dd>必需品: <a
+href="http://sources.redhat.com/bzip2/">bzip2</a> コマンド</dd>
+
+<dt>compress.pl</dt>
+<dd>compressで圧縮されたファイルを扱う</dd>
+<dd>必需品: compressコマンド</dd>
+
+<dt>deb.pl</dt>
+<dd>debパッケージを扱う</dd>
+<dd>必需品: dpkgコマンド</dd>
+
+<dt>dvi.pl</dt>
+<dd>dviファイルを扱う</dd>
+<dd>必需品: dvi2tty, nkf</dd>
+
+<dt>epub.pl</dt>
+<dd>epubファイルを扱う</dd>
+<dd>必需品: なし</dd>
+
+<dt>excel.pl</dt>
+<dd>Microsoft Excel文書を扱う</dd>
+<dd>依存フィルタ: html.pl</dd>
+<dd>必需品: <a href="http://chicago.sourceforge.net/xlhtml/">xlhtml</a>,
+(<a href="http://wvWare.sourceforge.net/">wvWare</a> に付属の wvSummaryコマンド)</dd>
+<dd>依存モジュール: extutf8.pl</dd>
+<dd>代替品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+
+<dt>gnumeric.pl</dt>
+<dd>Gnumericの文書を扱う</dd>
+<dd>必需品: <a href="http://www.gzip.org/">gzip</a> コマンド
+または Compress::Zlib モジュール</dd>
+
+<dt>gzip.pl</dt>
+<dd>gzipで圧縮されたファイルを扱う</dd>
+<dd>必需品: <a href="http://www.gzip.org/">gzip</a> コマンド
+または Compress::Zlib モジュール</dd>
+
+<dt>hdml.pl</dt>
+<dd>HDML文書を扱う</dd>
+<dd>必需品: なし</dd>
+
+<dt>hnf.pl</dt>
+<dd><a href="http://www.h14m.org/">ハイパー日記システム</a> のファ
+イルを扱う</dd>
+<dd>必需品: hnf フィルタは特殊。<a
+href="http://www.h14m.org/">ハイパー日記システム・プロジェクト</a>か
+ら Namazu for hns を入手する必要がある</dd>
+<dd>依存フィルタ: html.pl</dd>
+
+<dt>html.pl</dt>
+<dd>HTML文書を扱う</dd>
+<dd>必需品: なし</dd>
+
+<dt>koffice.pl</dt>
+<dd>KOffice の KWord, KSpread, KPresenter, Kivio 文書を扱う</dd>
+<dd>依存モジュール: extutf8.pl, extzip.pl</dd>
+
+<dt>macbinary.pl</dt>
+<dd>MacBinary I,II,III 形式の文書を排除する</dd>
+<dd>必需品: なし</dd>
+
+<dt>mailnews.pl</dt>
+<dd>Mail/News のファイル、mhtml ファイルを扱う</dd>
+<dd>必需品: なし</dd>
+<dd>注意: mhtml ファイル、E-mail に添付された Base64 でエンコードされた部分
+を扱うには
+<a href="http://search.cpan.org/dist/MIME-Base64/">MIME::Base64, MIME::QuotedPrint</a>
+が必要(Perl5.8では標準で組込済)。利用する際には mknmz に次のオプションを使用、
+--decode=base64</dd>
+
+<dt>man.pl</dt>
+<dd>man を扱う</dd>
+<dd>必需品: nroff または
+<a href="http://www.gnu.org/software/groff/groff.html">groff</a></dd>
+<dd>注意: 日本語の man を扱うには -T nippon に対応した groff
+または jgroff が必要</dd>
+
+<dt>mhonarc.pl</dt>
+<dd><a href="http://www.mhonarc.org/">MHonArc</a> のファイルを扱う</dd>
+<dd>必需品: なし</dd>
+<dd>依存フィルタ: html.pl, mailnews.pl</dd>
+
+<dt>mp3.pl</dt>
+<dd>MP3ファイルのID3タグ内データを扱う</dd>
+<dd>必需品: <a
+href="http://sourceforge.net/projects/pudge/">MP3::Info モジュール</a>(バージョン 1.01 以上)</dd>
+
+<dt>msword.pl</dt>
+<dd>Microsoft Word文書を扱う (日本語版は Word 97, 98, 2000, 2002(XP), 2003)</dd>
+<dd>依存フィルタ: html.pl</dd>
+<dd>必需品: <a href="http://wvWare.sourceforge.net/">wvWare</a>
+</dd>
+<dd>依存モジュール: extutf8.pl</dd>
+<dd>代替品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+
+<dt>msofficexml.pl</dt>
+<dd>Microsoft Office2007 のWord, Excel, PowerPoint OfficeOpenXML 文書を扱う</dd>
+<dd>依存フィルタ: ooo.pl, zip.pl</dd>
+<dd>依存モジュール: extutf8.pl, extzip.pl</dd>
+
+<!--
+<dt>oasys.pl</dt>
+<dd>OASYS V6/V7文書を扱う</dd>
+<dd>必需品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+-->
+
+<dt>ooo.pl</dt>
+<dd>OpenOffice.org の Writer, Calc, Impress, Draw 文書を扱う</dd>
+<dd>依存モジュール: extutf8.pl, extzip.pl</dd>
+
+<dt>pdf.pl</dt>
+<dd>PDF 文書を扱う</dd>
+<dd>必需品: <a href="http://www.foolabs.com/xpdf/">xpdf</a>
+(バージョン 0.91 以上を推奨)に付属の pdftotextコマンド</dd>
+<dd>注意: バージョン 1.00 より前の xpdf にて日本語の PDF 文書を扱う場合、
+    --enable-japanese で configure されたものが必要<br>
+    バージョン 1.00 以降では、Language Support Packages が必要
+</dd>
+
+<dt>pipermail.pl</dt>
+<dd><a href="http://mm.tkikuchi.net/">Mailman/pipermail</a> のファイルを扱う</dd>
+<dd>必需品: なし</dd>
+<dd>依存フィルタ: html.pl, mailnews.pl</dd>
+
+<dt>postscript.pl</dt>
+<dd>PostScript 文書を扱う</dd>
+<dd>必需品: <a
+href="http://softpark.jplaza.com/software/freesoft.html">ps2textコマンド</a></dd>
+
+<dt>powerpoint.pl</dt>
+<dd>Microsoft PowerPoint文書を扱う</dd>
+<dd>依存フィルタ: html.pl</dd>
+<dd>必需品: <a href="http://chicago.sourceforge.net/xlhtml/">xlHtml</a> に付属の pptHtmlコマンド,
+(<a href="http://wvWare.sourceforge.net/">wvWare</a> に付属の wvSummaryコマンド)</dd>
+<dd>依存モジュール: extutf8.pl</dd>
+<dd>代替品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+
+<dt>rfc.pl</dt>
+<dd>RFCのファイルを扱う</dd>
+<dd>必需品: なし</dd>
+
+<dt>rpm.pl</dt>
+<dd>RPMパッケージを扱う</dd>
+<dd>必需品: <a href="http://www.rpm.org/">rpm</a></dd>
+
+<dt>rtf.pl</dt>
+<dd>RTF (Rich Text Format) 形式の文書を扱う</dd>
+<dd>必需品: <a href="http://www.asahi-net.or.jp/~yw3t-trns/namazu/rtf2html/">rtf2html</a></dd>
+<dd>代替品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+<dd>依存フィルタ: html.pl</dd>
+
+<dt>taro.pl</dt>
+<dd>一太郎 (バージョン 7 〜 13)の文書を扱う</dd>
+<dd>必需品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+
+<dt>taro56.pl</dt>
+<dd>一太郎 5, 6 の文書を扱う</dd>
+<dd>必需品: なし</dd>
+
+<dt>taro7_10.pl</dt>
+<dd>一太郎 (バージョン 7 〜 13)の文書を扱う</dd>
+<dd>必需品: <a href="http://www.onicos.com/staff/iz/release/">unicode.pl</a> (Perlのバージョンが5.8以上であれば不要),
+<a href="http://search.cpan.org/~jmcnamara/OLE-Storage_Lite/">OLE::Storage_Lite モジュール</a>,
+<a href="http://search.cpan.org/~dskoll/IO-stringy/">IO::stringy モジュール</a></dd>
+
+<dt>tex.pl</dt>
+<dd>TeXのファイルを扱う</dd>
+<dd>必需品: <a
+href="http://www.cs.purdue.edu/homes/trinkle/detex/">detex</a></dd>
+
+<dt>visio.pl</dt>
+<dd>Microsoft Visio XML図面(.vdx) 文書を扱う</dd>
+<dd>依存フィルタ: ooo.pl</dd>
+<dd>依存モジュール: extutf8.pl</dd>
+
+<!--
+<dt>wordpro.pl</dt>
+<dd>Lotus Word Pro文書を扱う</dd>
+<dd>必需品: <a href="http://www.dehenken.co.jp/products/doccat/">doccat</a></dd>
+-->
+<!--
+<dt>xps.pl</dt>
+<dd>XML Paper Specification (XPS) ファイルを扱う</dd>
+<dd>必需品: <a href="http://www.info-zip.org/pub/infozip/UnZip.html">unzip</a> コマンド,
+<a href="http://sourceforge.jp/projects/nkf/">NKF モジュール</a></dd>
+-->
+
+<dt>zip.pl</dt>
+<dd>zip圧縮ファイルを扱う</dd>
+<dd>必需品: <a
+href="http://www.info-zip.org/pub/infozip/UnZip.html">unzip</a> コマンド</dd>
+<dd>代替品: Compress::Zlibモジュール,
+<a href="http://search.cpan.org/~adamk/Archive-Zip-1.23/">Archive::Zipモジュール</a>
+</dd>
+</dl>
+
+<p>
+次の文書フィルタは Windows専用です。Windows環境でのみ動作します。
+</p>
+
+<dl>
+
+<dt>ichitaro456.pl</dt>
+<dd>一太郎 4, 5, 6 の文書を扱う</dd>
+<dd>必需品: <a href="http://www.vector.co.jp/soft/dos/writing/se013972.html">
+JSTXT</a></dd>
+<dd>注意: JSTXT は MS-DOS用のツールです。</dd>
+
+<dt>oleexcel.pl</dt>
+<dd>Microsoft Excel文書を扱う</dd>
+<dd>必需品: Microsoft Excel 97 SP1 以降/2000/2002(XP)/2003/2007/2010/2013/2016 のいずれか
+<br></dd>
+<dd><br></dd>
+<dd>Microsoft Excel 2007文書を扱う</dd>
+<dd>必需品: Microsoft Excel 2007/2010/2013/2016</dd>
+<dd>または: Microsoft Excel 2002(XP)/2003および「Word/Excel/PowerPoint 2007 ファイル形式用 Microsoft Office 互換機能パック SP3」</dd>
+
+<dt>olemsword.pl</dt>
+<dd>Microsoft Word文書を扱う</dd>
+<dd>必需品: Microsoft Word 97 SP1 以降/98/2000/2002(XP)/2003/2007/2010/2013/2016 のいずれか
+<br></dd>
+<dd><br></dd>
+<dd>Microsoft Word 2007文書を扱う</dd>
+<dd>必需品: Microsoft Word 2007/2010/2013/2016</dd>
+<dd>または: Microsoft Word 2000/2002(XP)/2003および「Word/Excel/PowerPoint 2007 ファイル形式用 Microsoft Office 互換機能パック SP3」</dd>
+
+<dt>olepowerpoint.pl</dt>
+<dd>Microsoft PowerPoint文書を扱う</dd>
+<dd>必需品: Microsoft PowerPoint 97 SP1 以降/2000/2002(XP)/2003/2007/2010 のいずれか
+<br></dd>
+<dd><br></dd>
+<dd>Microsoft PowerPoint 2007文書を扱う</dd>
+<dd>必需品: Microsoft PowerPoint 2007/2010</dd>
+<dd>または: Microsoft PowerPoint 2002(XP)/2003および「Word/Excel/PowerPoint 2007 ファイル形式用 Microsoft Office 互換機能パック SP3」</dd>
+
+
+<dt>oletaro.pl</dt>
+<dd>一太郎 (バージョン 4) の文書を扱う</dd>
+<dd>必需品: Microsoft Word 97 SP1 以降/98/2000 のいずれか</dd>
+<dd>必需品: および Microsoft Office 付属の該当文書コンバータ
+<dd>依存フィルタ: olemsword.pl</dd>
+<br></dd>
+<dd><br></dd>
+<dd>一太郎 (バージョン 5 〜 6) の文書を扱う</dd>
+<dd>必需品: Microsoft Word 97 SP1 以降/98/2000/2002(XP) のいずれか</dd>
+<dd>必需品: および Microsoft Office 付属の該当文書コンバータ
+<dd>依存フィルタ: olemsword.pl</dd>
+<br></dd>
+<dd><br></dd>
+<dd>一太郎 (バージョン 7 〜 13, 2004-2006他) の文書を扱う</dd>
+<dd>必需品: Microsoft Word 97 SP1 以降/98/2000/2002(XP)/2003/2007 のいずれか</dd>
+<dd>必需品: および Microsoft Office 付属の該当文書コンバータ</dd>
+<dd>依存フィルタ: olemsword.pl</dd>
+
+<dt>olertf.pl</dt>
+<dd>RTF (Rich Text Format) 形式の文書を扱う</dd>
+<dd>必需品: Microsoft Word 97 SP1 以降/98/2000/2002(XP)/2003/2007/2010/2013/2016 のいずれか</dd>
+<dd>依存フィルタ: olemsword.pl</dd>
+
+<dt>olevisio.pl</dt>
+<dd>Microsoft Visio文書を扱う</dd>
+<dd>必需品: Microsoft Visio 2000 以降/2002/2003/2007/2010/2013/2016 のいずれか</dd>
+<dd>依存フィルタ: olemsword.pl
+<br></dd>
+<dd><br></dd>
+<dd>Microsoft Visio 2013図形を扱う</dd>
+<dd>必需品: Microsoft Visio 2013/2016</dd>
+
+<dt>xdoc2txt.pl</dt>
+<dd>Microsoft Word,Excel,PowerPoint、一太郎の文書を扱う</dd>
+<dd>必需品: <a href="http://www31.ocn.ne.jp/~h_ishida/xdoc2txt.html">xdoc2txt.exe</a></dd>
+<dd>注意: xdoc2txt.exe は Microsoft Windows 95/98/Me/NT/2000/XP/Vista/Server 2003 用のツールです。</dd>
+</dl>
+
+
+<p>
+次の Namazu 付属の拡張モジュールは、各種文書フィルタで使用されます。
+</p>
+
+<dl>
+
+<dt>extutf8 拡張モジュール</dt>
+<dd>UTF-8 コードを扱う</dd>
+<dd>必需品: <a href="http://sourceforge.jp/projects/nkf/">NKF モジュール</a>、
+またはPerl 5.8以上、
+または<a href="http://www.ff.iij4u.or.jp/~nrt/lv/">lv コマンド</a>、
+または<a href="http://www.onicos.com/staff/iz/release/">unicode.pl</a>
+</dd>
+
+<dt>extzip 拡張モジュール</dt>
+<dd>zip 圧縮データを扱う</dd>
+<dd>必需品: <a href="http://search.cpan.org/~pmqs/IO-Compress-2.021/">IO::Compress モジュール</a>、
+<a href="http://search.cpan.org/~adamk/Archive-Zip-1.30/">Archive::Zip モジュール</a>
+(オプション <a href="http://search.cpan.org/~gaas/IO-String-1.08/">IO::String モジュール</a>)、
+または <a href="http://www.info-zip.org/pub/infozip/UnZip.html">unzip コマンド</a>
+</dd>
+
+</dl>
+
+
+<h2><a name="namazu">namazuコマンド</a></h2>
+
+<h3><a name="namazu-option">namazuコマンド行引数</a></h3>
+
+<!-- namazu-option -->
+<pre>
+    namazu 2.0.X, Namazu の検索プログラム
+
+    使い方: namazu [options] &lt;query&gt; [index]...
+        -n, --max=NUM           一度に表示する件数
+        -w, --whence=NUM        表示する検索結果の先頭番号
+        -l, --list              検索結果を URI・パス名をリストで出力する
+        -s, --short             短い書式で出力する
+            --result=EXT        結果表示に用いる NMZ.result.EXT を指定する
+            --late              検索結果を新しい順にソートする
+            --early             検索結果を古い順にソートする
+            --sort=METHOD       ソート方法を指定する (score, date, field:name)
+            --ascending         ソートの方向を昇順にする (標準は降順)
+        -a, --all               検索結果をすべて表示する
+        -c, --count             ヒット数のみを表示する
+        -h, --html              HTMLで出力する
+        -r, --no-references     参考ヒット数を表示しない
+        -H, --page              先の検索結果へのリンクを表示する (ほぼ無意味)
+        -F, --form              &lt;form&gt; ... &lt;/form&gt; の部分を強制的に表示する
+        -R, --no-replace        URI の置き換えを行わない
+        -U, --no-decode-uri     URI encode の復元を行わない
+        -o, --output=FILE       指定したファイルに検索結果を出力する
+        -f, --config=FILE       設定ファイルを指定する
+        -C, --show-config       設定を表示する
+        -q, --quiet             検索結果以外のメッセージを表示しない
+        -d, --debug             デバッグモード
+        -v, --version           ヴァージョンを表示する
+            --help              このヘルプを表示する
+            --norc              設定ファイルを読み込まない
+            --                  オプションリストを終了する
+
+    バグ報告は &lt;http://www.namazu.org/trac-namazu/trac.cgi&gt;
+    または &lt;bug-namazu@namazu.org&gt; へどうぞ
+</pre>
+<!-- namazu-option -->
+
+<p>
+コマンド行引数の <code>[index dir]...</code> に検索対象のイ
+ンデックスを指定します。インデックスの指定を省略すると、<a
+href="#default-index">基本インデックス</a>が検索対象となりま
+す。
+</p>
+
+<p>
+また、 +foo, +bar のように頭に <code>+</code> 記号をつけると、
+基本インデックスからの相対パスでインデックスを指定できます。
+</p>
+
+<p>
+コマンド行から実行したときは標準では平文で検索結果を出力します。
+HTML で出力する場合には -h オプションを指定します。
+</p>
+
+<p>
+検索結果の 21 件目から 40 件目までを表示させたいときは -n 20
+-w 20 と指定します。-w の値が 21 でないところに注意してくだ
+さい。
+</p>
+
+<h3><a name="namazurc">namazurcの設定</a></h3>
+<p>
+namazurc および .namazurc ではいくつかの設定が行えます。
+namazu は
+</p>
+
+<ol>
+<li><code>$(sysconfdir)/$(PACKAGE)/namazurc</code><br>
+通常は /usr/local/etc/namazu/namazurc
+</li>
+<li>~/.namazurc</li>
+<li>-f, --config=FILE オプションで指定した namazurc<br>
+(CGIの場合は namazu.cgi を設置したディレクトリ の .namazurc)
+</li>
+</ol>
+
+<p>
+の順で設定ファイルを探して読み込みます。複数、見つかった場合
+はすべて読み込みます。
+</p>
+
+<p>
+インストール直後の状態では
+<code>$(sysconfdir)/$(PACKAGE)/namazurc-sample</code> という
+サンプルファイルが用意されています。これを
+<code>$(sysconfdir)/$(PACKAGE)/namazurc</code> にコピーする、
+あるいは自分のホームディレクトリに ~/.namazurc としてコピー
+して利用します。
+</p>
+
+<p>
+namazurc の設定項目の説明は namazurc-sample ファイルにコメント
+として書かれています。
+</p>
+
+<h3><a name="default-index">基本インデックス</a></h3>
+
+<p>
+基本インデックスは、検索時にインデックスの指定が省略されたと
+きに検索対象となるインデックスです。基本インデックスは次の規
+則に従います。
+</p>
+
+<ul>
+<li>標準は $(localstatedir)/$(PACKAGE)/index<br>
+通常は /usr/local/var/namazu/index)
+</li>
+<li><a href="#namazurc">namazurc</a> の Index指示で変更可能</li>
+</ul>
+
+<p>
+CGI (<a href="#cgi">namazu.cgi</a>) では、<a
+href="#form-idxname">インデックスを選択する</a>際に基本イン
+デックスからの相対パスで指定します。
+</p>
+
+<h2><a name="cgi">namazu.cgi</a></h2>
+
+<h3><a name="setting">namazu.cgiの設置</a></h3>
+
+<p>
+CGIとして Namazuを利用するには、 namazu.cgi を用います。
+namazu.cgi は <code>$(libexecdir)</code> ディレクトリ (通常
+は/usr/local/libexec) にインストールされます。CGI を設置した
+いディレクトリに namazu.cgiをコピーすれば設置完了です。
+</p>
+
+<h3><a name=".namazurc">.namazurc の設定</a></h3>
+
+<p>
+namazu.cgi を設置したディレクトリに .namazurc ファイルを置く
+と、CGIの実行時に設定ファイルとして読み込まれます。日本語で
+表示するには次の設定が必須です。
+</p>
+
+<p><code>Lang ja</code></p>
+
+<h3><a name="template">雛形ファイル</a></h3>
+
+<p>
+雛形ファイルは HTMLでの結果出力の書式を定義するファイル群で
+す。それぞれの役割は次の通りです。
+</p>
+
+<dl>
+<dt><a href="nmz.html#head">NMZ.head</a></dt>
+<dd>検索結果の冒頭部分</dd>
+<dt><a href="nmz.html#foot">NMZ.foot</a></dt>
+<dd>検索結果の末尾部分</dd>
+<dt><a href="nmz.html#body">NMZ.body</a></dt>
+<dd>検索式の説明</dd>
+<dt><a href="nmz.html#tips">NMZ.tips</a></dt>
+<dd>検索のコツ</dd>
+<dt><a href="nmz.html#result">NMZ.result</a></dt>
+<dd>検索結果の表示書式</dd>
+</dl>
+
+<p>
+これらのファイルは言語ごとに分かれています。ファイル名の末尾
+が .ja で終わるものが日本語用です。末尾に何もついていないも
+のは英語用です。
+</p>
+
+<h3><a name="form">formの設定</a></h3>
+
+<p>
+formは NMZ.head に定義されています。CGI変数は次の通りです。
+</p>
+
+<dl>
+<dt>query</dt>
+<dd>検索式の指定です。</dd>
+<dt>max</dt>
+<dd>一度に表示する検索結果の件数を指定します。</dd>
+<dt>result</dt>
+<dd>検索結果の表示形式を指定します。</dd>
+<dt>sort</dt>
+<dd>ソートの方法を指定します。</dd>
+<dt>idxname</dt>
+<dd>検索するインデックス名を指定します。</dd>
+<dt>subquery</dt>
+<dd>補助の検索式を指定します。</dd>
+<dt>whence</dt>
+<dd>検索結果を何件目から表示するかを指定します。</dd>
+<dt>reference</dt>
+<dd>参考ヒット数を表示するかを指定します。</dd>
+<dt>lang</dt>
+<dd>検索結果を表示する言語を指定します。</dd>
+</dl>
+
+<h3><a name="form-idxname">インデックスを選択する</a></h3>
+
+<p>
+Webブラウザからインデックスを選択できるようにするには
+NMZ.head に次のように記述します。
+</p>
+
+<pre>
+
+      &lt;strong&gt;検索対象:&lt;/strong&gt;
+      &lt;select name="idxname"&gt;
+      &lt;option selected value="foo"&gt;foo&lt;/option&gt;
+      &lt;option value="bar"&gt;bar&lt;/option&gt;
+      &lt;option value="baz"&gt;baz&lt;/option&gt;
+      &lt;/select&gt;
+</pre>
+
+<p>
+この例では、 foo, bar, baz の中からインデックスを
+選択可能にしています。foo が選ばれた時は<a
+href="#default-index">基本インデックス</a> の下にある
+foo インデックスを検索します。基本インデックスが
+/usr/local/var/namazu/index の場合は次のディレクトリ構成にな
+ります。
+</p>
+
+<pre>
+
+       /
+       + usr/
+         + local/
+           + var/
+             + namazu/
+               + index/
+                 + foo/
+                 + bar/
+                 + baz/
+</pre>
+
+
+<h3><a name="form-idxnames">複数のインデックスを選択する</a></h3>
+<p>
+複数のインデックスを検索するは NMZ.head に checkbox の記述を
+します。
+</p>
+
+<pre>
+
+      &lt;strong&gt;対象インデックス&lt;/strong&gt;
+      &lt;ul&gt;
+      &lt;li&gt;&lt;input type="checkbox" name="idxname" value="foo"&gt;foo&lt;/li&gt;
+      &lt;li&gt;&lt;input type="checkbox" name="idxname" value="bar"&gt;bar&lt;/li&gt;
+      &lt;li&gt;&lt;input type="checkbox" name="idxname" value="baz"&gt;baz&lt;/li&gt;
+      &lt;/ul&gt;
+</pre>
+
+<p>
+この例では foo, bar, baz から複数選択して検索できます。検索
+結果に使われる<a href="#template">雛形ファイル</a>は
+namazurc の Template指示で指定したディレクトリのものが用いら
+れます。Template が指定されていないときは、次の規則に従いま
+す。
+</p>
+
+<ul>
+<li>選択されたインデックスが 1つのとき<br>
+選択されたインデックスの雛形ファイルが用いられる
+</li>
+<li>選択されたインデックスが複数のとき<br>
+<a href="#default-index">基本インデックス</a>の雛形ファイルが用いられる
+</li>
+</ul>
+
+<h3><a name="form-subquery">補助検索式の利用法</a></h3>
+
+<p>
+利用者が入力する検索式とは別に、補助検索式を設定できます。た
+とえば次の例では、検索対象のペイジを選択可能にしています。検
+索対象の URIを +uri: で制限しているところが要です。
+</p>
+
+<pre>
+
+      &lt;strong&gt;検索対象&lt;/strong&gt;
+      &lt;select name="subquery"&gt;
+      &lt;option value=""&gt;全体&lt;/option&gt;
+      &lt;option value="+uri:/^http://foo.example.jp/foo//"&gt;fooのペイジ&lt;/option&gt;
+      &lt;option value="+uri:/^http://foo.example.jp/bar//"&gt;barのペイジ&lt;/option&gt;
+      &lt;option value="+uri:/^http://foo.example.jp/baz//"&gt;bazのペイジ&lt;/option&gt;
+      &lt;option value="+uri:/^http://foo.example.jp/quux//"&gt;quuxのペイジ&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;input type="hidden" name="reference" value="off"&gt;
+</pre>
+
+
+<h3><a name="form-lang">検索結果の言語を選択する</a></h3>
+
+<p>
+Webブラウザから検索結果の言語を選択できるようにするには CGI
+変数 lang を用いて NMZ.head に次のように設定します。
+.namazurc で Lang が設定されていると、そちらが優先されます。
+CGI変数 langを用いるときは .namazurc に Lang の設定をしては
+いけません。
+</p>
+
+<pre>
+
+      &lt;strong&gt;言語:&lt;/strong&gt;
+      &lt;select name="lang"&gt;
+      &lt;option selected value="ja"&gt;日本語&lt;/option&gt;
+      &lt;option value=""&gt;英語&lt;/option&gt;
+      &lt;/select&gt;
+</pre>
+
+
+<h2><a name="tools">付属ツール</a></h2>
+
+<h3><a name="bnamazu">bnamazu</a></h3>
+
+<p>
+bnamazu は Webブラウザと連携して検索を行うツールです。検索結
+果を Webブラウザ (標準では
+<a href="http://www.lynx.browser.org/">lynx</a> ) に渡して
+閲覧できます。コマンド行から次のように実行します。
+</p>
+
+<p>
+<code>% bnamazu [-n] [-b browser] [namazu's options] &lt;query&gt; [index]...</code>
+</p>
+
+<p>
+-b オプションで Webブラウザを指定できます。 -n はWebブラウザ
+が netscape のときのみ有効なオプションです。-n を指定すると、
+新しい netscape の新しいウィンドウを開いて検索結果を表示しま
+す。
+</p>
+
+
+<h3><a name="nmzgrep">nmzgrep</a></h3>
+
+<p>
+nmzgrep は namazu コマンドと連携して egrep を実行するツール
+です。検索にヒットした文書に対して、egrepをかけます。egrep
+を適用することで、そのキーワードがどの行に出現するかがわかり
+ます。コマンド行から次のように実行します。
+</p>
+
+<p>
+<code>% nmzgrep [egrep's options] &lt;pattern&gt; [index]...</code>
+</p>
+
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスに対して
+foo で検索し、ヒットした文書に対してさらに egrep をかけるに
+は、次のように実行します。
+</p>
+
+<p>
+<code>% nmzgrep foo ~/Namazu/foobar</code>
+</p>
+
+<h3><a name="gcnmz">gcnmz</a></h3>
+
+<p>
+文書の更新・削除を伴うインデックスの更新を繰り返していくと、
+インデックス内に不要なデータが溜まっていきます。gcnmz はこの
+不要なデータを削除するツールです。コマンド行から次のように実
+行します。
+</p>
+
+<p>
+<code>% gcnmz [options] &lt;target&gt;...</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスをゴミ掃除
+するなら、次のように実行します。
+</p>
+
+<p>
+<code>% gcnmz ~/Namazu/foobar</code>
+</p>
+
+<h3><a name="mailutime">mailutime</a></h3>
+
+<p>
+mailutime は Mail/News のファイルのタイムスタンプを Date: ヘッ
+ダに合わせるツールです。コマンド行から次のように実行します。
+</p>
+
+<p>
+<code>% mailutime &lt;target&gt;...</code>
+</p>
+
+<p>
+たとえば、 ~/Mail/ml/foobar に置かれているメイルのタイムスタ
+ンプを変更するなら、次のように実行します。
+</p>
+
+<p>
+<code>% mailutime ~/Mail/ml/foobar/*</code>
+</p>
+
+
+<h3><a name="vfnmz">vfnmz</a></h3>
+
+<p>
+vfnmz は検索結果の表示を preview するツールです。コマンド行
+から次のように実行します。
+</p>
+
+<p>
+<code>% vfnmz &lt;index&gt; [NMZ.result.foobar]</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスを preview
+するなら、次のように実行します。
+</p>
+
+<p>
+<code>% vfnmz ~/Namazu/foobar &gt; foobar.html</code><br>
+<code>% lynx foobar.html # 出力をブラウザで閲覧する</code>
+</p>
+
+<h3><a name="rfnmz">rfnmz</a></h3>
+
+<p>
+rfnmz は NMZ.field.*.i を再構築するツールです。コマンド行か
+ら次のように実行します。
+</p>
+
+<p>
+<code>% rfnmz &lt;index&gt;</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれている NMZ.field.*.i を再
+構築するなら、次のように実行します。
+</p>
+
+<p>
+<code>% rfnmz ~/Namazu/foobar</code><br>
+</p>
+
+<h3><a name="lnnmz">lnnmz</a></h3>
+
+<p>
+lnnmz は、検索対象の HTML ファイルに含まれるハイパーリンクを抽出し
+たファイルである NMZ.field.link を作成するコマンドです。lnnmz 実行
+時には元のHTML ファイルが読める必要があります。通常は関係ないはず
+ですが、リモートサイトの検索などで wget などで一時的に取ってきただ
+けという場合には注意が必要です。コマンド行から以下のように実行しま
+す。
+</p>
+
+<p>
+<code>% lnnmz [options] &lt;target&gt;...</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスの
+NMZ.field.link を作成するなら、次のように実行します。
+</p>
+
+<p>
+<code>% lnnmz ~/Namazu/foobar</code><br>
+</p>
+
+<p>
+なお、lnnmz は HTML ファイルのリンクしか検出しません。シンプルテキ
+ストやPDF 他のリンク構造は検出しないだけでエラーなどにはなりません。
+</p>
+
+<h3><a name="adnmz">adnmz</a></h3>
+
+<p>
+adnmz は NMZ.field.link を使って検索対象のHTMLファイル間の相互のハ
+イパーリンク構造を示す NMZ.field.adjacency を作成するコマンドです。
+文書間のリンク関係を文書IDに変換したもので、隣接リストそのものです。
+実行時に NMZ.field.link が必要ですので、lnnmz と事実上セットである
+と考えるのが良いでしょう。コマンド行から以下のように実行します。
+</p>
+
+<p>
+<code>% adnmz [options] &lt;target&gt;...</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスの
+NMZ.field.adjacency を作成するなら、次のように実行します。
+</p>
+
+<p>
+<code>% adnmz ~/Namazu/foobar</code><br>
+</p>
+
+<h3><a name="kwnmz">kwnmz</a></h3>
+<p>
+kwnmz は NMZ.field.keywords を作成するコマンドです。
+インデックス作成時に mknmz の --meta オプションで抽出された
+キーワードはそのまま残し、
+それ以外の文書については、単語リストから適当な語を抜き出します。
+</p>
+
+<p>
+<code>% kwnmz [options] &lt;target&gt;...</code>
+</p>
+
+<h3><a name="nmzmerge">nmzmerge</a></h3>
+
+<p>
+nmzmerge は 2 つのインデックスを 1 つにまとめるコマンドです。
+</p>
+
+<p>
+<code>% nmzmerge &lt;destination_dir&gt; &lt;source_dir1&gt; &lt;source_dir2&gt;</code>
+</p>
+
+<p>
+たとえば、 ~/Namazu/afc ~/Namazu/nfc に置かれている
+2 つのインデックスを ~/Namazu/nfl にマージするなら、次のように実行します。
+</p>
+
+<p>
+<code>% nmzmerge ~/Namazu/nfl ~/Namazu/afc ~/Namazu/nfc</code><br>
+</p>
+
+<h3><a name="nmzegrep">nmzegrep</a></h3>
+
+<p>
+nmzegrep は namazu コマンド、mknmz の文書フィルタと連携して egrep
+を実行するツールです。検索にヒットした文書に対して、egrepをかけます。
+egrep を適用することで、そのキーワードがどの行に出現するかがわかり
+ます。コマンド行から次のように実行します。
+</p>
+
+<p>
+<code>% nmzegrep [egrep's options] &lt;pattern&gt; [index]...</code>
+</p>
+
+
+<p>
+たとえば、 ~/Namazu/foobar に置かれているインデックスに対して
+foo で検索し、ヒットした文書に対してさらに egrep をかけるに
+は、次のように実行します。
+</p>
+
+<p>
+<code>% nmzegrep foo ~/Namazu/foobar</code>
+</p>
+
+<p>
+注意：nmzgrep は検索でヒットした文書ファイルを直接 egrep にかけていますが、
+nmzegrep では、検索でヒットした文書ファイルを mknmz の文書フィルタに通した
+後で egrep をかけます。テキストファイル以外に対しても egrep がかけられます
+が、mknmz の文書フィルタを呼び出すため nmzgrep よりも処理に時間がかかります。
+</p>
+
+<h3><a name="nmzcat">nmzcat</a></h3>
+
+<p>
+nmzcat は mknmz の文書フィルタと連携して 文書ファイルからテキストを
+抽出するツールです。mknmz が文書ファイルからどのような情報を抽出しているか
+を確認することができます。コマンド行から次のように実行します。
+</p>
+
+<p>
+<code>% nmzcat &lt;対象ファイル&gt;...</code>
+</p>
+
+<p>
+注意：nmzcat は、文書ファイルを mknmz の文書フィルタに通しています。
+扱うことができるのは、mknmz で対応可能になっている形式のファイルのみです。
+mknmz の文書フィルタを呼び出すため多少処理に時間がかかります。
+</p>
+
+
+<!-- query -->
+<h2><a name="query" id="query">検索式</a></h2>
+
+<h3><a name="query-term" id="query-term">単一単語検索</a></h3>
+<p>
+調べたい単語を一つ指定するだけのもっとも基本的な検索手法です。
+例:
+</p>
+
+<p class="example">
+namazu
+</p>
+
+<h3><a name="query-and" id="query-and">AND検索</a></h3>
+
+<p>
+ある単語とある単語の両方を含む文書を検索します。検索結果を絞
+り込むのに有効です。3つ以上の単語を指定することも可能です。
+単語と単語の間に <code class="operator">and</code> を挿みます。例:
+</p>
+
+<p class="example">Linux and Netscape</p>
+
+<p>
+<code class="operator">and</code> は省略できます。単語を空白で区切って羅列す
+るとそれらの語すべてを含む文書をAND検索します。
+</p>
+
+<h3><a name="query-or" id="query-or">OR検索</a></h3>
+<p>
+ある単語とある単語のどちらかを含む文書を検索します。3つ以上
+の単語を指定することも可能です。単語と単語の間に
+<code class="operator">or</code> を挿みます。例:
+</p>
+
+<p class="example">
+Linux or FreeBSD
+</p>
+
+<h3><a name="query-not" id="query-not">NOT検索</a></h3>
+<p>
+ある単語を含み、ある単語を含まない文書を検索します。3つ以上
+の単語を指定することも可能です。単語と単語の間に
+<code class="operator">not</code> を挿みます。例:
+</p>
+
+<p class="example">
+Linux not UNIX
+</p>
+
+<h3><a name="query-grouping" id="query-grouping">グループ化</a></h3>
+<p>
+AND検索、OR検索、NOT検索を括弧でグループ化できます。括弧の両
+隣には空白を入れる必要があります。例:
+</p>
+
+<p class="example">
+( Linux or FreeBSD ) and Netscape not Windows
+</p>
+
+<h3><a name="query-phrase" id="query-phrase">フレイズ検索</a></h3>
+<p>
+2語以上からなる複合語を検索します。 <code
+class="operator">"..."</code> と2重引用符で、あるいは <code
+class="operator">{...}</code> と中括弧で囲みます。Namazuのフ
+レイズ検索は精度が 100 % ではないため、ときどき誤ることがあ
+ります。例: </p>
+
+<p class="example">
+{GNU Emacs}
+</p>
+
+<!-- foo
+<p>
+Tknamazu および namazu.el から検索するときは必ず後者で指定します。
+</p>
+-->
+
+<h3><a name="query-substring" id="query-substring">部分一致検索</a></h3>
+<p>
+部分一致検索には前方一致、中間一致、後方一致の 3種類があります。
+</p>
+
+<dl>
+<dt>前方一致検索</dt>
+<dd><code class="example">inter*</code>
+(<code>inter</code> から始まる単語を含む文書を検索)</dd>
+<dt>中間一致検索</dt>
+<dd><code class="example">*text*</code>
+(<code>text</code> を内包する単語を含む文書を検索)</dd>
+<dt>後方一致検索</dt>
+<dd><code class="example">*net</code>
+(<code>net</code> で終わる単語を含む文書を検索)</dd>
+</dl>
+
+
+<h3><a name="query-regex" id="query-regex">正規表現検索</a></h3>
+
+<p>
+検索するキーワードを正規表現で指定します。正規表現は
+<code class="operator">/.../</code> のようにスラッシュ記号で囲みます。正規表
+現のエンジンには<a
+href="http://www.ruby-lang.org/">Ruby</a>のコードを利用
+しています。正規表現の書式は<a
+href="http://www.perl.com/">Perl</a>とほぼ同じです。 例:
+</p>
+
+<p class="example">
+/インター?フェ[イー]ス/
+</p>
+
+
+<h3><a name="query-field" id="query-field">フィールド指定の検索</a></h3>
+<p>
+<code>Subject:</code>, <code>From:</code>,
+<code>Message-Id:</code> といったフィールドを指定して検
+索する手法です。特にMail/News のファイルを扱う際に効果を発揮
+します。例:
+</p>
+
+<ul>
+<li><code class="example">+subject:Linux</code><br>
+(Subject: に <code>Linux</code>が含まれる文書)
+</li>
+<li><code class="example">+subject:"GNU Emacs"</code><br>
+(Subject: に <code>GNU Emacs</code>が含まれる文書)
+</li>
+<li><code class="example">+from:foo@example.jp</code><br>
+(From: に <code>foo@example.jp</code> が含まれる文書)
+</li>
+<li><code class="example">+message-id:&lt;199801240555.OAA18737@foo.example.jp&gt;</code><br>
+(Message-Id を指定)
+</li>
+</ul>
+
+<h3><a name="query-notes" id="query-notes">特記事項</a></h3>
+
+<ul>
+<li>いずれの検索方法でもアルファベットの大文字・小文字の区別
+はしません。
+</li>
+
+<li>日本語の複合語は形態素単位に分割し、それらを<a
+href="#query-phrase"> フレイズ検索</a>します。分割は不適切に
+行なわれることがあります。
+</li>
+
+<li>JIS X 0208 (いわゆる全角文字) の英数字と記号の一部
+(ASCIIと重複しているもの) は ASCII (いわゆる半角文字) として
+処理されます。
+</li>
+
+<li>記号を含む語の検索ができます。例: <code>TCP/IP</code>。
+ただし、記号の処理は完全ではないので <code>TCP and IP</code>
+のように分割して<a href="#query-and">AND検索</a>をかけた方が取りこ
+ぼしがありません (その代わり余計なファイルまでヒットしてしま
+う可能性があります)。
+</li>
+
+<li>中間一致・後方一致、正規表現、フィールド指定の検索には少
+し時間がかかります。
+</li>
+
+<li><code class="operator">and</code>, <code
+class="operator">or</code>, <code
+class="operator">not</code> を単語として検索したいときはそれ
+ぞれ、 <code class="operator">"..."</code> と2重引用符で、
+あるいは <code class="operator">{...}</code> と中括弧で囲みます。
+
+<!-- foo
+Tknamazu および namazu.el から検索するときは必ず後者で指定します。
+-->
+</li>
+
+</ul>
+<!-- query -->
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2015 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: manual.html,v 1.60.4.66 2015-10-03 15:52:27 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

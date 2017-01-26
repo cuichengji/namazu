@@ -1,0 +1,8 @@
+<HDML version=3.0 public=true markable=true>
+<display name=top title=Test_for_Namazu>
+  <center>Test for Namazu<br>
+  Namazu is a full-text search system intended for easy use.
+  This file is for testing.<br>
+  <right>test@namazu.org
+</display>
+</hdml>

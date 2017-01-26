@@ -1,0 +1,116 @@
+#!%PERL% -w
+#
+# $Id: namazu-5.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu. Attack namazu with nasty cases.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+my $docnum;
+my $doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files\s+(\d+)/) {
+    $docnum = $1;
+} else {
+    exit 1;
+}
+
+# No query, no results.
+@cmd = ("$NAMAZU", "-c", "", "$INDEX");
+my ($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+if ($hitnum) {
+    exit 1;
+}
+
+# Should never match any documents.
+my @querys = ( '"', '/', '{', '}', '""', '{}', '" "', '{ }',
+	       '"  "', '{  }', ' " " ', ' { } ');
+foreach my $query (@querys) {
+    @cmd = ("$NAMAZU", "-c", $query, "$INDEX");
+    my ($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+    if ($hitnum && ($hitnum > 0)) {
+	pltests::putline($LOG, "failed: query=$query");
+	exit 1;
+    }
+}
+
+# Match all documents.
+#@querys = ('//', 'namazu', '"namazu"', '{namazu}');
+@querys = ('"//"', 'namazu', '"namazu"', '{namazu}');
+foreach my $query (@querys) {
+    @cmd = ("$NAMAZU", "-c", $query, "$INDEX");
+    ($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+    if ($hitnum != $docnum) {
+	pltests::putline($LOG, "failed: query=$query");
+	exit 1;
+    }
+}
+
+# Boundary testing.
+my $QUERY_MAX = 256;
+my $BUFSIZE   = 1024;
+for my $num (0 .. 3, $QUERY_MAX - 5 .. $QUERY_MAX + 5,
+		     $BUFSIZE   - 5 .. $BUFSIZE   + 5, 
+		     10000) # Huge query
+{
+    my $query  = "x" x $num;
+    @cmd = ("$NAMAZU", "-c", $query, "$INDEX");
+    my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+
+    pltests::putline($LOG, "$num: $status");
+    pltests::putline($LOG, $hitnum);
+
+    my $assert = sub {
+	my ($code) = @_;
+	if (! eval $code) {
+	    pltests::putline($LOG, "assert failed: $code");
+	    exit 1;
+	}
+    };
+
+    if ($num == 0) {
+	&$assert('$result eq ""');
+    } elsif ($num <= 256) {
+	&$assert('$result =~ /^0\s/');
+    } elsif ($num > 256) {
+	&$assert('$conts_err =~ /^namazu: /');
+    }
+}
+exit 0;

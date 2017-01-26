@@ -1,0 +1,21 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# gtnmz - program to count a total number of indexed files.
+#
+# Copyright (C) 1999 Satoru Takabayashi  All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+use strict;
+die "usage: gtnmz NMZ.r\n" if @ARGV == 0;
+
+my @all   = <>;
+@all      = grep {! /^\#\#/} @all; 
+@all      = grep {! /^$/} @all;
+
+my @added = grep {! /^\#/} @all;
+my @deleted  = grep {  /^\#/} @all;
+
+my $total = @added - @deleted;
+
+print $total, "\n";

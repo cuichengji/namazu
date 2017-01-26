@@ -1,0 +1,143 @@
+#!%PERL% -w
+#
+# $Id: chasen-2.pl.in,v 1.1.2.8 2017-01-09 13:43:58 opengl2772 Exp $
+# Copyright (C) 2005-2017 Tadamasa Teranishi
+#               2005-2017 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for ChaSen.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = pltests::selectdata() . "/html.html";
+my $INDEX = "$cwd/idx102";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+#
+# ChaSen Check
+#
+
+eval 'require Text::ChaSen;' || exit 77;
+my $CHASEN = "module_chasen";
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (pltests::get_lang() !~ /^[jJ]a/) {
+    pltests::putline($LOG, "Skipping because of LANG does not begin with ja: $0");
+    exit 77;
+}
+
+pltests::putline($LOG, "Text::ChaSen : $Text::ChaSen::VERSION");
+
+my $RC = "$cwd/tmp.mknmzrc-chasen-2";
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, 'package conf;');
+pltests::putline($RC, "\$CHASEN = \"$CHASEN -i e -j -F \\\"\\%m \\\"\";");
+pltests::putline($RC, '$WAKATI = $CHASEN;');
+
+# Simple indexing.
+@cmd = ("$MKNMZ", "-c", "-f", "$RC", "-O", "$INDEX", "$TARGET");
+pltests::putline($LOG, "  *** ", \@cmd);
+my $status = pltests::logsyscmd($LOG, \@cmd);
+
+if (-f $RC) {
+    unlink $RC;
+}
+
+exit 101 if ($status != 0);
+
+my $word = pltests::cat("$INDEX/NMZ.w");
+pltests::codeconv_to_external(\$word);
+pltests::putline($LOG, "  *** NMZ.w ***");
+my @word = split(/\n/, $word);
+my $w;
+foreach $w (@word) {
+    pltests::putline($LOG, $w);
+}
+pltests::putline($LOG, "  *** NMZ.w ***");
+
+#
+# Test for namazu.
+#
+
+my $NAMAZU = pltests::binpath('namazu');
+
+my $docnum;
+my $doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files (\d+)/m) {
+    $docnum = $1;
+} else {
+    exit 1;
+}
+
+# Check simple searching.
+my $query = "*Á´* *Ê¸* *¸¡* *º÷*";
+pltests::codeconv_to_external(\$query);
+@cmd = ("$NAMAZU", "$query", "$INDEX");
+pltests::putline($LOG, "  ", \@cmd);
+$status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-c", "$query", "$INDEX");
+my $hitnum;
+my $conts_err;
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $hitnum) {
+    exit 1;
+}
+chomp $hitnum;
+
+pltests::putline($LOG, "docnum: $docnum hitnum: $hitnum");
+
+if ($docnum != $hitnum) {
+    exit 1;
+}
+
+exit 0;
+
+#
+# For avoiding "used only once: possible typo at ..." warnings.
+#
+my @muda = (
+  $Text::ChaSen::VERSION,
+);

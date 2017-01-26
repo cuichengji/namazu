@@ -1,0 +1,177 @@
+============================================================================ 
+
+ Tcl/Tk Namazu client version 1.11
+ ( X Window System or Windows 95/NT or OS/2 or Macintosh GUI Namazu client ) 
+
+                     Copyright (C) 1998 Ken-ichi Hirose. All rights reserved.
+============================================================================ 
+
+1.ファイルについて
+
+    Readme              : このドキュメント
+    Copying             : ライセンスについて(GPL2)
+    .exampletknmzrc     : tknamazu の設定例(説明付き)
+    .unixtknmzrc        : tknamazu の設定例(for Unix)
+    Makefile            : make ファイル(for Unix)
+    .wintknmzrc         : tknamazu の設定例(for Windows)
+    Makefile.W32        : make ファイル(for Windows+cygwin)
+    tknamazu.tcl        : プログラム本体
+    tknamazu.ppm        : tknamazu のロゴ
+    tknamazu.hlp        : tknamazu のヘルプファイル
+    tknamazu.sample     : Unix用 tknamazu 起動ファイルサンプル
+    tknamazu.bat.sample : Windows用 tknamazu 起動ファイルサンプル
+    mini-tknamazu.xpm   : fvwm95 等の Window Manager 用の tknamazu のロゴ
+                        (高林さんに作成して頂きました。ありがとうございます)
+
+2.このアーカイブ以外に必要な物
+
+     tcl7.6/tk4.2 以降が必要となります。
+     Unix で使用する場合には、
+        <URL:ftp://ftp.sunlabs.com/pub/tcl/tcl7.6.tar.gz>
+        <URL:ftp://ftp.sra.co.jp/pub/lang/tcl/jp/tcl7.6jp-patch.gz>
+        <URL:ftp://ftp.sunlabs.com/pub/tcl/tk4.2.tar.gz>
+        <URL:ftp://ftp.sra.co.jp/pub/lang/tcl/jp/tk4.2jp-patch.gz>
+     という jp-patch との組合せか、
+        <URL:ftp://ftp.sunlabs.com/pub/tcl/tcl8.1a2.tar.gz>
+        <URL:ftp://ftp.sunlabs.com/pub/tcl/tk8.1a2.tar.gz>
+     の国際化された物を使用してください。
+
+     Windows で使用される場合には、
+        <URL:http://www.geocities.co.jp/SiliconValley/5268/Tcl76Tk42p2J.zip>
+     の日本語化された tcl7.6/tk4.2 を使用するか、
+        <URL:ftp://ftp.sunlabs.com/pub/tcl/tcl81a2.exe>
+     の国際化された tcl8.1/tk8.1 を使用してください。
+
+
+     ＃OS/2 , Macintosh で使用される場合には、各プラットフォームで動く Tcl/Tk 
+     ＃が必要となります。私は OS/2 , Macintosh を持っていないので詳細は判りま
+     ＃せん。(苦労すれば動くらしいと言うのは聞いていますが。。。)情報をお持ち
+     ＃の方は広瀬<kenzo-@tama.or.jp>まで御連絡ください。宜しくお願い致します。
+
+
+     また lynx が必要になりますので
+     Unix で使用される方は、
+        <URL:http://www.slcc.edu/lynx/release/>
+     から
+
+     Windows で使用される方は、
+        <URL:http://jolt.ime.yamagata-cit.ac.jp/>
+     か
+        <URL:http://www.fdisk.com/doslynx/lynxport.htm>
+     から取って来てインストールしておいてください。
+
+
+3.使い方
+
+     同梱の Makefile を使用してインストールして下さい。
+     Unix であれば展開して出来た directory で
+        % make install
+    として下さい。
+     Windows で gnu make その他 mkdir,cp,rm がある方(cygwin を導入している)
+    方は
+        % make -f Makefile.W32 install
+    として下さい。
+    
+     Makefile を使わない(使えない)場合は archive を適当な所に
+    展開してください。 /usr/local/namazu の下あたりが無難かも知れません。
+     Unix の方は tknamazu.sample から tknamazu を作り path の通っている所に
+    置いて tknamazu の中にある TKNMZPATH を tknamazu.tcl と tknamazu.ppm の
+    ある directory に設定してください。
+     Windows の方は tknamazu.bat.sample から tknamazu.bat を作り path の
+    通っている所に置いて tknamazu.bat の中にある TKNMZPATH を tknamazu.tcl 
+    と tknamazu.ppm のある directory に設定してください。
+
+4.著作権及び転載について
+
+    GPL2に従ったフリーソフトウェアとして公開します。 
+    詳細は同梱の Copying をご参照願います。
+
+5.サポートは
+
+    TkNamazu の使用に関しては基本的に  at your own risk でお願いいたします。
+
+    但し、不具合orバグに関してはできるだけ対処したいと思っていますので、不
+    具合orバグを見つけた方は広瀬<kenzo-@tama.or.jp>までご連絡して頂けるよ
+    う、宜しくお願い致します。
+
+6.バージョン履歴
+
+    version 1.00 ... とりあえず作ってみた。
+    version 1.01 ... 少し修正。Makefile 追加。help file 追加。
+    version 1.02 ... .gz file が表示出来ない不具合修正。
+    version 1.03 ... DATABASE[0-9]+ のタイトルでハイフン等が使えない bug fix。
+                   + 色を変えられるようにした。
+                   + .tknmzrc に登録していない NMZ.i を一時的に DB Luncher に
+                     入れられるようにした。
+                   + 好きな file を内蔵 viewer で見れるようにした。
+                   + default font を fixed にした。
+    version 1.04 ... kinput2 の入力をすっきりさせた。
+                   + about で tk の version が間違えていた。。。
+    version 1.05 ... man , info を表示できるように工夫してみた。
+                     (こじまみつひろさん、高林さんありがとうございます。)
+                     ＃但し、 info はまだいまいちです ^^:
+                   + Keybind のを整理してみた。
+                     (馬場さんありがとうございます。)
+    version 1.06 ... jump tag(green) を追加した。
+                   + info も browse 出来るようにした。
+                   + .tknmzrc に GNUINFOTMP ,LANGUAGE を追加した。
+                   + WIDGETFONT , TEXTFONT を -misc-Fixed-.... にした。
+                   + logo を押せば tknamazu の web page に飛ぶようにした。
+                   + 現在の設定を表示できるようにした。
+                   + その他諸々 bug fix。
+    version 1.07 ... kinput2 の keybind を <shift> + <space> にした。
+                   + man と info ファイルの判断を拡張子で行っていたが、不具合が
+                     結構あるので、１階層上の directory で判断するように変更し
+                     た。
+                   + info の link 周りを整理した。(が、Indirect を使って file 
+                     が分割されている info file と、 node名 が日本語の物は info
+                     コマンドでうまく扱えないようだ。。将来的には改善する) 
+                   + Popup Menu を追加した。
+                   + Menu bar に [Go] を追加した。
+                   + [Go] に [Bookmark] を追加した。
+                   + [Go] に [To Head] を追加した。
+                   + [Go] に [To Tail] を追加した。
+                   + [File] に [Open URL] を追加した。
+                   + [File] に [Save] を追加した。
+                   + [Edit] に [Set authorization] を追加した。
+                   + [Edit] に [Display Configuration] を追加した。
+                   + mini-tknamazu.xpm を追加した。
+                     (高林さんありがとうございます) 
+                   + code を少し整理した。
+                   + Help file を大幅に加筆した。
+                   + 一応 Namazu 1.1.x.x シリーズ対応の最後のつもりです。
+                     気が向いたり要望があったら、version up しますが。。。
+    version 1.10 ... Namazu 1.2.0 ではキーワードと インデックスの指定の順序が逆
+                     になったのでそれに対応。
+                   + PopupMenu に [External browser or viewer] を追加。
+                   + man から別の manual をある程度辿れるようにした。
+                   + node名 が日本語のやつが辿れない不具合修正。
+                   + netscape を二重起動しようとしてしまう不具合修正。
+                   + その他諸々 bug fix。
+    version 1.11 ... man の link を列挙した path の中から検索できるようにした。
+                   + .tknmzrc に MANPATH を追加した。
+                   + PopupMenu に [Copy this URL] を追加。
+                   + その他諸々 bug fix。
+
+7.ToDo
+
+    ・ URL の履歴を辿れるようにしたい。
+    ・ Find で前方検索出来るようにしたい。
+    ・ Find で正規表現が使えるようにしたい。
+    ・ Add to bookmark 機能を追加したい。
+    ・ bookmark を lynx や netscape から convert 出来るようにしたい。
+    ・ .tknmzrc の save が出来るようにしたい。
+    ・ lynx その他の処理を途中で中断できるようにしたい。
+    ・ 自前の file&directory Explorer を持ちたい。
+    ・ DataBase Selecter を番号が小さい順に sort して出力したい。
+    ・ font / color を GUI で設定できるようにしたい。
+    ・ Namazu の検索結果をもっと格好良く表示したい。(lynx 無しと同時かも。。)
+    ・ id 属性 <A NAME="..."> が機能しないのをなんとかしたい。(同上)
+    ・ .tknmzrc の実行ファイルの full path 指定を GUI で選択できるようにしたい。
+    ・ print out 機能を追加したい。
+    ・ 外部 browser/viewer を popup window で選べるようにしたい。
+    ・ 全面的に code を見直したい。
+    ・ そのうち info を使わない version を造りたい。
+    ・ そのうち lynx を使わない version を造りたい。
+    ・ そのうち groff を使わない version を造りたい。
+

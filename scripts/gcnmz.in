@@ -1,0 +1,166 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# $Id: gcnmz.in,v 1.8.8.5 2006-10-14 14:16:27 opengl2772 Exp $
+#
+# gcnmz.pl - by furukawa@tcp-ip.or.jp
+#
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+push(@INC, $PKGDATADIR . "/pl");
+require 'nmzidx.pl';
+require 'util.pl';
+
+use IO::File;
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+
+my $tim = time();
+my $tintvl = 10;
+my $verbose = 0;
+my $backup = 1;
+
+while (@ARGV && $ARGV[0] =~ s/^\-//){
+    my $argv = shift;
+
+    &usage, exit if $argv eq '-help';
+    $backup = 0, next if $argv eq '-no-backup';
+    $verbose = 1, next if $argv eq '-verbose';
+    $verbose = -1, next if $argv eq '-quiet';
+
+    while ($argv =~ s/^(.)//){
+        $backup = 0 if $1 eq 'b';
+        $verbose = 1 if $1 eq 'v';
+        $verbose = -1 if $1 eq 'q';
+    }
+}
+
+if (@ARGV){
+    for my $argv (@ARGV){
+        $argv =~ s/NMZ$// unless -d $argv;
+        $argv = '.' if $argv eq '';
+        &gcnmz($argv, $backup) if -d $argv;
+    }
+}else{
+    &usage;
+}
+
+sub eprint{
+    print STDERR $_[0] if $verbose >= 0;
+    $tim = time();
+}
+
+sub veprint{
+    print STDERR $_[0] if $verbose > 0;
+    $tim = time();
+}
+
+sub gcnmz{
+    my $dir = shift;
+    my $backup = shift;
+    my %table = ();
+    my $nmzi = new nmzidx($dir);
+    defined($nmzi) or die("NMZ.lock2 found. Maybe this index is being updated by another process now.");
+
+    my $nmzfi = $nmzi->open_flist;
+    unless (defined $nmzfi->{'t'}) {
+        $nmzfi->close;
+        $nmzi->close;
+        return;
+    }
+
+    my $gcflag = 0;
+    my $nmzo = new nmzidx($dir, 'w');
+
+    my $file_num = 0;
+    my %list;
+    my $nmzfo = $nmzo->open_flist;
+    my $file_total = $nmzfi->{'size'};
+    &eprint("processing NMZ.{t,r,field}\n");
+    while (defined $nmzfi->read(\%list)){
+        if ($list{'t'} == -1){
+            &eprint("$file_num/$file_total ($list{'r'}) deleted\n");
+            $gcflag = 1;
+        }else{
+            $table{$file_num} = $nmzfo->{'offset'};
+            $nmzfo->write(\%list);
+            &veprint("$file_num/$file_total\n") if time() - $tim >= $tintvl;
+        }
+        ++$file_num;
+    }
+    $nmzfi->close;
+    $nmzfo->close;
+
+    if ($gcflag){
+        my $word;
+        my %list_i;
+
+        my $nmzwi = $nmzi->open_word;
+        my $nmzwo = $nmzo->open_word;
+        my $word_total = $nmzwi->{'size'};
+        my $word_num = 0;
+        &eprint("processing NMZ.{i,w}\n");
+        while (defined $nmzwi->read(\$word, \%list_i)){
+            my %list_o;
+            for my $key (keys %list_i){
+                if (defined $table{$key}){
+                    $list_o{$table{$key}} = $list_i{$key};
+                }
+            }
+            if (keys %list_o){
+                $nmzwo->write($word, \%list_o);
+                &veprint("$word_num/$word_total\n") if time() - $tim >= $tintvl;
+            }else{
+                &eprint("$word_num/$word_total ($word) deleted\n");
+            }
+            $word_num++;
+        }
+        $nmzwi->close;
+        $nmzwo->close;
+
+        my $nmzpi = $nmzi->open_phrase;
+        my $nmzpo = $nmzo->open_phrase;
+        my $phrase_total = $nmzpi->{'size'};
+        &eprint("processing NMZ.p\n");
+        for (my $x = 0; $x < 0x10000; $x++){
+            my @list_i;
+            my @list_o;
+            $nmzpi->read(\@list_i);
+            for my $key (@list_i){
+                if (defined $table{$key}){
+                    push(@list_o, $table{$key});
+                }
+            }
+            if (@list_i && !@list_o){
+                &eprint("$x/$phrase_total deleted\n");
+            }elsif (time() - $tim >= $tintvl){
+                &veprint("$x/$phrase_total\n");
+            }
+            $nmzpo->write(\@list_o);
+        }
+        $nmzpi->close;
+        $nmzpo->close;
+
+        $nmzo->write_status($nmzi);
+        $nmzo->replace_db($backup);
+        if (my $log = $nmzo->log_open("[Garbage Collection]")){
+            $log->printf("%-20s %s\n", "Collected Entry:", util::commas($nmzi->{'flist'}->{'offset'} - $nmzo->{'flist'}->{'offset'}));
+            $log->printf("%-20s %s\n", "Total Files:", util::commas($nmzo->{'flist'}->{'offset'}));
+            $log->printf("%-20s %s\n", "Total Keywords:", util::commas($nmzo->{'word'}->{'offset'}));
+            $nmzo->log_close;
+        }
+    }else{
+        $nmzo->remove_tmpdb;
+    }
+    $nmzi->close;
+}
+
+sub usage{
+    print
+        ("Usage: gcnmz [options] <target>...\n" .
+         "  --help              show this help and exit.\n" .
+         "  -b, --no-backup     do not backup original file.\n" .
+         "  -v, --verbose       verbose mode.\n" .
+         "  -q, --quiet         quiet mode.\n"
+         );
+}

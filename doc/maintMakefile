@@ -1,0 +1,2 @@
+update-doc:
+	perl update-doc.pl

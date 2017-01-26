@@ -1,0 +1,442 @@
+dnl
+dnl configure for Namazu
+dnl $Id: configure.in,v 1.137.4.109 2014-04-05 22:17:38 opengl2772 Exp $
+dnl
+dnl Created  by Satoru Takabayashi <satoru@isoternet.org> [1998-10-09]
+dnl Modified by SATOH Fumiyasu <fumiya@cij.co.jp> [1998-12-05]
+dnl Modified by Satoru Takabayashi <satoru@isoternet.org> [1998-12-06]
+dnl Modified by Hajime BABA <baba@kusastro.kyoto-u.ac.jp> [1999-02-02]
+dnl Modified by NOKUBI Takatsugu <knok@daionet.gr.jp> [1999/06/22]
+dnl
+
+dnl *
+dnl * Process this file with autoconf to produce a configure script.
+dnl *
+AC_INIT(namazu, 2.0.21, bug-namazu@namazu.org)
+AC_PREREQ(2.50)               dnl Minimum Autoconf version required.
+
+
+AM_INIT_AUTOMAKE
+AM_MAINTAINER_MODE
+
+dnl *
+dnl * Namazu Website.
+dnl * 
+OPT_NMZ_URI="http://www.namazu.org/"
+AC_SUBST(OPT_NMZ_URI)
+
+dnl *
+dnl * Mailing address.
+dnl *
+MAILING_ADDRESS="bug-namazu@namazu.org"
+AC_SUBST(MAILING_ADDRESS)
+AC_DEFINE_UNQUOTED(MAILING_ADDRESS, "$MAILING_ADDRESS", [Mailing address])
+
+dnl *
+dnl * Trac URI.
+dnl *
+TRAC_URI="http://www.namazu.org/trac-namazu/trac.cgi"
+AC_SUBST(TRAC_URI)
+AC_DEFINE_UNQUOTED(TRAC_URI, "$TRAC_URI", [Trac URI])
+
+dnl *
+dnl * Namazu Copyright.
+dnl * 
+COPYRIGHT="Copyright (C) 1997-1999 Satoru Takabayashi All rights reserved.\n\
+Copyright (C) 2000-2013 Namazu Project All rights reserved."
+AC_SUBST(COPYRIGHT)
+AC_DEFINE_UNQUOTED(COPYRIGHT, "$COPYRIGHT", [Namazu Copyright])
+
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_LIBTOOL
+AC_PROG_MAKE_SET
+
+if test -n "$GCC"; then
+    CFLAGS="$CFLAGS -Wall -pedantic"
+fi
+
+dnl This option requires config.guess, config.sub and install-sh
+dnl AC_CANONICAL_SYSTEM
+
+AC_ISC_POSIX
+
+dnl OS specific.
+AC_EXEEXT
+AC_OBJEXT
+
+if test -n "$EMXOS2"; then
+    CFLAGS="$CFLAGS -Zmtd"
+    LDFLAGS="$LDFLAGS -Zmtd -Zcrtdll -Zsysv-signals -Zbin-files"
+fi
+
+dnl *
+dnl * libtool
+dnl *
+AM_PROG_LIBTOOL
+
+# Before making a release, the LTVERSION string should be modified.
+# The string is of the form C:R:A.
+# - If interfaces have been changed or added, but binary compatibility has
+#   been preserved, change to C+1:0:A+1
+# - If binary compatibility has been broken (eg removed or changed interfaces)
+#   change to C+1:0:0
+# - If the interface is the same as the previous version, change to C:R+1:A
+
+LTVERSION="8:3:1"
+AC_SUBST(LTVERSION)
+
+dnl *
+dnl * I18N
+dnl *
+ALL_LINGUAS="ja ja_JP.SJIS es fr de pl"
+AM_GNU_GETTEXT([external])
+AM_LC_MESSAGES
+
+dnl For latest gettext
+DATADIRNAME=share
+AC_SUBST(DATADIRNAME)
+
+dnl Checks for libraries.
+dnl Replace `main' with a function in -lm:
+if test -z "$MINGW32"; then
+    AC_CHECK_LIB(m, main)
+fi
+
+dnl is win32 platform?
+if test "$CYGWIN" = yes || test "$MINGW32" = yes; then
+    win32=yes
+else
+    win32=no
+fi
+AM_CONDITIONAL(WIN32, test x$win32 = xyes)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h string.h stdlib.h locale.h errno.h)
+
+AC_C_BIGENDIAN
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_C_CHAR_UNSIGNED
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_FUNC_ALLOCA
+
+LTALLOCA=`echo "$ALLOCA" | sed 's/\.[^.]* /.lo /g;s/\.[^.]*$/.lo/'`
+AC_SUBST(LTALLOCA)
+
+AC_FUNC_MMAP
+NMZ_FUNC_MEMCMP
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(getcwd getwd putenv setenv strdup strspn setlocale)
+AC_REPLACE_FUNCS(strstr)
+NMZ_REPLACE_FUNCS([memmove memset strcspn strerror])
+if test -z "$MINGW32"; then
+    NMZ_REPLACE_FUNCS([strcasecmp strncasecmp vsnprintf])
+fi
+
+dnl for debugging.
+AM_WITH_CCMALLOC
+
+dnl *
+dnl * Define the admin's email address
+dnl * 
+
+dnl *
+dnl *  following code is imported from Apache's buildinfo.sh
+dnl * 
+dnl *  buildinfo.sh -- Determine Build Information
+dnl *  Written by Ralf S. Engelschall <rse@apache.org>
+dnl *
+dnl *  determine hostname and domainname
+dnl *
+
+changequote(<<, >>)
+#
+#   determine hostname and domainname
+#
+hostname="`uname -n 2>/dev/null |\
+           awk '{ printf("%s", $1); }'`"
+if test "x$hostname" = "x"; then
+    hostname="`hostname 2>/dev/null |\
+               awk '{ printf("%s", $1); }'`"
+    if test "x$hostname" = "x"; then
+        hostname='unknown'
+    fi
+fi
+case $hostname in
+    *.* )
+        domainname=".`echo $hostname | cut -d. -f2-`"
+        hostname="`echo $hostname | cut -d. -f1`"
+        ;;
+esac
+if test "x$domainname" = "x"; then
+    if test -f /etc/resolv.conf; then
+        domainname="`egrep '^[ 	]*domain' /etc/resolv.conf | head -1 |\
+                     sed -e 's/.*domain//' \
+                         -e 's/^[ 	]*//' -e 's/^ *//' -e 's/^	*//' \
+                         -e 's/^\.//' -e 's/^/./' |\
+                     awk '{ printf("%s", $1); }'`"
+        if test "x$domainname" = "x"; then
+            domainname="`egrep '^[ 	]*search' /etc/resolv.conf | head -1 |\
+                         sed -e 's/.*search//' \
+                             -e 's/^[ 	]*//' -e 's/^ *//' -e 's/^	*//' \
+                             -e 's/ .*//' -e 's/	.*//' \
+                             -e 's/^\.//' -e 's/^/./' |\
+                         awk '{ printf("%s", $1); }'`"
+        fi
+    fi
+fi
+changequote([, ])
+
+admin="webmaster@${hostname}${domainname}"
+AC_MSG_CHECKING(for admin's email address)
+AC_MSG_RESULT($admin)
+OPT_ADMIN_EMAIL=$admin
+AC_SUBST(OPT_ADMIN_EMAIL)
+
+dnl *
+dnl * Set a directory to install perl modules
+dnl *
+ADDITIONAL_INC="."  # default (dummy)
+AC_ARG_WITH(
+    pmdir,
+    [  --with-pmdir=DIR        perl modules are in DIR [guessed]],
+    [PMDIR=${withval}], [PMDIR='.']
+)
+test "$PMDIR" && ADDITIONAL_INC="$PMDIR"
+AC_SUBST(ADDITIONAL_INC)
+
+dnl *
+dnl * Checks for external programs
+dnl *
+AC_ARG_WITH(
+    perl5,
+    [  --with-perl5=PATH       set perl 5.004 or later location [search path]],
+    AC_MSG_RESULT(using $with_perl5 for perl5)
+    PERL=$with_perl5,
+    [AC_PATH_PROGS(PERL, perl5 perl, no)]
+)
+if test $PERL = "no" || $PERL -e 'exit ($] >= 5.004)'; then
+    AC_MSG_ERROR(perl 5.004 or later required)
+fi
+
+AC_MSG_CHECKING(for NKF perl module)
+if $PERL -e "use lib '$PMDIR'; use NKF;" >/dev/null 2>&1; then
+    NKF=module_nkf
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+    AC_PATH_PROG(NKF,nkf, no)
+fi
+if test "$NKF" = "no"; then
+    AC_MSG_WARN(NKF (network kanji filter) not found)
+fi
+
+AC_MSG_CHECKING(for Text::Kakasi perl module)
+if $PERL -e "use lib '$PMDIR'; use Text::Kakasi;" >/dev/null 2>&1; then
+    KAKASI=module_kakasi
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+    AC_PATH_PROG(KAKASI,kakasi, no)
+fi
+
+AC_MSG_CHECKING(for Text::ChaSen perl module)
+if $PERL -e "use lib '$PMDIR'; use Text::ChaSen;" >/dev/null 2>&1; then
+    CHASEN=module_chasen
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+    AC_PATH_PROG(CHASEN,chasen, no)
+fi
+
+AC_MSG_CHECKING(for MeCab perl module)
+if $PERL -e "use lib '$PMDIR'; use MeCab;" >/dev/null 2>&1; then
+    MECAB=module_mecab
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+    AC_PATH_PROG(MECAB,mecab, no)
+fi
+
+AC_MSG_CHECKING(for default wakatigaki processor)
+OPT_WAKATI_DEFAULT=none
+if test "$KAKASI" != "no"; then
+    OPT_WAKATI_DEFAULT=KAKASI
+elif test "$CHASEN" != "no"; then
+    OPT_WAKATI_DEFAULT=CHASEN
+elif test "$MECAB" != "no"; then
+    OPT_WAKATI_DEFAULT=MECAB
+else
+    AC_MSG_WARN(KAKASI or ChaSen are required to handle Japanese)
+fi
+AC_MSG_RESULT($OPT_WAKATI_DEFAULT)
+AC_SUBST(OPT_WAKATI_DEFAULT)
+
+if test "$KAKASI" = "no"; then
+    DO_KAKASI="no"
+else
+    DO_KAKASI="$KAKASI -ieuc -oeuc -w"
+fi
+if test "$CHASEN" = "no"; then
+    DO_CHASEN="no"
+    DO_CHASEN_NOUN="no"
+else
+    DO_CHASEN="$CHASEN -i e -j -F \\\"\%m \\\""
+    DO_CHASEN_NOUN="$CHASEN -i e -j -F \\\"\%m %H\\\\n\\\""
+fi
+if test "$MECAB" = "no"; then
+    DO_MECAB="no"
+else
+    DO_MECAB="$MECAB -Owakati -b 8192"
+fi
+AC_SUBST(DO_KAKASI)
+AC_SUBST(DO_CHASEN)
+AC_SUBST(DO_CHASEN_NOUN)
+AC_SUBST(DO_MECAB)
+
+dnl *
+dnl * Preprocessing for tknamazu (FIXME: ugly scripts)
+dnl *
+AC_ARG_ENABLE(
+    tknamazu,
+    [  --enable-tknamazu       build namazu with tcl/tk front-end [default=no]],
+    [case "${enableval}" in
+     yes|no) tknamazu=${enableval};;
+     *)      AC_MSG_ERROR(invalid argument to --enable-tknamazu) ;;
+     esac],
+    [tknamazu='no']
+)
+
+dnl * For determining namazu and mknmz pathnames
+ac_cv_path_NAMAZU="$bindir/namazu"
+ac_cv_path_MKNMZ="$bindir/mknmz"
+
+if test "${tknamazu}" != "no"; then
+    AC_PATH_PROGS(WISH, wish8.0jp wish4.2jp wish8.2 wish8.1 wish, no)
+    if test "$WISH" = "no"; then
+	AC_MSG_WARN(wish not found: tknamazu will not be built)
+	tknamazu=no
+    else
+	AC_PATH_PROG(LYNX, lynx, no)
+	if test "$LYNX" = "no"; then
+	    AC_MSG_WARN(lynx not found: tknamazu will not be built)
+	    tknamazu=no
+        else
+	    tknamazu=yes
+	fi
+    fi
+fi
+if test "${tknamazu}" = "yes"; then
+    AC_CONFIG_SUBDIRS(tknamazu)
+fi
+AM_CONDITIONAL(BUILD_TKNAMAZU, test x$tknamazu = xyes)
+
+
+dnl * 
+dnl * File::MMagic checking
+dnl * 
+
+AC_ARG_ENABLE(
+    file_mmagic_checking,
+    [  --disable-file-mmagic-checking  do not check existence of File::MMagic],
+    enable_file_mmagic_checking=no,
+    enable_file_mmagic_checking=yes)
+
+if test "$enable_file_mmagic_checking" = "yes"; then
+    tmp="1.20"
+    # tmp="10.0"  # for testing
+    AC_MSG_CHECKING(for File::MMagic perl module)
+
+    if $PERL -e "use lib '$PMDIR'; use File::MMagic $tmp;"; then
+	AC_MSG_RESULT(yes)
+	file_mmagic=no
+    else
+	AC_MSG_RESULT(no)
+	file_mmagic=yes
+    fi
+    if test "${file_mmagic}" = "yes"; then
+	AC_MSG_ERROR([you need to install File-MMagic first.
+
+      % su
+      # make install
+
+     Then, simply run configure again.
+      % ./configure
+    ])
+
+    fi
+fi
+
+dnl *
+dnl * Check for Emacs and where to install .elc files.
+dnl *
+dnl AM_PATH_LISPDIR
+
+dnl *
+dnl * Set default behavior (will be moved)
+dnl * 
+AC_DEFINE_UNQUOTED(OPT_SCORING, $OPT_SCORING, [Scoring method])
+AC_DEFINE(MSIE4MACFIX, 1,
+    [Define if you want to fix the bug of MSIE4.x for Macintosh :-(])
+
+dnl * 
+dnl * Output Files.
+dnl * 
+AM_CONFIG_HEADER(config.h)
+
+AC_OUTPUT([Makefile
+	   nmz-config
+	   namazu.spec
+	   conf/Makefile 
+	   doc/Makefile
+	   doc/en/Makefile
+	   doc/ja/Makefile
+	   etc/Makefile
+	   filter/Makefile
+	   filter/win32/Makefile
+	   m4/Makefile 
+	   lib/Makefile
+	   lisp/Makefile
+	   man/Makefile 
+	   nmz/Makefile
+	   pl/Makefile
+	   pl/var.pl
+	   pl/conf.pl
+	   po/Makefile.in
+	   scripts/Makefile 
+	   src/Makefile
+	   template/Makefile
+	   contrib/Makefile
+	   tests/Makefile
+	   tests/data/Makefile
+	   tests/data/ja/Makefile
+	   tests/data/ja-spec/Makefile
+	   tests/data/en/Makefile
+	   tests/data/query/Makefile
+	   tests/data/html-split/Makefile
+	   tests/data/filter/Makefile
+	   tests/data/emphasize/Makefile
+	   tests/data/dup-field/Makefile
+	   tests/data/decodebase64/Makefile
+	   pltests/Makefile
+	  ],
+	  [chmod +x nmz-config \
+	    ]) 
+
+# Local Variables:
+# mode:shell-script
+# sh-indentation:4
+# End:

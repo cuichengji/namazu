@@ -1,0 +1,284 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Namazu tips</title>
+</head>
+<body>
+<h1>Namazu Tips</h1>
+<hr>
+
+<h2>Table of contents</h2>
+
+<ul>
+<li><a href="#indexing">Fast indexing</a></li>
+<li><a href="#saving-memory">Saving memory for indexing</a></li>
+<li><a href="#weight">Score weighting by HTML elements</a></li>
+<li><a href="#html">HTML processing</a></li>
+<li><a href="#line-adjustment">Line Adjustment</a></li>
+<li><a href="#digest">HTML documents digest</a></li>
+<li><a href="#mailnews">Mail/News Digest</a></li>
+<li><a href="#symbol">Symbol handling</a></li>
+<li><a href="#phrase">(Pseudo) Phrase searching</a></li>
+<li><a href="#update-index">Updating index for updated
+documents and/or deleted documents</a></li>
+</ul>
+
+<h2><a name="indexing">Fast indexing</a></h2>
+
+<ul>
+<li>Use Perl Modules<br>
+To handle Japanese documents, using NKF, KAKASI (or ChaSen, MeCab)
+Perl modules makes 1.5 - 2 times faster.
+  <ul>
+  <li><a href="ftp://ftp.ie.u-ryukyu.ac.jp/pub/software/kono/nkf171.shar">NKF</a></li>
+  <li><a href="http://www.daionet.gr.jp/~knok/kakasi/">Text::Kakasi</a></li>
+  <li><a href="http://www.daionet.gr.jp/~knok/chasen/">Text::ChaSen</a></li>
+  <li><a href="http://mecab.sourceforge.net/src/">MeCab</a></li>
+  </ul>
+</li>
+
+<li>Specify <code>--media-type=mtype</code> option<br>
+mknmz uses File-MMagic module to automatically identify the
+document type.  If you know the document type of target
+files in advance, you can avoid the automatic document
+identification processing by specifying the
+<code>--media-type=mtype</code> option. By doing so, you can
+gain 10-20% speed improvement.
+<br>
+
+If the target file is Mail/News, you can use
+<code>--mailnews</code> instead of
+<code>--media-type=message/rfc822</code>. Similarly, if the
+target file is MHonArc, you can use <code>--mhonarc</code>
+instead of <code>--media-type='text/html;
+x-type=mhonarc'</code>.
+</li>
+
+
+<li>Increase the value of <code>$ON_MEMORY_MAX</code> in mknmzrc<br>
+
+By default, <code>$ON_MEMORY_MAX</code> is set to 5
+MB. Through this value, mknmz limits the amounts of
+documents processed in memory. If you use a machine with 1
+GB memory, you will have no trouble setting
+<code>$ON_MEMORY_MAX</code> to 100 MB. By doing so, the
+number of times to write to working files will be reduced.
+</li>
+
+
+<li>Use fast computer<br>
+Namazu is effective when you use a fast computer that has <br>
+fast CPU + large memory + fast HDD . Do not forget to change
+$ON_MEMORY_MAX.
+</li>
+
+</ul>
+
+<h2><a name="saving-memory">Saving memory for indexing</a></h2>
+
+<p>
+Indexing takes a lot of memory. If you encounter "Out of
+memory!" error at runtime of mknmz, the following
+precautions can be considered.
+</p>
+
+<ul>
+<li>Decrease the value of $ON_MEMORY_MAX in mknmzrc<br>
+
+
+By default, <code>$ON_MEMORY_MAX</code> is set to 5
+MB. This value assumes your machine has 64 MB memory. If your
+machine have less memory, decrease this.
+</li>
+
+<li>Use --checkpoint option for mknmz<br>
+
+mknmz limits the amounts of documents processed in memory
+through $ON_MEMORY_MAX in mknmzrc. And mknmz writes
+temporary files when the size of loaded documents reaches
+the value.
+
+Using --checkpoint option makes mknmz re-exec itself at
+this time. As a result, the size of mknmz's process
+decreases considerably. Use top command to see behavior if
+you are curious.
+</li>
+</ul>
+
+
+<h2><a name="weight">Score weighting by HTML elements</a></h2>
+
+<p>
+By default, the following rules are applied for score
+weighting.  These values are decided empirically, and has no
+theoretical foundations.
+</p>
+
+
+<ul>
+<li><code>&lt;title&gt; 16</code></li>
+<li><code>&lt;h1&gt; 8</code></li>
+<li><code>&lt;h2&gt; 7</code></li>
+<li><code>&lt;h3&gt; 6</code></li>
+<li><code>&lt;h4&gt; 5</code></li>
+<li><code>&lt;h5&gt; 4</code></li>
+<li><code>&lt;h6&gt; 3</code></li>
+<li><code>&lt;a&gt; 4</code></li>
+<li><code>&lt;strong&gt;, &lt;em&gt;, &lt;code&gt;, &lt;kbd&gt;, &lt;samp&gt;, &lt;cite&gt;, &lt;var&gt; 2</code></li>
+</ul>
+
+<p>
+Moreover, for <code>&lt;meta name="keywords"
+content="</code><var>foo bar</var><code>"&gt;</code>
+<var>foo bar</var> , score 32 is used.
+</p>
+
+
+<h2><a name="html">HTML processing</a></h2>
+
+<p>
+Namazu decodes &amp;quot;, &amp;amp;,&amp;lt;, &amp;gt; as
+well as named and numbered entity in &amp;#9-10 and
+&amp;#32-126. Since the internal encoding is
+EUC-JP, the right half of ISO-8859-1 (0x80-0xff) cannot be
+used. By the same reason, numbered entity in UCS-4
+cannot be used.
+</p>
+
+
+<h2><a name="line-adjustment">Line Adjustment</a></h2>
+<p>
+Spaces, tabs at the beginning and the end of lines and &gt;
+| # : at the beginning are removed. If the line ends with a
+Japanese character, the newline code will be ignored. (This
+prevents segmentation of Japanese words at the end of line.)
+These processing will be effective particularly for Mail
+files. Moreover, recovery of English hyphenation will be
+handled.
+</p>
+
+<h2><a name="digest">HTML documents digest</a></h2>
+
+<p>
+HTML defines the structure of documents. A simple digest can
+be made by using the heading information of documents
+defined by &lt;h[1-6]&gt;. By default, the length of digest
+is set to 200 characters. If words from the heading are not
+enough, more words are supplemented from the beginning of
+the documents. If the target is text file, the first 200
+characters of the documents are simply used.
+</p>
+
+<h2><a name="mailnews">Mail/News Digest</a></h2>
+<p>
+When dealing Mail/News files, quotation indicators as in
+(foo@example.jp wrote:"), quotation bodies beginning, for
+example, with <code>&gt;</code> are not included in the
+Mail/News digest. Note that these messages are not included
+in the digests, but are included in the search targets.
+</p>
+
+
+<h2><a name="symbol">Symbol handling</a></h2>
+
+<p>
+Symbol handling is rather a difficult task. Consider a
+sentence <code>(foo is bar.)</code> . If we separate it with
+spaces, <code>"(foo", "is", "bar.)"</code> will be indexed
+and foo or bar cannot be searched.
+</p>
+
+<p>
+To solve this problem, the easiest solution is to remove all
+the symbols. However, we sometimes wish to search words that
+has symbols as in <code>.emacs, TCP/IP</code> . For a
+symbol-embedded string "<code>tcp/ip</code>", Namazu
+decomposes it into 3 terms <code>"tcp/ip", "tcp",
+"ip"</code> and registers independently.
+</p>
+
+<p>
+For <code>(tcp/ip)</code>, Namazu decomposes it into 4 terms
+<code>"(tcp/ip)", "tcp/ip", "tcp", "ip"</code> . Note that
+no recursive processing is done, <code>((tcp/ip))</code>
+will be decomposed into <code>"((tcp/ip))", "(tcp/ip)",
+"tcp", "ip"</code>. The indexes for the first example
+<code>(foo is bar.)</code> will be separated as
+<code>"(foo", "foo", "is", "bar.)", "bar.", "bar"</code>, so
+foo or bar can be searched.
+</p>
+
+
+<h2><a name="phrase">(Pseudo) Phrase searching</a></h2>
+
+<p>
+A straight-forward phrase searching implementation will lead
+to an unacceptable index size. Namazu converts words into
+hash values to reduce the index size.
+</p>
+
+<p>
+If the search expression is given as a phrase "foo bar",
+Namazu first performs AND searching for "foo" and "bar", and
+then filters the results by the phrase information.
+</p>
+
+<p>
+The phrase information is 2-word unit and is recorded as 16
+bit hash value. For this reason, phrases with more than 2
+words cannot be searched accurately. For a phrase searching
+"foo bar baz", the documents only including "foo bar" and
+"bar baz" will also be retrieved: </p>
+
+<p>
+...<br>
+foo bar ...<br>
+... bar baz
+</p>
+
+<p>
+
+When collision of hash values occurred, wrong search results
+may be returned. But, at least, words foo, bar, baz are all
+included, for mistakenly retrieved documents.
+</p>
+
+
+<h2><a name="update-index">Updating index for updated
+documents and/or deleted documents</a></h2>
+
+<p>
+Updating will be done by not updating/deleting of the
+documents information from index, but recording the deleted
+documents information.  In other words, the index is intact
+and simply records the ID of the document that is deleted in
+addition to the original index.
+</p>
+
+<p>
+If updates of an index caused by deleted/updated documents
+are repeated, the information of deleted documents is
+increased, and consequently the efficiency of index
+recording will be lost. In this case, we recommend to clean
+garbage by gcnmz.
+</p>
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2009 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: tips.html,v 1.3.8.9 2009-03-12 13:07:15 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

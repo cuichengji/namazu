@@ -1,0 +1,465 @@
+=============================================================================
+Manual of Tcl/Tk front-end for Namazu the full text retrieval search system. 
+=============================================================================
+Contents
+        [1] Intro
+        [2] Widget Description
+        [3] Menubar Description
+        [4] Popup Description
+        [5] Mouse Description
+        [6] Key Bind Description
+        [7] Resource File(~/.tknamazurc) Description
+        [8] Hyper Text Browsing(lynx)
+        [9] Man Page Browsing(groff)
+        [10] Info Browsing(info)
+        [11] KANJI Input(for japanese)
+        [12] Bug Report
+        [13] Input Rule of Namazu (appendix)
+        [14] Display Description (appendix)
+
+
+References
+
+1. Intro
+--------
+
+ This utility was made for the intention of let's use the full text retrieval 
+search system Namazu that development had been advanced in the Unix base 
+comfortably with GUI.
+
+ It is supposed to move in the platform that Windows and OS/2, Mac, 
+etc... Tcl/Tk executable platform besides X Window System because the language 
+which can make GUI of Tcl/Tk easily by interpreter is being used though a 
+target is X Window System.
+ Refer to the README file that it is packed together for the details.
+
+ A command line complies with the Namazu reference system of Web site that 
+of course it is introduced to the public with Internet and Intranet as well 
+with TkNamazu.
+
+
+ The latest edition is introduced to the public with the following URL.
+    0. <URL:http://www.tama.or.jp/%7Ekenzo-/Namazu/tknamazu/>
+ （And, this page is renewed if necessary.）
+
+
+2. Widget Description
+---------------------
+
+  (1) Title bar
+        It is indicated with "TkNamazu" and version in Main Widget.
+
+  (2) Menu bar
+        Each function of TkNamazu can be chosen. A short cut choice can be 
+        done in <Alt(Grph)Key> + <underlined key>.
+        As for the details of the menu bar, it is featured in the next 
+        chapter ([3] Menubar Description).
+
+  (3) Search form
+         Go along the reference-type specification of Namazu at Keyword, 
+		and input keyword. As for the reference-type specification, 
+		it explains by the ([13] Input Rule of Namazu).
+        + You can focus the Keyword Entry with <Alt> + <K>.
+        + You can focus the Search Button with <Alt> + <S>.
+          And submit with <Space>.
+        + You can focus the Quit Button with <Alt> + <Q>.
+          And quit with <Space>.
+
+  (4) Option bar(Upper)
+        
+  (5) Option bar(Lower)
+        
+  (6) Result display & Scroll bar
+
+
+3. Menubar Description
+----------------------
+
+  (1) File
+    i)   Open
+    ii)  Open URL
+    iii) Save
+    iv)  Load namazurc
+    v)   Indexes
+    vi)  Quit
+
+  (2) Edit
+    i)   Editable
+    ii)  Copy
+    iii) Cut
+    iv)  Paste
+    v)   Find
+    vi)  Set authorization
+    vii) Display configuration
+    viii)Load tknamazurc
+
+  (3) Go
+    i)   To Head
+    ii)  To Tail
+    iii) Bookmark 
+
+  (4) Mknmz
+    i)   Execute mknmz
+
+  (5) Help
+    i)   Help
+    ii)  Version
+
+
+4. Popup Description
+--------------------
+
+  (1) Search this
+
+  (2) Copy and Paste to keyword
+
+  (3) Copy and Paste to Findword
+
+  (4) Copy this URL
+
+  (5) Copy
+
+  (6) Paste
+
+  (7) Cut
+
+  (8) External Browser or Viewer
+
+  (9) To Head
+
+  (10) To Tail
+
+  (11) Editable
+
+  (12) Quit
+
+
+5. Mouse Description
+--------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+6. Key Bind Description
+-----------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+7. Resource File(~/.tknamazurc) Description
+-------------------------------------------
+ It is file that the establishment of TkNamazu is prescribed with .tknamazurc.
+TkNamazu goes to look for Home directory of the user who started it when it 
+was started. If it is not here, directory prescribed with TKNMZPATH is 
+looked for. If it is not still here, it stands up with default which it has 
+by itself, and it is raised. Be sure to divide each item with the capital 
+letter with one and more SPACE or TAB between the item and the value. 
+It becomes comment if "#" is written to the line head again.
+
+  (1) NAMAZU
+NAMAZU			/usr/local/bin/namazu
+
+  (2) BROWSER
+BROWSER			/usr/local/bin/lynx
+
+  (3) EXTBROWSER
+EXTBROWSER		/usr/local/bin/netscape
+
+  (4) UNCOMPRESS
+UNCOMPRESS		/usr/bin/zcat
+
+  (5) MANPAGE
+MANPAGE			/usr/local/bin/groff
+
+  (6) MANPAGEFILTER
+MANPAGEFILTER		
+
+  (7) MANPATH
+MANPATH			/usr/local/man /usr/share/man /usr/bin/man /usr/man /usr/X11R6/man /usr/openwin/man
+
+  (8) GNUINFO
+GNUINFO			/usr/bin/info
+
+  (9) GNUINFOFILTER
+GNUINFOFILTER		
+
+  (10) GNUINFOTMP
+GNUINFOTMP		/tmp/.gnuinfotmp
+
+  (11) WIDTH
+WIDTH			80
+
+  (12) HEIGHT
+HEIGHT			20
+
+  (13) LANG
+LANG			
+
+  (14) WIDGETFONT
+WIDGETFONT		-misc-Fixed-Medium-R-Normal-*-*-120-*-*-*-*-*-*
+
+  (15) TEXTFONT
+TEXTFONT		-misc-Fixed-Medium-R-Normal-*-*-120-*-*-*-*-*-*
+
+  (16) WIDGETCOLOR
+WIDGETCOLOR		gray90
+
+  (17) OPTIONS
+OPTIONS			
+
+  (18) NAMAZURC
+NAMAZURC			
+
+  (19) INDEXES
+INDEXES			/usr/local/var/namazu/index
+
+  (20) MKNMZ
+MKNMZ			/usr/local/bin/mknmz
+
+  (21) INDEXOUTPUTDIR
+INDEXOUTPUTDIR	/usr/local/var/namazu/index
+
+  (22) TARGETDIR
+TARGETDIR		./
+
+  (23) MKOPTIONS
+MKOPTIONS		
+
+  (24) SMARTBROWSE
+SMARTBROWSE		1
+
+  (25) HEADERWIPE
+HEADERWIPE		ON
+
+  (26) LOCALSITES
+LOCALSITES		
+
+  (27) THOUGHTFULFIND
+THOUGHTFULFIND		
+
+  (28) INDEXESx
+INDEXES1		main /usr/local/var/namazu/index
+INDEXES2		hogehoge /usr/local/var/namazu/index/hogehoge
+
+  (29) BOOKMARKSx
+BOOKMARKS1		Namazu-manual /usr/local/share/namazu/doc/ja/manual.html
+BOOKMARKS2		Namazu-Homepage http://www.namazu.org/
+
+  (30) NAMAZUSITESx
+NAMAZUSITES1		localhost http://localhost/cgi-bin/namazu.cgi
+NAMAZUSITES2		Namazu-mailinglist http://ml.namazu.org/cgi-bin/namazu.cgi
+
+
+8. Hyper Text Browsing(lynx)
+----------------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+9. Man Page Browsing(groff)
+---------------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+10. Info Browsing(info)
+-----------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+11. KANJI Input(for japanese)
+-----------------------------
+
+Please wait a few days.
+Wwriting now.
+
+
+12. Bug Report
+--------------
+
+Please wait a few days.
+Wwriting now.
+
+
+13. Input Rule of Namazu (appendix)
+-----------------------------------
+
+Query
+
+  Single term query
+   The query specifies only one term for retrieving all documents which
+   contain the term. e.g.,
+   
+   namazu
+   
+  AND query
+   The query specifies two or more terms for retrieving all documents
+   which contain both terms. You can insert the and operator between the
+   terms. e.g.,
+   
+   Linux and Netscape
+   
+   You can ommit the and operator. Terms which is separated by one ore
+   more spaces is assumed to be AND query.
+   
+  OR query
+   The query specifies two or more terms for retrieving all documents
+   which contain either term. You can insert the or operator between the
+   terms. e.g.,
+   
+   Linux or FreeBSD
+   
+  NOT query
+   The query specifies two or more terms for retrieving all documents
+   which contain a first term but does't contain the following terms. You
+   can insert the not operator between the terms to do NOT query. e.g.,
+   
+   Linux not UNIX
+   
+  Grouping
+   You can group queries by surrounding them by parentheses. The
+   parentheses should be separated by one or more spaces. e.g.,
+   
+   ( Linux or FreeBSD ) and Netscape not Windows
+   
+  Phrase searching
+   You can search for a phrase which consists of two or more terms by
+   surrounding them with double quotes like "..." or with braces like
+   {...}. In Namazu, precision of phrase searching is not 100 %, so it
+   causes wrong results occasionally. e.g.,
+   
+   {GNU Emacs}
+   
+  Substring matching
+   The are three types of substring matching searching.
+   
+   Prefix matching
+          inter* (terms which begin with inter)
+          
+   Inside matching
+          *text* (terms which contain text)
+          
+   Suffix matching
+          *net (terms which terminated with net)
+          
+  Regular expressions
+   You can use regular expressions for pattern matching. The regular
+   expressions must be surrounded by slashes like /.../. Namazu uses Ruby
+   's regular regular expressions engine. It offers generally Perl
+   compatible flavor. e.g.,
+   
+   /pro(gram|blem)s?/
+   
+  Field-specified searching
+   You can limit your search to specific fields such as Subject:, From:,
+   Message-Id:. It's especially convenient for Mail/News documents. e.g.,
+     * +subject:Linux
+       (Retrieving all documents which contain Linux in a Subject: field)
+     * +subject:"GNU Emacs"
+       (Retrieving all documents which contain GNU Emacs in a Subject:
+       field)
+     * +from:foo@example.jp
+       (Retrieving all documents which contain foo@example.jp in a From:
+       field)
+     * +message-id:<199801240555.OAA18737@foo.example.jp>
+       (Retrieving a certain document which contains specified
+       Message-Id:)
+       
+  Notes
+     * In any queries, Namazu ignores case distinctions of alphabet
+       characters. In other words, Namazu does case-insensitive pattern
+       matching in any time.
+     * Japanese phrases are forced to be segmented into morphemes
+       automatically and are handled them as phrase searching. This
+       processing causes invalid segmentation occasionally.
+     * Alphabet, numbers or a part of symbols (duplicated in ASCII)
+       characters which defined in JIS X 0208 (Japanese Industrial
+       Standards) are handled as ASCII characters.
+     * Namazu can handle a term which contains symbols like TCP/IP. Since
+       this handling isn't complete, you can describe TCP and IP instead
+       of TCP/IP, but it may cause noisy results.
+     * Substring matching and field-specified searching takes more time
+       than other methods.
+     * If you want to use and, or or not simply as terms, you can
+       surround them respectively with double quotes like "..." or braces
+       like {...}.
+
+Tips on searching
+
+   If you have trouble with searching, you can check the following tips.
+     * Check a spelling of your keyword
+       Namazu can't find anything with wrong spelling.
+     * Add keywords
+       If you gained no results or too few results, you can add one or
+       more related keywords with or operator. It makes your search more
+       hittable. e.g.,
+       tex or ptex or latex or latex2e
+       If you gaind too many results, you can add one or more related
+       keywords with and operator. It makes your search more limited.
+       e.g.,
+       latex and dvi2ps and eps
+     * Try substring matching
+       If you gained no results or too few results, you can try substring
+       matching. You can specify tex* to search for terms which begin
+       with tex (e.g., tex, texi2html, texindex, text).
+       You can specify *tex to search for terms which terminated with tex
+       (e.g., bibtex, jlatex, latex, platex, ptex, vertex).
+       You can specify *tex* to search for terms which contain tex
+       (many).
+     * You tried phrase searching but it hit documents which didn't
+       contain your phrase.
+       It's a defect of Namazu. Precision of phrase searching is not 100
+       %, so it cause wrong results occasionally.
+     * You want to use and, or or not as ordinary keywords
+       You can surround them respectively with double quotes like "..."
+       or braces like {...}.
+
+
+14. Display Description (appendix)
+----------------------------------
+
++---+----------------------------------------------------+
+|TK | TkNamazu                                           |<- Title bar
+|---+----------------------------------------------------|
+| File  Edit  Go  Mknmz                             Help |<- Menu bar
+|--------------------------------------------------------|
+|        +------------------------------+ +------+ +----+|
+|Keyword:|                              | |Search| |Quit||<- Search form
+|        +------------------------------+ +------+ +----+|
+|             +--+        +---+     +------+  +--------+ |
+|DisplayCount:|9-|Summary:|ON-|Sort:|score-|  |        | |<- Option bar(Upper)
+|             +--+        +---+     +------+  |        | |
+|            +--+           +---+     +----+  |        | |
+|SmartBrowse:|1-|HeaderWipe:|ON-|Site:|Cmd-|  |        | |<- Option bar(Lower)
+|            +--+           +---+     +----+  +--------+ |
+|+--------------------------------------------------+ +-+|
+||                                                  | | ||<-Result display &
+||                                                  | | ||  Scroll bar
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+||                                                  | | ||
+|+--------------------------------------------------+ +-+|
++--------------------------------------------------------+
+
+============================================================================ 
+Copyright (C) 1998-2000 Ken-ichi Hirose. All rights reserved.
+$Id: tknamazu.hlp.en,v 1.5.8.1 2008-02-02 07:17:34 opengl2772 Exp $

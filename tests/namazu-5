@@ -1,0 +1,65 @@
+#! /bin/sh
+#
+# Test for namazu. Attack namazu with nasty cases.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+docnum=`perl -lne 'print $1 if /^files (\d+)/' idx1/NMZ.status`
+
+cd ../src
+
+# No query, no results.
+# FIXME: Is it a good behavior?
+test "`./namazu -c ''   ../tests/idx1`" != ''  && exit 1
+
+# Should never match any documents.
+test `./namazu -c '"'     ../tests/idx1` != '0' && exit 1
+test `./namazu -c '/'     ../tests/idx1` != '0' && exit 1
+test `./namazu -c '{'     ../tests/idx1` != '0' && exit 1
+test `./namazu -c '}'     ../tests/idx1` != '0' && exit 1
+test `./namazu -c '""'    ../tests/idx1` != '0' && exit 1
+test `./namazu -c '{}'    ../tests/idx1` != '0' && exit 1
+test `./namazu -c '" "'   ../tests/idx1` != '0' && exit 1
+test `./namazu -c '{ }'   ../tests/idx1` != '0' && exit 1
+test `./namazu -c '"  "'  ../tests/idx1` != '0' && exit 1
+test `./namazu -c '{  }'  ../tests/idx1` != '0' && exit 1
+test `./namazu -c ' " " ' ../tests/idx1` != '0' && exit 1
+test `./namazu -c ' { } ' ../tests/idx1` != '0' && exit 1
+
+# Match all documents.
+test `./namazu -c '//'       ../tests/idx1` != $docnum && exit 1
+test `./namazu -c 'namazu'   ../tests/idx1` != $docnum && exit 1
+test `./namazu -c '"namazu"' ../tests/idx1` != $docnum && exit 1
+test `./namazu -c '{namazu}' ../tests/idx1` != $docnum && exit 1
+
+# Boundary testing.
+perl << 'TEST'  >> $LOG
+	my $QUERY_MAX = 256;
+	my $BUFSIZE   = 1024;
+	for my $num (0 .. 3, $QUERY_MAX - 5 .. $QUERY_MAX + 5,
+			     $BUFSIZE   - 5 .. $BUFSIZE   + 5, 
+			     10000) # Huge query
+        {
+		my $query  = "x" x $num;
+		my $cmd    = "./namazu -c '$query' ../tests/idx1";
+		my $result = `$cmd 2>&1`;
+		print "$num: $?\n";
+		print "$result\n";
+
+		my $assert = sub {
+		    my ($code) = @_;
+		    die "assert failed: $code" if ! eval $code;
+		};
+
+		if ($num == 0) {
+			&$assert('$result eq ""');
+		} elsif ($num <= 256) {
+			&$assert('$result eq "0\n"');
+		} elsif ($num > 256) {
+			&$assert('$result =~ /^namazu: /');
+		}
+	}
+	exit 0;
+TEST
+exit $?
+

@@ -1,0 +1,141 @@
+$Id: THANKS,v 1.27.4.19 2007-01-22 12:50:59 usu Exp $
+
+We have been trying to keep track of everyone who
+contributes to Namazu.  Please contact us if you know anyone
+whose name should be on this list but isn't.
+
+Thanks to all of the following for their valuable
+hints/fixes/discussions/contributions:
+
+"Andrew S. Howell" <andy@tibco.com>
+"Burton A. Leland . 1315" <burt@mdli.com>
+"Hayato YAMANA" <yamana@etl.go.jp>
+"Junji KAKUTA" <junji.kakuta@city.chiba.jp>
+"SAKAGUCHI Akio" <akios@hi-ho.ne.jp>
+"TAKAGI, Hiromitsu" <takagi.hiromitsu@aist.go.jp>
+"Tokita Kazuyuki" <ktoki@bonson.sony.co.jp>
+"Yoshinori.TAKESAKO" <takesako@ddt.or.jp>
+ASHIDA Isao <isao@process.semicon.sony.co.jp>
+Akihiro Sagwa <sagawa@sohgoh.net>
+Akira TAGOH <at@gclab.org>
+Anna Potoczny <potoczny.1@osu.edu>
+Chiaki Ishikawa <Chiaki.Ishikawa@personal-media.co.jp>
+Earl Hood <earl@earlhood.com>
+Egon Schmid <eschmid@s.netic.de>
+Gerald Pfeifer <pfeifer@dbai.tuwien.ac.at>
+Gorochan ^o^ <kunito@hal.t.u-tokyo.ac.jp>
+HANAI Akira <hanai-a@csde.fielding.nec.co.jp>
+HARUNAGA Hirotoshi / ½Õ±Ê¹ÀÉÒ <harunaga@upu.co.jp>
+Hajime BABA <baba@kusastro.kyoto-u.ac.jp>
+Hideshi ISHIHARA <ishihara@cco.ncl.omron.co.jp>
+Hideyuki SHIRAI (Çò°æ½¨¹Ô) <shirai@rdmg.mgcs.mei.co.jp>
+Hideyoshi Akimoto <akimoto@jeol.co.jp>
+Hiroshi Kato <tumibito@mm.rd.nttdata.co.jp>
+Hisaaki Shibata <shibata@opost1.netspace.or.jp>
+Isaac Jones <ijones@syntaxpolice.org>
+Jon Steinhart <jon@fourwinds.com>
+Jose Juan Zapater <compi@arrakis.es>
+Jun Kurabe <jun-krb@mars.dti.ne.jp>
+Jun Kuriyama <kuriyama@FreeBSD.org>
+Jun Morimoto <morimoto@marib.imagica.co.jp>
+Junio Hamano <junio@twinsun.com>
+Katsuhiro Ueno <unnie@blue.sky.or.jp>
+KOIE Hidetaka (¸ñ¹¾±ÑÎ´) <hide@koie.org>
+Koji Kishi <kis@hdsoft.sony.co.jp>
+KOJIMA Mitsuhiro <kojima@criepi.denken.or.jp>
+Kaoru Yamamoto <kaoru-ya@is.aist-nara.ac.jp>
+Katsuyuki Ishigami <ishi@soum.co.jp>
+Katsuyuki Maeda <kei@nanet.co.jp>
+Kaz SHiMZ <kshimz@sfc.co.jp>
+Kazuhiko  <kazuhiko@ring.gr.jp>
+Kazunori NISHI <kazunori@swlab.csce.kyushu-u.ac.jp>
+Kazuo Nagata <nagata@uproad.ne.jp>
+Kazutaka SHIGENO <shigeno@iij-mc.co.jp>
+Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>
+Kenji Suzuki <kenji@po.ganseki.ne.jp>
+KF <dotslash@snsoft.com>
+Kobayakawa <kobaken@hh.iij4u.or.jp>
+Krzysztof Drewicz <hunter@pld.org.pl>
+MAEDA Atusi <maeda@is.uec.ac.jp>
+Masaki Takayama <takayama@lang.csd.nes.nec.co.jp>
+MATSUMURA Namihiko <po-jp@counterghost.net>
+Matsumura Naoki <j5306050@cs.gunma-u.ac.jp>
+Maximo Ramos <maximo@violadores.org>
+MORIMOTO Akihiro <morimoto@laser.ee.es.osaka-u.ac.jp>
+MURATA Nobuhiro <nob@y-min.or.jp>
+Masami HIRATA <a0292060@iwate-u.ac.jp>
+Masato Fukumitsu <fukumitu@segausers.gr.jp>
+Masayasu Ishikawa <mimasa@isoternet.org>
+Mineo Kasai <kasai@sid.nis.nec.co.jp>
+Motoyuki Kasahara <m-kasahr@sra.co.jp>
+Naohiro IIMURA <iimura@sra.co.jp>
+NISHIDA Keisuke <knishida@nn.iij4u.or.jp>
+OKI Yukihiro <yoki@beams.nagaokakyo.kyoto.jp>
+OKUNISHI Fujikazu <fuji0924@mbox.kyoto-inet.or.jp>
+Osamu Okano <osamu2001@livedoor.com>
+Philip S Tellis <philip@konark.ncst.ernet.in>
+Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>
+Ryuji Abe <raeva@t3.rim.or.jp>
+SATOH Fumiyasu <fumiya@cij.co.jp>
+SHIOZAKI Takehiko <takehi-s@ascii.co.jp>
+SUGITA Shigeki <sugita@ambitious.lib.hokudai.ac.jp>
+Seiji Yamashita <s_yam@na.rim.or.jp>
+Shohei TAKASHIRO <takavoid@palette.plala.or.jp>
+Stephane Legrand <Stephane.Legrand@bigfoot.com>
+TSUCHIYA Masatoshi <tsuchiya@pine.kuee.kyoto-u.ac.jp>
+Takanori Hayashi <tzhaya@affrc.go.jp>
+Takashi Tomokiyo <tomokiyo+@cs.cmu.edu>
+Takeshi ITOH <titou@bits.co.jp>
+Takeshi MUTOH <mutoh@info.nara-k.ac.jp>
+Takuji Hayashi <t-hayasi@cals.fujitsu.co.jp>
+Taku Kudoh <taku-ku@is.aist-nara.ac.jp>
+Takuya Nakayama <nakayama@rd.kyoto.omronsoft.co.jp>
+Tatsuo Furukawa <tatsuo@rfcom704.kobe.hp.com>
+Tenkou N. Hattori <tnh@kondara.org>
+Tetsuya Ryuchi <ryuchi@imasy.or.jp>
+Tietew <tietew@tietew.net>
+Tomoko Yoshida <tomoko-y@mbox.kyoto-inet.or.jp>
+Tomoyasu Mizuno <t-mz@ijk.com>
+Toshiaki Tanaka <toshiaki@ksj1.kansai-sc.toshiba.co.jp>
+Toshiyuki Haginaga <hagi@prox.ad.jp>
+YAMAMOTO Toru <jamamoto@e1hd.ncos.nec.co.jp>
+Yasuhiro MAGARA <gama@candy.paso.fujitsu.co.jp>
+Yasunori Tada <tada@er.ams.eng.osaka-u.ac.jp>
+yokoi <yokoi@cti.co.jp>
+Yoshihiro Tsukamoto <y-tukamoto@mb.meidensoftware.co.jp>
+Yoshioka Tsuneo <tsuneo-y@is.aist-nara.ac.jp>
+Yutaka SHIMAMURA (ÅçÂ¼Ë­) <shimamura@coss.telcom.oki.co.jp>
+aki takada <aki@phoenixeng.co.jp>
+akira yamada <akira@linux.or.jp>
+chida@ywt.tdk.co.jp (CHIDA Makoto)
+chihara@atl.advantest.co.jp (Kazunori Chihara)
+higuchi@sumitomopharm.co.jp (910699)
+hosokawa@ntc.keio.ac.jp (HOSOKAWA Tatsumi)
+kenzo-@tama.or.jp (Ken-ichi Hirose)
+kita@sec.rd.nttdata.co.jp (´îÂ¿ ½ß°ìÏº)
+kjm@rins.ryukoku.ac.jp (KOJIMA Hajime /¾®ÅçÈ¥)
+luc@2113.ch
+masao@ulis.ac.jp (Masao Takaku)
+matz@netlab.co.jp (Yukihiro Matsumoto)
+mithara <mithara@da2.so-net.or.jp>
+mmatsu@pms.mmlab.toshiba.co.jp (Masafumi Matsumura)
+nmatsumu@can.bekkoame.ne.jp (Nozomi Matsumura)
+okkun@mickey.ai.kyutech.ac.jp (Masaru Okumura)
+seigo <ishiyama.seigo@sse.bch.ntt.co.jp>
+seiya_ni@yahoo.co.jp (Seiya Nishizawa)
+sharl@hauN.org
+shibuya@rd.isac.co.jp
+shimizu@rodem.ingrid.org (Shimizu Susumu)
+shin@hans.or.jp (Teruhiko Shinmura)
+sugiura@kt.rim.or.jp (Sugiura Shiro)
+susumu-w@ppp.bekkoame.or.jp
+teranisi@bpo.co.jp
+tmu@ikegami.co.jp (MURASHITA Takuya)
+tsubouchi@bravenet.co.jp
+usuda@pwri.go.jp (Usuda Yukio)
+yonezawa <yonezawa.kenji@nttcom.co.jp>
+yoshihide hirose <hirose@niko.fast.co.jp>
+¾®´Ø µÈÂ§ (KOSEKI Yoshinori) <kose@wizard.tamra.co.jp>
+Æ£¸¶À¿/ Makoto Fujiwara <makoto@ki.nu>
+Á°ÅÄ¹¬ÈÏ /Yukinori Maeda <yuki@zephyr.elcom.nitech.ac.jp>
+Âç¹õÍÎ»Ë  <daikoku@lang2.bs1.fc.nec.co.jp>

@@ -1,0 +1,153 @@
+# -*- Perl -*-
+# $Id: var.pl.in,v 1.12.8.4 2009-01-29 02:29:00 opengl2772 Exp $
+# Copyright (C) 1997-1999 Satoru Takabayashi All rights reserved.
+# Copyright (C) 2000-2009 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+package var;
+
+#-----------------------------------------------------------
+#
+# Software information.
+#
+
+$VERSION         = "@VERSION@";
+$COPYRIGHT       = "@COPYRIGHT@"; # should be doublequote
+$MAILING_ADDRESS = '@MAILING_ADDRESS@';
+$TRAC_URI        = '@TRAC_URI@';
+
+#-----------------------------------------------------------
+#
+# File names of index files.
+#
+
+my $base      = "NMZ";
+
+%NMZ = ();
+$NMZ{'i'}      = "$base.i";
+$NMZ{'ii'}     = "$base.ii";
+$NMZ{'r'}      = "$base.r";
+$NMZ{'head'}   = "$base.head";
+$NMZ{'foot'}   = "$base.foot";
+$NMZ{'log'}    = "$base.log";
+$NMZ{'slog'}   = "$base.slog";
+$NMZ{'lock'}   = "$base.lock";
+$NMZ{'lock2'}  = "$base.lock2";
+$NMZ{'msg'}    = "$base.msg";
+$NMZ{'body'}   = "$base.body";
+$NMZ{'err'}    = "$base.err";
+$NMZ{'w'}      = "$base.w";
+$NMZ{'wi'}     = "$base.wi";
+$NMZ{'p'}      = "$base.p";
+$NMZ{'pi'}     = "$base.pi";
+$NMZ{'field'}  = "$base.field";
+$NMZ{'result'} = "$base.result";
+
+$NMZ{'t'}      = "$base.t";
+$NMZ{'status'} = "$base.status";
+$NMZ{'tips'}   = "$base.tips";
+$NMZ{'version'}= "$base.version";
+
+$NMZ{'_t'}  = $NMZ{'t'};
+$NMZ{'_i'}  = $NMZ{'i'};
+$NMZ{'_p'}  = $NMZ{'p'};
+$NMZ{'_pi'} = $NMZ{'pi'};
+$NMZ{'_r'}  = $NMZ{'r'};
+$NMZ{'_ii'} = $NMZ{'ii'};
+$NMZ{'_w'}  = $NMZ{'w'};
+$NMZ{'_wi'} = $NMZ{'wi'};
+
+$NMZ{'_flist'}       = "$base.flist";
+$NMZ{'_checkpoint'}  = "$base.checkpoint";
+
+$NMZ{'__i'}  = "$base.tmp_i";
+$NMZ{'__w'}  = "$base.tmp_w";
+$NMZ{'__p'}  = "$base.tmp_p";
+$NMZ{'__pi'} = "$base.tmp_pi";
+
+#-----------------------------------------------------------
+#
+# Options
+#
+
+$Opt{'debug'}         = 0;
+$Opt{'quiet'}         = 0;
+$Opt{'verbose'}       = 0;
+
+$Opt{'robotexclude'}    = 0;
+$Opt{'htaccessexclude'} = 0;
+$Opt{'htmlsplit'} = 0;
+
+$Opt{'uuencode'}      = 0;
+$Opt{'noheadabst'}    = 0;
+$Opt{'hiragana'}      = 0;
+$Opt{'okurigana'}     = 0;
+$Opt{'noedgesymbol'}  = 0;
+$Opt{'nosymbol'}      = 0;
+$Opt{'noencodeuri'}   = 0;
+
+$Opt{'nodelete'} = 0;
+$Opt{'noupdate'} = 0;
+
+$Opt{'checkfilesize'} = 0;
+
+$Opt{'decodebase64'} = 0;
+
+#-----------------------------------------------------------
+#
+# Size of `int'
+#
+
+{
+    my $tmp = 0;
+    $tmp = pack("i", $tmp);
+    $INTSIZE = length($tmp);
+}
+
+
+#-----------------------------------------------------------
+#
+# Misc
+#
+
+$OUTPUT_DIR = undef;
+$NO_TITLE   = N_("No title in original");
+$USE_NKF_MODULE = 0;
+
+%REQUIRE_ACTIONS = ();
+%RECURSIVE_ACTIONS = ();
+%REQUIRE_PRE_CODECONV =
+    (
+     'text/plain' => 1,
+     );
+%REQUIRE_POST_CODECONV =
+    (
+     'text/plain' => 0,
+     );
+%Supported =
+    (
+     'text/plain' => "yes",
+     );
+
+# Dummy function for gettextization.
+sub N_ {};
+
+1;

@@ -1,0 +1,297 @@
+#!%PERL% -w
+#
+# $Id: namazu-9.pl.in,v 1.1.4.3 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu. with MaxHit, MaxMatch.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx8";
+my $NAMAZU = pltests::binpath('namazu');
+
+my $RC = "$cwd/tmp.namazurc";
+my $MSG0 = 'No document matching your query.';
+my $MSG1 = 'Too many documents hit. Ignored';
+my $MSG2 = 'Too many words matched. Ignored';
+
+my @cmd;
+
+delete $ENV{'LANG'};
+$ENV{'LANGUAGE'} = 'C';
+$ENV{'LC_ALL'} = 'C';
+delete $ENV{'LC_MESSAGE'};
+delete $ENV{'LC_CTYPE'};
+delete $ENV{'NAMAZURC'};
+
+pltests::putline($LOG, "  *** starting $0");
+
+# Tests for MaxHit.
+#   foo => 1 page indexed.
+#   bar => 2 page indexed.
+#   baz => 3 page indexed.
+
+pltests::putline($RC, "MaxHit 0");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "foo", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG1/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "bar", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG1/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "baz", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG1/s) {
+    exit 1;
+}
+
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxHit 1");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "foo", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG1/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "bar", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG1/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "baz", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG1/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "foo and bzz", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG0/s) {
+    exit 1;
+}
+
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxHit 2");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "foo", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG0/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "bar", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG0/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "baz", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG0/s) {
+    exit 1;
+}
+
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxHit 3");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "foo", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG0/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "bar", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG0/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "baz", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG0/s) {
+    exit 1;
+}
+
+# Tests for MaxMatch.
+#   f* => 1 word matched.       (foo)
+#   b* => 2 words matched.      {bar,baz}
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxMatch 0");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "f*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG2/s) {
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "b*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG2/s) {
+    exit 1;
+}
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxMatch 1");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "f*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG2/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "b*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result !~ /$MSG2/s) {
+    exit 1;
+}
+
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "MaxMatch 2");
+
+@cmd = ("$NAMAZU", "-f", "$RC", "f*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG2/s) {
+    exit 1;
+}
+
+@cmd = ("$NAMAZU", "-f", "$RC", "b*", "$INDEX");
+pltests::putline($LOG, "", \@cmd);
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+if ($result =~ /$MSG2/s) {
+    exit 1;
+}
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink $RC;
+    }
+}

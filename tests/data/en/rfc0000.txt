@@ -1,0 +1,17 @@
+
+
+
+
+
+
+Network Working Group                                  test@namazu.org
+Request for Comments: 0000                              Namazu Project
+Category: Standards Track                                February 2000
+
+
+         Test for Namazu
+
+Abstract
+
+   Namazu is a full-text search system intended for easy
+   use.  This file is for testing.

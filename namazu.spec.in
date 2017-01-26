@@ -1,0 +1,300 @@
+%define _use_internal_dependency_generator 0
+
+# XXX is this right - it was /var/lib before FHS macros
+%define _localstatedir	/var/lib
+%define _libexecdir	/var/www/cgi-bin
+
+Summary:	Namazu is a full-text search engine
+Name:		namazu
+Version:	@VERSION@
+Release:	1
+License:	GPL
+Group:		Applications/Text
+URL:		http://www.namazu.org/
+BuildRequires:	perl >= 5.6.0, perl-NKF >= 1.71, perl-Text-Kakasi >= 1.00
+BuildPreReq:	perl-File-MMagic >= 1.27
+BuildRoot:	%{_tmppath}/%{name}-%{version}-root
+
+Requires:	perl >= 5.6.0, perl-File-MMagic >= 1.27, perl-NKF >= 1.71
+Requires:	kakasi >= 2.3.0, perl-Text-Kakasi >= 1.00
+
+#Source:		http://www.namazu.org/stable/%{name}-%{version}.tar.gz
+Source:		%{name}-%{version}.tar.gz
+
+%description
+Namazu is a full-text search engine software intended for easy use.
+Not only it works as CGI program for small or medium scale WWW
+search engine, but also works as personal use such as search system
+for local HDD.
+
+%package devel
+Summary:	Libraries and include files of Namazu
+Group:		Development/Libraries
+Requires:	%{name} = %{version}
+
+%description devel
+Libraries and include files of Namazu.
+
+%package cgi
+Summary:	a CGI interface for Namazu
+Group:		Applications/Text
+Requires:	%{name} = %{version}
+Requires:	webserver
+
+%description cgi
+A CGI interface for Namazu.
+
+%prep 
+LC_ALL=C
+export LC_ALL
+echo "#!/bin/sh" > %{_tmppath}/filter-requires-namazu.sh
+echo "%{__find_requires} $* | egrep -v 'perl\((nmzidx|conf|document|time|util|var|ext).pl\)'" >> %{_tmppath}/filter-requires-namazu.sh
+chmod +x %{_tmppath}/filter-requires-namazu.sh
+%define __find_requires %{_tmppath}/filter-requires-namazu.sh
+
+%setup -q
+
+%build
+
+%configure
+
+if [ "$SMP" != "" ]; then
+  make -j$SMP "MAKE=make -j$SMP"
+else
+  make
+fi
+
+%install
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+
+%makeinstall
+
+mv $RPM_BUILD_ROOT%{_sysconfdir}/namazu/namazurc-sample \
+	$RPM_BUILD_ROOT%{_sysconfdir}/namazu/namazurc
+sed -e "s/\(\$ADDRESS = 'webmaster@\).*\(';\)/\1\2/" $RPM_BUILD_ROOT%{_sysconfdir}/namazu/mknmzrc-sample > $RPM_BUILD_ROOT%{_sysconfdir}/namazu/mknmzrc
+rm $RPM_BUILD_ROOT%{_sysconfdir}/namazu/mknmzrc-sample
+chmod 755 -R $RPM_BUILD_ROOT%{_localstatedir}/namazu
+chmod 755 -R $RPM_BUILD_ROOT%{_localstatedir}/namazu/index
+
+# don't ship ja.po for sjis.
+rm -rf $RPM_BUILD_ROOT%{_datadir}/locale/ja_JP.SJIS
+rm -rf $RPM_BUILD_ROOT%{_datadir}/namazu/etc
+rm -rf $RPM_BUILD_ROOT%{_datadir}/namazu/doc
+rm -rf $RPM_BUILD_DIR/%{name}-%{version}/doc/en/Makefile*
+rm -rf $RPM_BUILD_DIR/%{name}-%{version}/doc/ja/Makefile*
+
+%find_lang %{name}
+
+%clean
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
+rm -f %{_tmppath}/filter-requires-namazu.sh
+
+%post -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
+
+%files -f %{name}.lang
+%defattr(-, root, root)
+%doc AUTHORS ChangeLog ChangeLog.1 CREDITS COPYING HACKING
+%doc INSTALL README NEWS THANKS TODO
+%doc etc/namazu.png doc/en doc/namazu.css
+%lang(es) %doc README-es
+%lang(ja) %doc HACKING-ja INSTALL-ja README-ja doc/ja
+%dir %{_sysconfdir}/namazu
+%dir %{_datadir}/namazu
+%dir %{_datadir}/namazu/filter
+%dir %{_datadir}/namazu/pl
+%dir %{_datadir}/namazu/template
+%config %{_sysconfdir}/namazu/*
+%{_bindir}/namazu
+%{_bindir}/bnamazu
+%{_bindir}/*nmz
+%{_bindir}/mailutime
+%{_bindir}/nmzgrep
+%{_bindir}/nmzmerge
+%{_bindir}/nmzcat
+%{_bindir}/nmzegrep
+%{_libdir}/*.so.*
+%{_mandir}/man1/*
+%{_datadir}/namazu/filter/*
+%{_datadir}/namazu/pl/*
+%{_datadir}/namazu/template/*
+%dir %{_localstatedir}/namazu
+%dir %{_localstatedir}/namazu/index
+
+%files devel
+%defattr(-, root, root)
+%dir %{_includedir}/namazu
+%{_bindir}/nmz-config
+%{_includedir}/namazu/*.h
+%{_libdir}/*.so
+%{_libdir}/*a
+
+%files cgi
+%defattr(-, root, root)
+%{_libexecdir}/namazu.cgi
+
+
+%changelog
+* Sun Jun 01 2008 Tadamasa Teranishi <yw3t-trns@asahi-net.or.jp>
+- Requires perl-File-MMagic >= 1.27.
+
+* Sat May 03 2008 Tadamasa Teranishi <yw3t-trns@asahi-net.or.jp>
+- require perl-File-MMagic 1.27.
+
+* Sat Jun 03 2006 Tadamasa Teranishi <yw3t-trns@asahi-net.or.jp>
+- filter-requires-namazu.sh is deleted with clean.
+
+* Fri Jun 02 2006 Tadamasa Teranishi <yw3t-trns@asahi-net.or.jp>
+- add nmzcat, nmzegrep.
+- fix filter-requires-namazu.sh.
+
+* Wed Apr 21 2004 Tadamasa Teranishi <yw3t-trns@asahi-net.or.jp> 2.0.13-1
+- remove patch files. (linguas, newgettext3, namazu-2.0.12-de.diff, fixinutf8)
+- remove filter-requires-namazu.sh.
+
+* Wed Jun 04 2003 Elliot Lee <sopwith@redhat.com>
+- rebuilt
+
+* Thu Jan 23 2003 Akira TAGOH <tagoh@redhat.com> 2.0.12-5
+- namazu-2.0.12-fixinutf8.patch: applied to fix 'Malformed UTF-8 character'. (#80113)
+
+* Wed Jan 22 2003 Tim Powers <timp@redhat.com>
+- rebuilt
+
+* Wed Jan 08 2003 Akira TAGOH <tagoh@redhat.com> 2.0.12-3
+- don't use rpms internal dep generator (#80966)
+
+* Fri Nov 29 2002 Tim Powers <timp@redhat.com> 2.0.12-2
+- remove second %%prep statement that rpm is choking on 
+
+* Mon Nov 11 2002 Akira TAGOH <tagoh@redhat.com> 2.0.12-1
+- New upstream release.
+- namazu-2.0.12-de.diff: applied to add german templetes.
+- remove duplicated files. but it was marked as unpackaged files.
+
+* Thu Jul 18 2002 Akira TAGOH <tagoh@redhat.com> 2.0.10-8
+- add the owned directory.
+
+* Fri Jun 21 2002 Tim Powers <timp@redhat.com>
+- automated rebuild
+
+* Thu May 30 2002 Chip Turner <cturner@redhat.com>
+- add dependency filter for bogus perl dependencies
+
+* Thu May 23 2002 Tim Powers <timp@redhat.com>
+- automated rebuild
+
+* Mon Mar 25 2002 Akira TAGOH <tagoh@redhat.com> 2.0.10-4
+- Don't ship ja.po for sjis.
+- Striped our hostname from mknmzrc.
+- Fix directories permission on /var/lib/namazu.
+
+* Wed Feb 27 2002 Akira TAGOH <tagoh@redhat.com> 2.0.10-3
+- Build against new environment.
+
+* Wed Jan 09 2002 Tim Powers <timp@redhat.com>
+- automated rebuild
+
+* Thu Dec 27 2001 Akira TAGOH <tagoh@redhat.com> 2.0.10-1
+- New upstream release.
+  includes a security fix by upstream.
+
+* Fri Nov 30 2001 Akira TAGOH <tagoh@redhat.com> 2.0.9-1
+- New upstream release.
+
+* Tue Nov 27 2001 Akira TAGOH <tagoh@redhat.com> 2.0.8-1
+- New upstream release.
+
+* Tue Oct 30 2001 Akira TAGOH <tagoh@redhat.com> 2.0.7-2
+- Fixed autoconf issue.
+
+* Wed Oct 17 2001 Akira TAGOH <tagoh@redhat.com> 2.0.7-1
+- Rebuild for Red Hat Linux.
+
+* Fri Sep 14 2001 Ryuji Abe <rug@namazu.org> 2.0.7-1
+- fix newgettext patch again.
+
+* Tue Sep 11 2001 Ryuji Abe <rug@namazu.org> 2.0.6-2
+- fix newgettext patch.
+
+* Mon Aug 13 2001 Ryuji Abe <rug@namazu.org> 2.0.6-1
+- update to 2.0.6
+
+* Thu Jul 26 2001 Ryuji Abe <rug@namazu.org>
+- fix %%files
+
+* Sat Jun 23 2001 Ryuji Abe <rug@namazu.org>
+- fix summary and %%description
+
+* Thu May 31 2001 Ryuji Abe <rug@namazu.org>
+- fix %%files
+- fix again cgi-bin location to /var/www/cgi-bin
+
+* Mon May 28 2001 Ryuji Abe <rug@namazu.org>
+- clean up spec file
+- more macros
+- provide cgi package
+- fix cgi-bin location /home/httpd/cgi-bin to /var/www/namazu-cgi-bin
+
+* Wed Mar 21 2001 Ryuji Abe <rug@namazu.org>
+- Rebuilt for 7.1 beta
+- more macros
+- fix dependencies
+- exclude unnecessary ja_JP.SJIS catalog.
+
+* Thu Oct 26 2000 Ryuji Abe <rug@namazu.org>
+- Requires perl-File-MMagic >= 1.09.
+- Add BuildRequires.
+
+* Tue Aug 22 2000 Ryuji Abe <rug@namazu.org>
+- Fixed %%localstatedir /var to /var/lib.
+
+* Tue Apr 25 2000 Ryuji Abe <rug@namazu.org>
+- Ignore %%{prefix}/share/namazu/etc.
+
+* Sun Feb 20 2000 Ryuji Abe <raeva@t3.rim.or.jp>
+- Install namazu.cgi at /home/httpd/cgi-bin.
+- Fixed typo.
+
+* Sat Feb 19 2000 Satoru Takabayashi <satoru-t@is.aist-nara.ac.jp>
+- Change URL.
+
+* Tue Feb 15 2000 Ryuji Abe <raeva@t3.rim.or.jp>
+- Delete package entries elisp and cgi.
+
+* Wed Feb 02 2000 Ryuji Abe <raeva@t3.rim.or.jp>
+- Adapted for namazu-current.
+- Changed group Utilities/Text -> Applications/Text.
+
+* Thu Dec 30 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- rpm-3.0.x adaptations.
+- Added package entries elisp and cgi (currently comment out). 
+  [Merged SAKA Toshihide's changes for Kondara MNU/Linux.]
+
+* Mon Nov 08 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- Changed includedir %%{prefix}/include/namazu.
+- Bug fix at configure section.
+
+* Thu Nov 04 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- Added nmz-config in devel package.
+
+* Wed Nov 03 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- Use our definite macros, ver, rel, prefix, sysconfdir, and localstatedir.
+- If configure not found, use autogen.sh.
+- Optimized for SMP environment.
+- Build devel package.
+
+* Tue Oct 12 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- Fixed correctly executables entry at %%files.
+- Added missing /usr/share/locale entry at %%files.
+ 
+* Thu Aug 26 1999 Ryuji Abe <raeva@t3.rim.or.jp>
+- Requires perl >= 5.004.
+- Delete Packager tag.
+- Clean up at %%prep.
+- Use CFLAGS="$RPM_OPT_FLAGS" at %%build.
+- Use $RPM_BUILD_ROOT variables at %%install.
+- Change configure option at %%build and %%files for new namazu directory structure.
+
+* Sun May 23 1999 Taku Kudoh <taku@TAHOO.ORG>
+- 

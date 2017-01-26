@@ -1,0 +1,66 @@
+          Namazu: a Full-Text Search Engine
+
+
+What is Namazu?
+
+   Namazu is a full-text search engine intended for easy
+   use. Not only does it work as a small or medium scale Web
+   search engine, but also as a personal search system for
+   email or other files.
+
+   Namazu is a free software under the terms of the GNU
+   General Public License version 2. See the file COPYING
+   for more details.
+
+   At the beginning Namazu was made with only intention for
+   Japanese use.  Now it can handle English. But, ISO-8859-*
+   character set are not officially supported in Namazu.
+
+   We have been trying to internationalize Namazu. At the
+   moment, we have just only gettextized it.  There is a lot
+   of things to do. Please help us.
+
+   You can find documentation in the `doc' directory. And
+   you can get the latest Namazu information at
+
+     http://www.namazu.org/
+
+
+Where is the documentation?
+
+   In the doc directory in the distribution. English documents are 
+   in the en sub-directory, and Japanese documents are in the ja
+   sub-directory.
+
+
+How to install it?
+
+   See the file INSTALL for details.
+
+
+What is Namazu Project?
+
+   Namazu Project is the group of developing and maintaining
+   Namazu. See the file CREDITS for more details.
+
+   Namazu was originally developed by Satoru Takabayashi.
+   Since version 2.0, Namazu has been developed by Namazu
+   Project cooperatively.
+
+
+Contact
+
+   Question: Join the namazu-users-en@namazu.org mailing list!
+     See. <http://www.namazu.org/ml.html>
+
+   General:
+     info@namazu.org
+
+   Bug report:
+     bug-namazu@namazu.org
+
+   Webpage maintainers:
+     webmaster@namazu.org
+
+
+NOTE: Japanese word `Namazu' means `catfish' in English.

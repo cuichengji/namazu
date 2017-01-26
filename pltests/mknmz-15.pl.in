@@ -1,0 +1,88 @@
+#!%PERL% -w
+#
+# $Id: mknmz-15.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for duplicated field.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = "$cwd/../tests/data/dup-field";
+my $INDEX = "$cwd/idx18";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+my $RC = "$cwd/tmp.mknmzrc-15";
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "package conf;");
+pltests::putline($RC, '$SEARCH_FIELD = "keywords|message-id|subject|from|date|uri|newsgroups|to|summary|size";');
+pltests::putline($RC, '$META_TAGS = "keywords|description";');
+
+#
+@cmd = ("$MKNMZ", "--meta", "-f", "$RC", "-O", "$INDEX", "$TARGET");
+pltests::putline($LOG, "", \@cmd);
+my $status = pltests::logsyscmd($LOG, \@cmd);
+
+if (-f $RC) {
+    unlink $RC;
+}
+
+my $resultcount = 0;
+open(IN, "$INDEX/NMZ.field.keywords") || exit 1;
+while(my $line = <IN>) {
+    if ($line =~ /test/) {
+        $resultcount++;
+    }
+}
+close(IN);
+
+pltests::putline($LOG, "resultcount: $resultcount");
+if ($resultcount != 1) {
+    exit 1;
+}
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink $RC;
+    }
+}

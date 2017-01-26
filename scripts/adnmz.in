@@ -1,0 +1,123 @@
+#! %PERL% -w
+# -*- Perl -*-
+# adnmz.pl - make NMZ.field.adjacency
+# $Id: adnmz.in,v 1.1.4.4 2005-09-24 12:25:07 opengl2772 Exp $
+#
+# Copyright (C) 2001 Hajime BABA  All rights reserved.
+# Copyright (C) 2001-2005 Namazu Project  All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+package adnmz;
+
+use strict;
+use Cwd;
+use File::Spec;
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+push(@INC, $PKGDATADIR . "/pl");
+require 'nmzidx.pl';
+
+my $backup;
+while (@ARGV && $ARGV[0] =~ s/^\-//){
+    my $argv = shift;
+
+    &usage, exit if $argv eq '-help';
+    $backup = 0, next if $argv eq '-no-backup';
+
+    while ($argv =~ s/^(.)//){
+        $backup = 0 if $1 eq 'b';
+    }
+}
+
+if (@ARGV){
+    for my $argv (@ARGV){
+        $argv =~ s/NMZ$// unless -d $argv;
+        $argv = '.' if $argv eq '';
+        &adnmz($argv, $backup);
+    }
+}else{
+    &adnmz('.', $backup);
+}
+exit(0);
+
+
+# read NMZ.field.link, and make NMZ.field.adjacency
+sub adnmz {
+    my ($dir, $backup) = @_;
+
+    if (! -f "$dir/NMZ.i") {
+        print "Cannot open index. : $dir\n";
+        return;
+    }
+
+    # pretreatment: read NMZ.r, then make %docid and $ndoc.
+    my (%docid, $ndoc);
+    my $nmzr = new nmzidx($dir, 'r');
+    my $fr = $nmzr->open_flist;
+    my %list_f;
+    $ndoc = 0;
+    while (defined $fr->read(\%list_f)){
+        my $file_name = $list_f{'r'};
+	$docid{$file_name} = $ndoc + 1;  # NOTE: DocID begins with 1.
+	$ndoc++;
+    }
+    $nmzr->close;
+
+    # Body: read NMZ.field.link, pick up of destination IDs using %docid,
+    # then write IDs list to NMZ.field.adjacency.
+    my $nmzi = new nmzidx($dir, 'r');
+    my $fi = $nmzi->open_field('link');
+    my $nmzo = new nmzidx($dir, 'w');
+    my $fo = $nmzo->open_field('adjacency');
+    while (defined (my $line = $fi->{'link'}->getline())){
+	chop($line);  # important !!!
+#	print "@@ $line\n";
+	my @destid; # destination IDs from page_i to page_j
+	my @href = split(/ /, $line);
+	foreach my $h (@href) {
+	    next if ($h =~ /^http:/);  # consider with internal link only
+	    if (defined $docid{$h}) {
+		push(@destid, $docid{$h});
+		next;
+	    }
+	}
+        {
+	    # uniq and numerical sort
+	    my %count;
+	    @destid = grep(!$count{$_}++, @destid);
+	    @destid = sort {$a <=> $b} @destid;
+        }
+	my $links = join(" ", @destid);
+	$fo->{'adjacency'}->putline("$links\n");
+    }
+    $nmzo->replace_db($backup);
+    $nmzi->close;
+}
+
+sub usage{
+    print
+        ("Usage: adnmz [options] <target(s)>\n" .
+         "  --help              show this help and exit.\n" .
+         "  -b, --no-backup     do not backup original file.\n" 
+         );
+}
+
+# EOF

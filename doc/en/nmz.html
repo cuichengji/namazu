@@ -1,0 +1,418 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Specification of NMZ.* files</title>
+</head>
+<body>
+<h1>Specification of NMZ.* files</h1>
+<hr>
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#i">NMZ.i</a>
+<li><a href="#ii">NMZ.ii</a>
+<li><a href="#w">NMZ.w</a>
+<li><a href="#wi">NMZ.wi</a>
+<li><a href="#r">NMZ.r</a>
+<li><a href="#p">NMZ.p</a>
+<li><a href="#pi">NMZ.pi</a>
+<li><a href="#t">NMZ.t</a>
+<li><a href="#field">NMZ.field.{subject,from,date,message-id,...}</a>
+<li><a href="#field-i">NMZ.field.{subject,from,date,message-id,...}.i</a>
+<li><a href="#access">NMZ.access</a>
+<li><a href="#status">NMZ.status</a>
+<li><a href="#result">NMZ.result</a>
+<li><a href="#head">NMZ.head</a>
+<li><a href="#foot">NMZ.foot</a>
+<li><a href="#body">NMZ.body</a>
+<li><a href="#tips">NMZ.tips</a>
+<li><a href="#log">NMZ.log</a>
+<li><a href="#lock">NMZ.lock</a>
+<li><a href="#lock2">NMZ.lock2</a>
+<li><a href="#slog">NMZ.slog</a>
+</ul>
+
+<h2><a name="i">NMZ.i</a></h2>
+<p>Index file for word searching. (inverted file)</p>
+
+<h3>Structure</h3>
+
+For each word, the pair of [documentID containing that word][score]
+is stored sequencially, making the record for the word.
+The record is of variable length, the byte count of each data part
+is placed in front of them.
+<pre>
+
+    [data length for word1][documentID][score][documentID][score]...
+    [data length for word2][documentID][score][documentID][score]...
+    [data length for word3][documentID][score][documentID][score]...
+       :
+</pre>
+
+<h3>Note</h3>
+
+<ul>
+<li>DocumentID are sorted in ascending order --INPORTANT.
+<li>DocumentID are stored by only gaps.<br>
+ e.g., 1, 5, 29, 34 -&gt; 1, 4, 24, 5
+<li>Data is stored in "pack 'w'" format.  (BER compression)
+</ul>
+
+
+<h2><a name="ii">NMZ.ii</a></h2>
+<p>Index for 'seek'ing NMZ.i.</p>
+
+<h3>Structure</h3>
+
+<pre>
+
+    [position of word 1 in NMZ.i][position of word 2 in NMZ.i]
+    [position of word 3 in NMZ.i]...
+</pre>
+
+
+<h3>Note</h3>
+<ul>
+<li>All data is in binary. (pack 'N')
+</ul>
+
+
+<h2><a name="w">NMZ.w</a></h2>
+<p>
+List of words.
+</p>
+
+<h3>Structure</h3>
+
+<p>
+A simple line-oriented text. Sorted in ascending order. You can seek
+NMZ.ii by line number. (Note: line number = wordID)
+</p>
+
+
+<h3>Note</h3>
+
+<ul>
+<li>Words are sorted in ascending order. (list of words are recorded in "NMZ.w")
+<li>Regular Expression/substring/suffix matching greps the entire file.
+<li>Characters in JIS X 0208 are recored in EUC-JP.
+</ul>
+
+
+<h2><a name="wi">NMZ.wi</a></h2>
+<p>Index for 'seek'ing NMZ.w </p>
+
+<h3>Structure</h3>
+
+<pre>
+
+    [position of word 1 in NMZ.w][position of word 2 in NMZ.w]
+    [position of word 3 in NMZ.w]...
+</pre>
+
+
+<h3>Note</h3>
+
+<ul>
+<li>All data is in binary. (pack 'N')
+</ul>
+
+
+<h2><a name="r">NMZ.r</a></h2>
+
+<p>List of files registered in index.</p>
+
+<h3>Structure</h3>
+
+<p>
+Each line records a document file which is registered in the index
+file.  However, a line beginning with '#' indicates a file deleted
+from the index. A line beginning with '##' indicates comment.
+Example:
+</p>
+
+<pre>
+
+    /home/foo/bar1.html
+    /home/foo/bar2.html
+    /home/foo/bar3.html
+    ## indexed: Sun, 08 Jan 2006 02:28:00 +0900
+    (an empty line)
+    # /home/foo/bar1.html
+    ## deleted: Sun, 08 Jan 1998 12:34:56 +0900
+</pre>
+
+<h2><a name="p">NMZ.p</a></h2>
+<p>Index for phrase searching.</p>
+
+<h3>Description</h3>
+
+<p>
+Two words are converted to a 16 bit hash value. For phrase
+searching, all words in a phrase are 'AND'ed and searched,
+then check the word order by referring NMZ.p. Note that the
+word order are recorded for each two word pairs.  So, to
+search "foo bar baz", documents including "foo bar" or "bar
+baz" are retrieved.  By collision of hash values,
+inappropriate documents may also be retrieved. Though phrase
+search is inaccurate, it usually works fine.
+</p>
+
+<h3>Structure</h3>
+
+<pre>
+
+                    |<------   data byte count (1)    ------->|
+[data byte count(1)][documentID including hash value \x0000]...
+                    |<------   data byte count (2)    ------->|
+[data byte count(2)][documentID including hash value \x0001]...
+...
+[data byte count(n)][documentID including hash value \xffff]...
+
+</pre>
+
+
+<h3>Note</h3> 
+
+<ul>
+<li>DocumentID are sorted in ascending order. -- IMPORTANT
+<li>DocumentID are stored by only gaps.<br>
+ e.g., 1, 5, 29, 34 -&gt; 1, 4, 24, 5
+<li>All data is stored in "pack 'w'".  (BER compression)
+</ul>
+
+<h2><a name="pi">NMZ.pi</a></h2>
+<p>Index of index for phrase searching.</p>
+
+<h3>Structure</h3>
+
+<pre>
+
+    [position of \x0000 in NMZ.p][position of \x0001 in NMZ.p] ...
+    [position of \xffff in NMZ.p]
+</pre>
+
+
+<h3>Note</h3>
+
+<ul>
+<li>All data is in binary. (pack 'N')
+<li>Always 256 Kb
+</ul>
+
+
+<h2><a name="t">NMZ.t</a></h2>
+<p>Record information about time stamps and deleted documents.</p>
+
+<h3>Description</h3>
+ 
+<p>
+File time stamps are recorded in 32 bits. This is used for sorting
+search results by date. Also, if value is -1, then the document is
+regarded as deleted.
+</p>
+
+<h3>Structure</h3>
+
+<pre>
+
+    [time stamp of documentID1][time stamp of documentID2]...
+</pre>
+
+<h3>Note</h3>
+<ul>
+<li>All data is in binary. (pack 'N')
+<li>Has the year 2038 problem.
+</ul>
+  
+<h2><a name="field">NMZ.field.{subject,from,date,message-id,...}</a></h2>
+<p>File to record field information.</p>
+
+<h3>Description</h3>
+ 
+<p>
+Used in field-specified searching. A simple line-oriented
+text. grep'ed by the regular expression engine. A line
+number can be used as a documentID. Also, used in displaying
+the search results.
+</p>
+
+<h3>Structure</h3>
+
+<p>
+A simple line-oriented text. (line number = documentID)
+</p>
+
+<h3>Note</h3>
+
+<p>
+Since it is a line-oriented text, it can be edited by an
+editor or other tools.  In case you edit, you should rebuild
+<a
+href="#field-i">NMZ.field.{subject,from,date,message-id,...}.i</a>
+files by <a href="manual.html#rfnmz">rfnmz</a>.
+</p>
+
+
+<h2><a name="field-i">NMZ.field.{subject,from,date,message-id,...}.i</a></h2>
+<p>Index for 'seek'ing NMZ.field.{subject,from,date,message-id,...}</p>
+
+<h3>Structure</h3>
+
+<pre>
+
+    [field position in documentID1][field position in documentID2]...
+</pre>
+
+
+<h3>Note</h3>
+
+<ul>
+<li>All data is in binary.
+<li>All data is in binary. (pack 'N')
+</ul>
+
+<h2><a name="access">NMZ.access</a></h2>
+<p>Configuration file for user access control.</p>
+
+<h3>Structure</h3>
+
+<p>
+Access control by IP address, host name and/or domain name.
+<code>deny</code> defines hosts from which you deny user
+access, and <code>allow</code> defines hosts from which you
+allow user access. When host is specified by IP address,
+prefix matching is used, and when host if specified by host
+name or domain name, suffix matching is
+used. <code>all</code> indicates all hosts. Configuration is
+evaluated from the top. Example:
+</p>
+
+<pre>
+
+    deny all
+    allow localhost
+    allow 123.123.123.
+    allow .example.jp
+</pre>
+
+<p>
+This configuration allows access from the localhost, hosts
+with IP address 123.123.123.*, or hosts with domain name
+*.example.jp. Access from other hosts are denied.
+</p>
+
+<p>
+For Apache web sever, access control by host name and/or
+domain name requires the following description in
+"httpd.conf".
+</p>
+
+<pre>
+
+    HostnameLookups On
+</pre>
+
+
+<h2><a name="status">NMZ.status</a></h2>
+<p>Data necessary to update index is stored.</p>
+
+
+<h2><a name="result">NMZ.result</a></h2>
+<p>File to specify the style of search results.</p>
+
+<h3>Description</h3>
+
+<p>
+${field name} is replaced by the contents of the field. For example,
+${title} is replaced by the contents of
+NMZ.field.title. ${namazu::counter} and ${namazu::score} have special
+meanings. They are replaced by the counter of search results and its
+score respectively.
+</p>
+
+<p>
+By default, NMZ.result.normal and NMZ.result.short are provided.
+Users can freely create NMZ.result.*.
+</p>
+
+<h2><a name="head">NMZ.head</a></h2>
+
+<p>
+Header of search results.
+</p>
+
+
+<h2><a name="foot">NMZ.foot</a></h2>
+
+<p>
+Footer of search results.
+</p>
+
+
+<h2><a name="body">NMZ.body</a></h2>
+
+<p>
+Query description. Displayed when no keyword is given.
+</p>
+
+<h2><a name="tips">NMZ.tips</a></h2>
+
+<p>
+Tips for searching. Displayed when no document is retrieved.
+</p>
+
+
+<h2><a name="log">NMZ.log</a></h2>
+
+<p>
+Log file of index updating.
+</p>
+
+
+<h2><a name="lock">NMZ.lock</a></h2>
+
+<p>
+Lock file to prevent searching.
+</p>
+
+
+<h2><a name="lock2">NMZ.lock2</a></h2>
+
+<p>
+Lock file to prevent updating/making the same index
+simultaneously.
+</p>
+
+
+<h2><a name="slog">NMZ.slog</a></h2>
+
+<p>
+Log file for searched keywords.
+</p>
+
+<h3>Note</h3>
+<ul>
+<li>Do not lock when writing.
+</ul>
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2008 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: nmz.html,v 1.10.8.8 2008-03-04 20:57:16 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

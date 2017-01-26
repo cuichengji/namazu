@@ -1,0 +1,35 @@
+#! /bin/sh
+#
+# Test for mknmz's --decode-base64 option.
+#
+LOG=`pwd`/test-log
+TARGET=$srcdir/data/decodebase64
+echo '  *** starting ' $0 >>$LOG
+
+perl -e 'use MIME::Base64 ();' 2> /dev/null
+if [ $? != "0" ]; then
+     echo "Skipping because perl module not exist." >> $LOG
+     echo "SKIP:" $0 >&2
+     exit 77
+fi
+
+if test ! -d idx22; then
+    mkdir idx22
+else
+    rm -f idx22/NMZ.*
+fi
+
+if test ! -d idx23; then
+    mkdir idx23
+else
+    rm -f idx23/NMZ.*
+fi
+
+# Indexing with --decode-base64 option.
+../scripts/mknmz --decode-base64 -O idx22 $TARGET >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+# Indexing without --decode-base64 option.
+../scripts/mknmz -O idx23 $TARGET >> $LOG
+exit $?
+

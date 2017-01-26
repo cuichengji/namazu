@@ -1,0 +1,66 @@
+#!%PERL% -w
+#
+# $Id: idxdiff-3.pl.in,v 1.1.4.3 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Check whether idx5 and idx6 indices are same.
+#
+# idx5: reference index which is simply indexed.
+# idx6: garbage collected by gcnmz.
+#
+
+use strict;
+require Cwd;
+use File::Compare;
+use File::Basename;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx5";
+my $INDEX2 = "$cwd/idx6";
+
+pltests::putline($LOG, "  *** starting $0");
+
+my @targets = ();
+for my $file (<$INDEX/NMZ.*>) {
+    if ($file !~ /NMZ\.(?:log|r|slog|status|err|t|field\.date|field\.utc)$/s) {
+        push @targets, basename($file);
+    }
+}
+
+if ($#targets == -1) {
+    exit 1;
+}
+
+my $status = 0;
+for my $file (@targets) {
+    if (compare("$INDEX/$file", "$INDEX2/$file") != 0) {
+        pltests::putline($LOG, "diff $INDEX/$file $INDEX2/$file");
+        $status = 1;
+    }
+}
+
+exit $status;

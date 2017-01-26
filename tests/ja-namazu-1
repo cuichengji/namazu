@@ -1,0 +1,44 @@
+#! /bin/sh
+#
+# Test for phrase search.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+
+EXEC=no
+
+lc_all=$LC_ALL
+lc_ctype=$LC_CTYPE
+lang=$LANG
+
+for ctype in "$lc_all" "$lc_ctype" "$lang"; do
+    if test -n "$ctype" -a "$ctype" = "C"; then
+        ctype="en"
+        break
+    fi
+    cand=`echo "$ctype" | LC_ALL="C" perl -nle 'print $1 if /^(..)/'`
+    if test -n "$cand"; then
+        ctype=$cand
+        break
+    fi
+done
+
+case $ctype in 
+        ja*)
+                EXEC=yes
+                ;;
+esac
+if [ $EXEC = 'no' ]
+then
+        echo "Skipping because of LANG does not begin with ja: $0" >> $LOG
+        exit 77
+fi
+
+# Check Jaapanese phrease searching.
+cd ../src
+./namazu '{関数 追加}' ../tests/ja-idx1 | egrep ':: [1-9]' >/dev/null
+test $? -ne 0 && exit 1
+./namazu '{関数 追加}' ../tests/ja-idx1 | egrep ':: 0' >/dev/null
+test $? -ne 0 && exit 0
+
+exit 1

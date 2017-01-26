@@ -1,0 +1,56 @@
+/*
+ * 
+ * nmzversion.c - Namazu library api - getting version
+ *
+ * $Id: nmzversion.c.in,v 1.1.2.2 2007-12-05 16:50:47 opengl2772 Exp $
+ * 
+ * Copyright (C) 2000-2003,2007 Namazu Project All rights reserved.
+ * Copyright (C) 1999 NOKUBI Takatsugu All rights reserved.
+ * This is free software with ABSOLUTELY NO WARRANTY.
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+ * 02111-1307, USA
+ * 
+ * 
+ */
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+#ifdef HAVE_SUPPORT_H
+#  include "support.h"
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else
+# ifdef _WIN32
+# include <io.h>
+# endif
+#endif
+
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#else
+#  include <strings.h>
+#endif
+
+#include "libnamazu.h"
+
+char *
+nmz_get_version(void)
+{
+    return((char *) "%VERSION%");
+}

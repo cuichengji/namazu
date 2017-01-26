@@ -1,0 +1,20 @@
+#! /bin/sh
+#
+# Check whether idx5 and idx6 indices are same.
+#
+# idx5: reference index which is simply indexed.
+# idx6: garbage collected by gcnmz.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+
+cd idx5
+targets=`find . -type f -name 'NMZ.*' -print | \
+              egrep -v "NMZ\.(log|r|slog|status|err)$"`  # Exclude them.
+cd ..
+
+for target in $targets; do
+    diff "idx5/$target" "idx6/$target"
+    test "$?" != "0" && exit 1  # error if not success
+done
+exit 0

@@ -1,0 +1,1030 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Namazu 2.0 tutorial</title>
+</head>
+<body lang="ja">
+<h1>Namazu 2.0 入門</h1>
+<hr>
+
+<p>
+Namazu 2.0 を初めて使う方のための入門書です。
+</p>
+
+<h2>目次</h2>
+<ul>
+<li><a href="#mission">本書の目的</a></li>
+<li><a href="#versions">開発の推移</a></li>
+<li><a href="#components">Namazu の構成部品</a></li>
+<li><a href="#prep-make">準備と make</a></li>
+<li><a href="#japanese">日本語環境での利用</a></li>
+<li><a href="#before-make-install">make install 前の確認</a></li>
+<li><a href="#help">help の表示</a></li>
+<li><a href="#run-mknmz">動作確認 mknmz</a></li>
+<li><a href="#customize-mknmz">mknmz の調整</a></li>
+<li><a href="#run-namazu">動作確認 namazu</a></li>
+<li><a href="#can-do">Namazu でできること</a></li>
+<li><a href="#can-not-do">できないこと</a></li>
+<li><a href="#others">その他</a></li>
+<li><a href="#terminology">用語</a></li>
+<li><a href="#reference">参照</a></li>
+</ul>
+
+<h2><a name="mission">本書の目的</a></h2>
+
+<ul>
+<li>Namazu 2.0 を初めてインストールする方</li>
+<li>Namazu を初めて使う方、Namazu 2.0 を初めて使う方</li>
+</ul>
+
+<p>
+を対象に、Namazu を使い始める時の困難を少しでも減らせるよう
+にという目的で書かれています。Namazu の全ての機能については、
+<a href="manual.html">説明書</a> があります。またインストー
+ルについては INSTALL-ja ファイルに説明があります。
+</p>
+
+<h2><a name="versions">開発の推移</a></h2>
+
+<p>
+1.3.0.x から 2.0 への開発は次のように推移してきました。
+</p>
+
+<dl>
+<dt>1.3.0.x
+<dd>
+旧安定版。1.3.0.10 以前のものは
+外部からゴミのファイルを作られる可能性があるので、
+1.3.0.11 に更新した方がいい。
+<br>
+1.3.0.11 が最新
+<dt>1.3.1.0
+  <dd>開発版。チェックポイント機能 (mknmz が定期的に自分自身を exec
+  し直してプロセスの膨張を防ぐ -s オプション) が導入された。
+  が、正式公開はされず、開発は 1.4.0.0 へと移った。
+<dt>1.4.0.0
+  <dd>開発版。Perl モジュールを使った高速化が導入された。<br>
+  が、正式公開はされず、開発は 1.9.x へと移った。
+<dt>1.9.x
+<dd>2.0 への開発中のものを不定期に公開したもの。<br>
+1.9.12 以前のものには外部からゴミのファイルを作られる可能性
+がある。
+<dt>2.0
+  <dd>2000/02 から公開されている安定版。
+<dt>current
+  <dd>次の版に向けて開発の続いているもの
+<a href="http://www.namazu.org/development.html">
+current</a> は CVS で取得できます。
+</dl>
+
+<h2><a name="components">Namazu の構成部品</a></h2>
+
+<p>
+Namazu は大きくわけて mknmz, namazu, namazu.cgi の三つから構成されています。
+</p>
+<ul>
+<li>mknmz<br>
+インデックスをあらかじめ作る。(Perl で書かれている)
+</li>
+
+<li>namazu<br>
+作成したインデックスを元に検索する。<br>
+コマンド行から利用する。(C言語で書かれている)
+</li>
+
+<li>namazu.cgi<br>
+作成したインデックスを元に検索する。<br>
+CGIとして利用する。(C言語で書かれている)
+</li>
+</ul>
+
+<h2><a name="prep-make">準備と make</a></h2>
+<p>
+2.0 の版を作るために次のソフトウェアが必要です。(お名
+前の敬称は略させていただきます)
+</p>
+
+<table cellspacing="0" cellpadding="3" border="1">
+<tr>
+<th>名称</th><th>説明</th>
+<th>必須</th>
+<th>最新版</th><th>必要な版</th>
+<th>ファイル名</th>
+<th>作成・配布</th>
+<th>入手先(例)</th>
+<th>その他</th>
+</tr>
+<tr><td>Perl</td><td>Perl 言語処理系</td>
+<td>○</td><td>5.18.0</td><td>&gt;= 5.004</td>
+<td>perl5.005_03.tar.gz</td>
+<td>Larry Wall
+GNU CPAN</td>
+<td>
+<a href="ftp://ftp.lab.kdd.co.jp/lang/perl/CPAN/authors/id/GBARR/">
+CPAN</a></td>
+ <td><br></td>
+</tr>
+
+<tr><td><a href="http://www.gnu.org/software/make/make.html">make</a></td>
+<td>コンパイル支援ソフトウェア</td>
+<td><br></td><td>3.82</td><td><br></td>
+<td><a href="http://ftp.gnu.org/gnu/make/make-3.82.tar.gz">make-3.82.tar.gz</a></td>
+<td>FSF</td>
+<td><a href="http://ftp.gnu.org/gnu/make/">GNU</a></td>
+ <td>システム付属のmakeでコンパイルできない場合に必要</td>
+</tr>
+
+<tr><td><a href="http://www.gnu.org/software/gettext/gettext.html">gettext</a></td>
+<td>メッセージの国際化</td>
+<td><br></td><td>0.18.3</td><td>&gt;= 0.13.1</td>
+<td><a href="http://ftp.gnu.org/gnu/gettext/gettext-0.18.3.tar.gz">gettext-0.18.3.tar.gz</a></td>
+<td>FSF</td>
+<td><a href="http://ftp.gnu.org/gnu/gettext/">GNU</a></td>
+ <td>Solaris は必須<br></td>
+</tr>
+
+<tr><td>nkf</td><td>Network Kanji Filter 漢字コード
+変換系</td>
+  <td>○</td><td>2.0.8</td><td>&gt;= 1.71</td>
+  <td rowspan=2>
+  <a href="http://prdownloads.sourceforge.jp/nkf/20770/nkf207.tar.gz">nkf207.tar.gz</a></td>
+  <td rowspan=2>
+  <a href="http://www.ie.u-ryukyu.ac.jp/%7Ekono/nkf/">河野眞治</a><br>
+  <a href="http://www01.tcp-ip.or.jp/%7Efurukawa/">古川令</a><br></td>
+  <td rowspan=2>
+  <a href="http://www01.tcp-ip.or.jp/%7Efurukawa/nkf_utf8/">nkf_utf8</a></td>
+  <td rowspan=2>1.90, 1.92 は問題があるので最新版もしくは 1.71 を使う(脚注参照)</td>
+  </tr>
+
+<tr><td>NKF</td><td>nkf Perl モジュール化</td>
+  <td>▲</td><td>2.0.8</td><td>&gt;= 1.71</td>
+
+  </tr>
+
+<tr>
+ <td><a href="http://kakasi.namazu.org/index.html">KAKASI</a></td>
+ <td>日本語・ ローマ字 変換系<td>△</td><td>2.3.6</td><td>&gt;= 2.x</td>
+ <td><a href="http://kakasi.namazu.org/stable/kakasi-2.3.6.tar.gz">
+ kakasi-2.3.6.tar.gz</a></td>
+ <td>
+ <a href="http://kakasi.namazu.org/">KAKASI Project</a></td>
+ <td>
+ <a href="ftp://kakasi.namazu.org/pub/kakasi/">namazu.org</a>
+  <td><br></td>
+ </tr>
+
+<tr>
+  <td><a href="http://www.daionet.gr.jp/~knok/kakasi/">Text::Kakasi</a></td>
+  <td>KAKASI Perl モジュール化<td>▲</td>
+  <td>2.04</td><td>&gt;= 1.05</td>
+  <td>
+  <a href="http://search.cpan.org/CPAN/authors/id/D/DA/DANKOGAI/Text-Kakasi-2.04.tar.gz">Text-Kakasi-2.04.tar.gz</a></td>
+  <td><a href="http://www.daionet.gr.jp/~knok/kakasi/">野首貴嗣</a><br>
+  <a href="http://search.cpan.org/dist/Text-Kakasi/">小飼弾</a><br></td>
+  <td><a href="http://search.cpan.org/dist/Text-Kakasi/">CPAN dist</a>
+  </td>
+  <td><br></td>
+  </tr>
+
+<tr>
+  <td>Chasen</td>
+  <td>(茶筌) -- 日本語 形態素 解析器</td>
+  <td>△</td>
+  <td>2.3.3</td><td>&gt;= 2.02</td><td>
+  <a href="http://chasen.aist-nara.ac.jp/stable/chasen/chasen-2.3.3.tar.gz">chasen-2.3.3.tar.gz</a>
+  </td><td>
+  <a href="http://chasen.aist-nara.ac.jp/">奈良先端科学技術大学院大学</a>
+  </td><td>
+  <a href="http://chasen.aist-nara.ac.jp/chasen/distribution.html.ja">配布方針</a></td>
+  <td>
+  2.02 以前では libchasen.a について下記参照
+  </tr>
+
+<tr>
+  <td>Text::ChaSen</td>
+  <td>ChaSen Perl モジュール化</td>
+  <td>▲</td>
+  <td>1.04</td><td>&lt;=</td><td>
+  <a href="http://search.cpan.org/~knok/Text-ChaSen-1.04/">
+  Text-ChaSen-1.04.tar.gz</a></td>
+  <td><a href="http://search.cpan.org/~knok/">野首貴嗣</a></td>
+  <td><a href="http://search.cpan.org/~knok/Text-ChaSen-1.04/">Text::ChaSen</a></td>
+  <td><br></td>
+</tr>
+
+<tr>
+  <td><a href="http://mecab.sourceforge.net/">MeCab</a></td>
+  <td>(和布蕪) -- 日本語 形態素解析器</td>
+  <td>△</td>
+  <td>0.98</td><td>&gt;= 0.6</td>
+  <td>mecab-0.98.tar.gz</td>
+  <td>工藤 拓</td>
+  <td><a href="http://mecab.sourceforge.net/src/">MeCab</a></td>
+  <td>Namazu 2.0.15 から正式対応 (MeCab 0.90 以降は Namazu 2.0.16 以降で対応)</td>
+</tr>
+
+<tr>
+  <td><a href="http://mecab.sourceforge.net/">mecab-perl</a></td>
+  <td>MeCab Perl モジュール化</td>
+  <td>▲</td>
+  <td>0.98</td><td>&gt;= 0.76</td>
+  <td>mecab-perl-0.98.tar.gz</td>
+  <td>工藤 拓</td>
+  <td><a href="http://mecab.sourceforge.net/src/">MeCab</a></td>
+  <td>Namazu 2.0.15 から正式対応 (MeCab 0.90 以降は Namazu 2.0.16 以降で対応)</td>
+</tr>
+
+<tr><td>
+<a href="http://search.cpan.org/search?mode=module&amp;query=MMagic">File::MMagic</a>
+</td><td>File 種別</td>
+<td>○</td><td>1.30</td><td>&gt;= 1.20</td>
+<td>File-MMagic-1.30.tar.gz
+<td>
+  <a href="http://www.daionet.gr.jp/~knok/">
+  野首貴嗣</a></td>
+<td>
+<a href="http://search.cpan.org/search?dist=File-MMagic">CPAN dist</a>
+</td><td>
+Namazu 2.0.21 までは Namazu の配布に同梱されています<br>
+1.28, 1.29 は問題があるので最新版もしくは 1.27 を使う(脚注参照)
+</td>
+</tr>
+</table>
+
+<ul>
+<li>
+△ は (日本語の処理をするなら)
+KAKASI/ChaSen/MeCab のいずれかが必要という意味。
+<table cellspacing="0" cellpadding="3" border="1">
+<tr><td>全て用意しておいた場合</td><td>
+(無指定ではわかち書きに KAKASI を使いますが、
+茶筌は -c オプション、和布蕪は -b オプションを
+指定するだけで使用できます。)</td>
+</tr>
+<tr><td>ひとつ以上用意している場合</td><td>
+./configure の時点で KAKASI/ChaSen/MeCab のいずれを使うかが選ばれます。
+(KAKASI を用意している場合は -k オプション、
+茶筌を用意している場合は -c オプション、
+和布蕪を用意している場合は -b オプションを
+指定するだけで使用できます。)</td>
+</tr>
+</table>
+</li>
+
+<li>
+▲ は
+Perl モジュール化で、2.0 の高速化機能を生かすために必要です。
+しかし、なくても動きます。
+その場合には一つのファイル毎にわかち書きの外部 process
+を起動するので、インデックス作成の速度は遅くなります。
+インストールは <code>perl Makefile.PL; make; make install</code>
+と実行するだけです。
+問題がなければ入れておいた方がいいでしょう。
+</li>
+
+
+<li>
+Namazu 2.0 以降では ChaSen2 にだけ対応しています。
+</li>
+
+
+<li>「KAKASI」か「茶筌」か「和布蕪」 ---- 大ざっぱに言うと<br>
+KAKASIの方が簡単 (安定)で速い。<br>
+茶筌の方が、
+少し遅いかもしれないがひらがなだけの文の取扱が出来る
+というような違いがあります。<br>
+</li>
+<li>ChaSen 2.02 以前では make install しても
+/usr/local/lib/libchasen.a をインストールしてくれないので、
+perl のChaSenモジュールを作るには手動で
+<pre>
+cp libchasen.a /usr/local/lib
+ranlib /usr/local/lib/libchasen.a # ここはシステムに応じて
+</pre>
+と実行する必要があります。
+</li>
+
+<!-- <li>×となっている File::MMagic は Namazu の配布に同梱されています。
+</li> -->
+<li>Namazu 自体の ./configure についてはINSTALL-ja
+を見てください。
+</li>
+<li>以上用意した KAKASI や ChaSen や MeCab は、
+Namazu を ./configure する時に、
+($PATH 変数の設定によって) 利用出来るようになっている必要があります。
+後から追加した場合には、./configure からやり直して下さい。
+</li>
+<li>nkf-1.90, 1.92 は
+<a href="http://www.namazu.org/ml/namazu-devel-ja/msg01599.html">
+全角空白の取扱いに問題</a>
+があります。最新版2.0.7を使うか 1.71 を使うかして下さい。
+</li>
+<li>File::MMagic 1.28, 1.29 は問題があります。
+最新版か 1.27 を使うかして下さい。
+</li>
+</ul>
+
+<h2><a name="japanese">日本語環境での利用</a></h2>
+<p class="note">
+Namazu 2.0.6 から環境変数の扱いが修正されました。また、mknmz
+にコマンド行引数が新設されました。
+
+<h3>環境変数の設定</h3>
+
+<p>
+Namazu 2.0
+を日本語環境で利用するには言語の切換を行う環境変数の設定が必要です。
+
+<p>
+2.0.5
+までは、以下のようにメッセージの表示と言語処理の両方で、
+全く同じ環境変数を用いていました。
+
+<div>
+<table cellspacing="0" cellpadding="3" border="1">
+<caption>言語の切換を行なう環境変数(左優先)</caption>
+<tr><td>【メッセージの表示】</td>
+<td>LANGUAGE</td>
+<td>LC_ALL</td>
+<td>LC_MESSAGES</td>
+<td>LANG</td></tr>
+<tr><td>【言語処理】</td>
+<td>LANGUAGE</td>
+<td>LC_ALL</td>
+<td>LC_MESSAGES</td>
+<td>LANG</td></tr>
+</table>
+</div>
+
+<p>
+2.0.6 からは以下のように修正されました。
+
+<div>
+<table cellspacing="0" cellpadding="3" border="1">
+<caption>言語の切換を行なう環境変数(左優先)</caption>
+<tr><td>【メッセージの表示】</td>
+<td>LANGUAGE</td>
+<td>LC_ALL</td>
+<td>LC_MESSAGES</td>
+<td>LANG</td></tr>
+<tr><td>【言語処理】</td>
+<td><br></td>
+<td>LC_ALL</td>
+<td>LC_CTYPE</td>
+<td>LANG</td></tr>
+</table>
+</div>
+
+<p>
+日本語の表示が欲しい時や、日本語の処理をしたい時には、
+これらの変数に、
+</p>
+<div>
+<table cellspacing="0" cellpadding="3">
+<tr><td>Unix OS</td><td>ja</td></tr>
+<tr><td>Windows</td><td>ja_JP.SJIS</td></tr>
+</table>
+</div>
+<p>
+等と設定します。例えば次のような方法で
+</p>
+
+<div>
+<table cellspacing="0" cellpadding="3" border="1">
+<tr><td>C shell 等</td><td>Bourne shell 等</td></tr>
+<tr><td><code>setenv LANG ja</code></td>
+<td><code>LANG=ja; export LANG</code></td></tr>
+</table>
+</div>
+
+<p>
+Mac OS X + gettext 0.14.2 以降の場合
+
+<div>
+<table cellspacing="0" cellpadding="3" border="1">
+<caption>言語の切換を行なう環境変数(左優先)</caption>
+<tr><td>【メッセージの表示】</td>
+<td>LANGUAGE</td>
+<td>【MacOS X の言語環境】</td>
+<td>LC_ALL</td>
+<td>LC_MESSAGES</td>
+<td>LANG</td></tr>
+</table>
+</div>
+<br>
+
+<div>
+メッセージの表示において、OS の言語環境が LC_ALL, LC_MESSAGES, LANG
+より優先します。<br>
+環境変数で切り替える場合は LANGUAGE で切り替えてください。
+</div>
+
+<p>
+LANG に ja を設定し
+(それ以外の変数に何も設定されていなければ)、
+全て日本語の表示をし、
+検索対象を日本語として処理します。
+
+<code>ja</code> という値が適当でない時には
+<code>ja_JP</code>, <code>ja_JP.eucJP</code>,
+<code>ja_JP.EUC</code>, <code>ja_JP.ujis</code>
+などという値が必要とされる場合(システム)もあります。
+
+<p>
+mknmz 実行時に環境変数が適切に設定されていないと、
+わかち書きが正しく行なわれず、
+(生成された索引の一つである) NMZ.w を覗いて見ると、
+本来なら単語が一行に一つづつ書いてあるはずなのに、
+長い文章が書いてあって、namazu/namazu.cgi で検索しても
+正しく見つけてくれないという問題が起きたり、
+filter が日本語について正しく動作しなかったりします。
+
+
+<h3>--indexing-lang コマンド行引数 (mknmz)</h3>
+
+<p>
+2.0.6 から mknmz に <code>--indexing-lang=LANG</code> が新設されました。
+<p>
+前述の環境変数の設定にかかわらなく mknmz の処理について
+言語の指定が出来ます。<code>--indexing-lang=ja</code> などとします。
+
+<code>ja</code> という値が適当でない時には
+<code>ja_JP</code>, <code>ja_JP.eucJP</code>,
+<code>ja_JP.EUC</code>, <code>ja_JP.ujis</code>
+などという値が必要とされる場合(システム)もあります。
+
+このオプションが指定されていない場合は前述の環境変数が参照されます。
+
+<h3>設定ファイル (namazu 及び namazu.cgi)</h3>
+
+<p>
+namazurc または .namazurc に次のように書きます。(一例です)
+<pre>
+Lang: ja
+</pre>
+
+<p>
+<code>ja</code> という値が適当でない時には
+<code>ja_JP</code>, <code>ja_JP.eucJP</code>,
+<code>ja_JP.EUC</code>, <code>ja_JP.ujis</code>
+などという値が必要とされる場合(システム)もあります。
+</p>
+
+<p>
+置く位置などについては
+<a href="manual.html#namazurc">説明書</a> を参照して下さい。
+
+
+<h2><a name="before-make-install">make install 前の確認</a></h2>
+<p>
+もし make install する前に mknmz を試してみたいという時には
+</p>
+<pre>
+cd namazu-2.0.x ( ... tar.gz 形式を開けた位置)
+   してから
+env pkgdatadir=`pwd` scripts/mknmz (csh/tcsh 等の場合)
+   または
+pkgdatadir=. scripts/mknmz (sh/bash 等の場合).
+</pre>
+<p>
+とすると、
+(<code>/usr/local/share/namazu</code> でなく)
+すぐ隣にある pl,filter,template 等を参照します。
+</p>
+
+<p class="note">
+(この辺の事情は mknmz 等の中の変数 $PKGDATADIR の文字列付近を見ると
+少し分ります。)
+</p>
+
+<p>
+同じようにして、
+</p>
+<pre>
+<code class="command">
+setenv pkgdatadir .
+   または
+pkgdatadir=.
+export pkgdatadir
+   しておいて、
+scripts/mknmz -C
+scripts/mknmz --help
+scripts/mknmz -O /tmp ~/Mail</code>
+</pre>
+<p>
+などが試すと、それぞれ、構成を表示・説明を表示・~/Mail の索引を作成する、
+などを行うことが出来ます。
+ただし、 make install 前は日本語でのメッセージ出力は行えません。
+</p>
+
+
+<h2><a name="help">help の表示</a></h2>
+<p>
+以上 mknmz と namazu の 2つの使い方は引数無しで起動すると簡
+単な説明が、--help と入力すると長い説明が表示されます。また
+-C を付けるとその時の構成を表示します。この 3つは覚えておくと便利です。
+</p>
+
+<table cellspacing="0" cellpadding="3" border="1">
+  <caption>コマンド行で説明などを得る方法</caption>
+  <tr><th>引数</th><th>意味</th><th>その他に引数を付けると</th></tr>
+
+  <tr><td>無</td> <td>とても簡単な説明<td>(他の引数・選択は付けられない)
+    </td></tr>
+  <tr><td><code>--help</code></td><td>詳しい説明 <td>(他の引数・選択は無視される)</td></tr>
+  <tr><td><code>-C </code>   </td><td>その時の構成<td> (他の引数・選択も意味がある)</td></tr>
+  </table>
+
+<h2><a name="run-mknmz">動作確認 mknmz</a></h2>
+<p>
+まずはインデックスを作ります。
+
+<strong>
+(もし make install の前に試したいなら、上の
+<a href="#before-make-install">
+mknmz make install 前の確認</a>を見てください)</strong>
+<br>
+1.4.0.8 からは少し書式が変っています。
+URI の置換は
+--replaceオプションを使って指定するようになりました。
+
+URIの置換は namazu/namazu.cgi の実行時にも行えます。mknmz で
+は --replace を指定しないで実行し、<a
+href="manual.html#namazurc">.namazurc</a> の設定で
+namazu/namazu.cgi の実行時に置換する方法をお勧めします。
+</p>
+
+<p>
+mknmz は次のように実行します。
+</p>
+
+<blockquote>
+<p>
+<code class="command"><a href="manual.html#mknmz">mknmz</a> [options] 対象ディレクトリ</code>
+</p>
+</blockquote>
+
+<p>
+この例では、インデックスはカレントディレクトリに作られます。
+もし出力先を変更したい時には -O を使います。
+</p>
+
+<p>
+例えば
+</p>
+<pre>
+      mkdir /tmp/index
+      mknmz -O /tmp/index \
+      --replace='s#/foo/bar/doc/#http://foo.example.jp/software/#' \
+      /foo/bar/doc
+</pre>
+
+<p>
+のよう実行します。インデックスの作成中に mknmz は次のような
+メッセージを出力します。もし、メッセージが英語で表示されたと
+きは<a href="#japanese">日本語環境での利用</a>を参照してくだ
+さい。
+</p>
+
+<pre>
+
+      6個のファイルがインデックス作成の対象として見つかりました
+      1/6 - /foo/bar/acrobat4.pdf [application/pdf]
+      2/6 - /foo/bar/html.html [text/html]
+      3/6 - /foo/bar/msg00000.html [text/html; x-type=mhonarc]
+      4/6 - /foo/bar/plain.txt [text/plain]
+      5/6 - /foo/bar/rfc0000.txt [text/plain; x-type=rfc]
+      6/6 - /foo/bar/tex.tex [application/x-tex]
+      インデックスを書き出しています...
+      [基本]
+      日付:                Fri Feb 18 14:09:55 2000
+      追加された文書の数:  6
+      サイズ (bytes):      7,301
+      合計の文書数:        6
+      追加キーワード数:    48
+      合計キーワード数:    48
+      わかち書き:          module_kakasi -ieuc -oeuc -w
+      経過時間 (秒):       8
+      ファイル/秒:         0.75
+      システム:            linux
+      Perl:                5.00503
+      Namazu:              2.0.X
+
+</pre>
+
+<ul>
+  <li>結果 (のインデックス) は (-O で指定した) /tmp/index に</li>
+  <li>検索対象は<code>/foo/bar/doc</code></li>
+  <li>URI については
+
+<p>
+「<code>/foo/bar/doc/</code> に置いてあるものは
+外から見ると、
+<code>http://foo.example.jp/software/</code> の下に見えるもの
+なので、(Perl 語で言うと)
+s#<em>aaa</em>#<strong>bbb</strong>#
+のように置換してね」という意味です。
+(上の例では aaa (/foo/bar/doc/)
+            bbb (http://foo.example.jp/) となります。)
+</p>
+  </li>
+
+  <li> (/usr/local/etc/namazu/mknmzrc の $ALLOW_FILE,
+     $DENY_FILE の設定によって)
+     *.html, *.txt, *.tex, *.pdf, MH形式のメイルなどを対象とします。
+  </li>
+</ul>
+
+
+
+<hr>
+
+<h2><a name="customize-mknmz">mknmz の調整</a></h2>
+<!--
+メイル
+HTML
+その他の形式 (Re: filter)
+他の Web
+-->
+
+<p>
+Namazu は元々は HTML 形式のものを処理するために作られました
+が、現在では様々な文書形式を取り扱うことができます。
+/usr/local/share/namazu/filter というディレクトリに手がかり
+が、また説明書の中の <a href="manual.html#doc-filter">文書フィ
+ルタ</a> の節に詳しい説明があります。
+</p>
+
+<dl>
+<dt>MH 形式のメイル
+  <dd>普通に mknmz を実行します。<br>
+<code class="command">% mknmz ~/Mail/foobar</code>
+
+<dt><a href="http://www.mhonarc.org/">MHonArc</a>
+  <dd>Namazu は MHonArc の HTMLに特化した処理を行います。
+
+<dt>hnf
+  <dd> hnf 用の .mknmzrc と起動手続が
+<a href="http://www.h14m.org/">ハイパー日記システム・プロジェクト</a> から入手出
+来ます。
+<dt>他の計算機にある文書
+  <dd>Namazu 単独ではできません。他にその内容を転送してくる
+  仕組み (wget, NFS など) と組合せて使います。
+</dl>
+
+<p>
+mknmz のコマンド行引数は、<a
+href="manual.html#mknmz-option">mknmz --help</a>とすると得ら
+れます。また-C を付けると、その時の構成を次のように表示してくれます。
+</p>
+
+<pre>
+
+      読み込んだ設定ファイル: /home/foobar/.mknmzrc
+      システム: linux
+      Namazu: 2.0.X
+      Perl: 5.00503
+      File-MMagic: 1.27
+      NKF: module_nkf
+      KAKASI: module_kakasi -ieuc -oeuc -w
+      茶筌: module_chasen -i e -j -F "%m "
+      和布蕪: module_mecab -Owakati -b 8192
+      わかち書き: module_kakasi -ieuc -oeuc -w
+      メッセージの言語: ja_JP.eucJP
+      言語: ja_JP.eucJP
+      文字コード: euc
+      CONFDIR: /usr/local/etc/namazu
+      LIBDIR: /usr/local/share/namazu/pl
+      FILTERDIR: /usr/local/share/namazu/filter
+      TEMPLATEDIR: ../template
+      対応メディアタイプ:   (43)
+      未対応メディアタイプ: (1) 必要ツールが $path にないものには (-) を表示
+        application/excel: excel.pl
+        application/gnumeric: gnumeric.pl
+        application/ichitaro5: taro56.pl
+        application/ichitaro6: taro56.pl
+        application/ichitaro7: taro7_10.pl
+        application/macbinary: macbinary.pl
+        application/msword: msword.pl
+        application/pdf: pdf.pl
+        application/postscript: postscript.pl
+        application/powerpoint: powerpoint.pl
+        application/rtf: rtf.pl
+        application/vnd.kde.kivio: koffice.pl
+        application/vnd.kde.kpresenter: koffice.pl
+        application/vnd.kde.kspread: koffice.pl
+        application/vnd.kde.kword: koffice.pl
+        application/vnd.oasis.opendocument.graphics: ooo.pl
+        application/vnd.oasis.opendocument.presentation: ooo.pl
+        application/vnd.oasis.opendocument.spreadsheet: ooo.pl
+        application/vnd.oasis.opendocument.text: ooo.pl
+        application/vnd.sun.xml.calc: ooo.pl
+        application/vnd.sun.xml.draw: ooo.pl
+        application/vnd.sun.xml.impress: ooo.pl
+        application/vnd.sun.xml.writer: ooo.pl
+        application/x-apache-cache: apachecache.pl
+        application/x-bzip2: bzip2.pl
+        application/x-compress: compress.pl
+      - application/x-deb: deb.pl
+        application/x-dvi: dvi.pl
+        application/x-gzip: gzip.pl
+        application/x-js-taro: taro7_10.pl
+        application/x-rpm: rpm.pl
+        application/x-tex: tex.pl
+        application/x-zip: zip.pl
+        audio/mpeg: mp3.pl
+        message/news: mailnews.pl
+        message/rfc822: mailnews.pl
+        text/hnf: hnf.pl
+        text/html: html.pl
+        text/html; x-type=mhonarc: mhonarc.pl
+        text/html; x-type=pipermail: pipermail.pl
+        text/plain
+        text/plain; x-type=rfc: rfc.pl
+        text/x-hdml: hdml.pl
+        text/x-roff: man.pl
+</pre>
+
+
+<h3>インデックスの作成対象について</h3>
+
+<table cellspacing="0" cellpadding="3">
+<tr><th>短縮形</th><th>本名</th><th>説明</th></tr>
+<tr><td>-F</td><td>--target-list=file</td><td>インデックス対象のファイルのリストを読み込む</td></tr>
+<tr><td>-t</td><td>--media-type=mtype</td><td>対象ファイルの文書形式を指定する</tr>
+<tr><td></td><td>--allow=PATTERN  </td><td>対象ファイル名の正規表現を指定する</tr>
+<tr><td></td><td>--deny=PATTERN   </td><td>除外するファイル名の正規表現を指定する</tr>
+<tr><td></td><td>--exclude=PATTERN</td><td>除外するパス名の正規表現を指定する</tr>
+
+</table>
+
+
+<!--
+<p>
+現在の版では<em>対象ディレクトリ</em>に symbolic link がある
+とうまく処理できません。
+</p>
+-->
+<h2><a name="run-namazu">動作確認 namazu</a></h2>
+
+<p>検索を行うにはコマンド行で次のように実行します。
+</p>
+<pre>
+      % namazu 検索文字列 インデックス
+</pre>
+
+<p>
+インデックスを省略すると、namazu は
+<code>/usr/local/var/namazu/index</code> を対象とします。
+</p>
+
+<p>
+namazu コマンドの設定は<code> <a
+href="manual.html#namazurc">namazurc</a></code> で行います。
+namazurc の設定例は 配布の中の
+<code>/usr/local/etc/namazu/namazurc-sample</code> にありま
+す。
+</p>
+
+<p>
+Web で CGI を実行するにはいくつかの条件があります。<a
+href="http://www.apache.org/">Apache</a> の場合、<a
+href="http://www.apache.org/docs/">設定</a>として
+</p>
+
+<table cellspacing="0" cellpadding="3">
+<tr><td>
+ScriptAlias</td><td> /cgi-bin/ /usr/local/apache/cgi-bin/
+</td><td>URI 中の /cgi-bin/ に対応するディレクトリ</td>
+</tr>
+
+<tr><td>
+AddHandler</td><td> cgi-script .cgi
+</td><td> .cgi と拡張子ならば cgi として実行する</td>
+</tr>
+
+<tr><td>
+<a href="http://www.apache.org/docs/mod/core.html#allowoverride">
+AllowOverride</a></td><td> All
+</td>
+<td>.htaccess での設定を許可する (Web管理者)</td></tr>
+<tr><td>
+Options
+</td>
+<td>ExecCGI
+<td>cgi-bin の実行を許す
+</tr>
+
+<tr><td>
+DirectoryIndex</td><td> index.html
+</td><td> URI がディレクトリを指している時に探すファイル名
+</td></tr>
+
+</table>
+
+<p>
+などが関係します。(Web管理者) と書かれているもの以外は
+.htaccess にも設定できます
+(ただし Apache の設定次第でそれを禁止されていることもあります)。
+</p>
+
+<h2><a name="can-do">Namazu でできること</a></h2>
+
+<p>
+<strong>
+ここに書いてあることは「保証」ではありません。
+</strong>
+開発者の希望が書かれているだけです。
+</p>
+
+<ul>
+<li>一つの計算機の、一つまたは複数のディレクトリの下にある文
+書ファイルを指定して、
+</li>
+<li>それらの中の単語を調べ、どの文書ファイルにどの単語が含まれているか
+をインデックスに書き出しておく
+</li>
+<li>利用者が入力した検索式と、上記の単語を比べて、
+その単語が含まれている文書ファイルを表示すること
+</li>
+<li>上記単語の指定は、単語の一部分でなく単語全体です。
+ですから sys と指定しても system は見つかりません。
+そのような時には sys* や *sys* のように前後に *
+を付けることによって、sys で始まる単語 (sys*)、
+sys を含む単語 (*sys*)、
+sys で終了する単語 (*sys) と入力します。
+</li>
+<li>作られたインデックスの利用はコマンド行、または
+cgi-bin が動く HTTP server を Webブラウザを通じて利用する形
+で行なう。
+</li>
+</ul>
+
+<h2><a name="can-not-do">できないこと</a></h2>
+<ul>
+<li>他の計算機にまで文書ファイルを取りにいって検索すること
+</li>
+<li>「一日に 100 万回の利用件数がある」というような大規模な構成
+の使い方。
+</li>
+</ul>
+
+<h2><a name="others">その他</a></h2>
+<dl>
+<dt>インデックス作成の対象ファイルについて
+<dd>
+指定した「対象ディレクトリ」の中で、どのファイルがインデック
+ス作成の対象とされるかは <strong>(mknmzrc の) </strong>
+$ALLOW_FILE, $DENY_FILE の設定、あるいは -a,
+--allow, --deny, --exclude オプションの設定で決まります。
+
+<dt>mew-1.94b2x と mew-nmz.el
+<dd>
+mew には namazu と連動して
+<ul>
+<li>
+mknmz を起動して必要なインデックスを作り
+</li>
+<li>
+検索した結果を使って virtual folder を作成する
+</li>
+</ul>
+機能が contrib/mew-nmz.el にあり、説明は
+contrib/00readme-namazu.jis に書かれています。
+</dl>
+
+<h2><a name="terminology">用語</a></h2>
+<dl>
+<dt><a href="http://kakasi.namazu.org/">KAKASI</a>
+<dd>本来は「漢字で書かれたもの」を「ひらがな・カタカナ・Ro-maji」などに変換するソフトウェア。しかし Namazu では次々項の「わ
+かち書き」をする道具として使う。
+
+<dt>
+<a href="http://chasen.aist-nara.ac.jp/">Chasen (茶筌)</a>
+<dd>「日本語形態素解析器」であるが、KAKASIと同様に「わかち書き」
+(正確には日本語の単語の切出し)に使っている。
+
+<dt>
+<a href="http://chasen.org/~taku/software/mecab/">MeCab (和布蕪)</a>
+<dd>MeCab は、ChaSenを基に開発された高速な形態素解析器です。
+現在 ChaSen とは独立に、工藤さんがフルスクラッチから開発しています。
+解析精度は ChaSen と変わらないにもかかわらず、ChaSen より高速に動作します。
+
+<dt>わかち書き
+<dd>
+日本語 は (英語 と 違って)単語 の 区切り に 空白 を 書いたり は しない。
+そのまま では 計算機 の 処理 に 不都合 が ある ので、単語毎 に わけて、
+間 に 空白 を 入れて 書いた もの を 利用する。
+そういう書き方を「わかち書き」と言う。
+(用語としては計算機用語として以外にも同じ意味で使われる)
+<dt>インデックス(名詞)
+<dd>
+<pre>
+               (準備)     (検索画面)
+                mknmz       namazu
+               ↑   ↓     ↑    ↓
+      元々の資料    インデックス  検索結果
+</pre>
+Namazu はあらかじめ単語の索引を作っておき、検索要求があっ
+たときには、それを元に検索を行う。この「あらかじめ作
+られた「索引」のことをインデックスと呼んでいる。<br>Namazu
+の場合 NMZ.* ファイルがそれにあたる。
+
+<dt>インデックス(動詞)
+<dd>上記インデックスを作ること。mknmz を使う
+<dt>複数インデックス
+<dd>2つ以上のインデックスを作っておいて、それらの中をまとめて
+検索する機能
+
+<dt>フレイズ検索
+<dd>
+Namazu の検索の基本は単語の組合せである。
+"foo and bar" と (順を逆にした)
+"bar and foo" は区別しない。また、 foo と bar は文書中のどこ
+に現れてもいい。 "foo bar" という文字列がそのままの順
+で出現する文書を探すことをフレイズ検索という。
+<dt>namazu.conf, conf.pl
+<dd>
+1.4 以前では、 namazu, mknmz の設定はそれぞれ namazu.conf,
+conf.pl で行ったが 2.0 では namazurc, mknmzrc に変更された。
+<dt>mknmzrc (/usr/local/etc/namazu/mknmzrc)
+<dd>mknmz の基本設定を行なう。
+
+<dt>namazurc  (/usr/local/etc/namazu/namazurc)
+<dd>
+Namazu の動作を変更したいときに、その設定をする。
+<code>Index, Replace, Logging, Lang, Template</code>
+の設定ができる。
+詳しくは<a href="manual.html#namazurc">説明書</a>を参照のこ
+と。
+
+<dt>Perl モジュール (Perl module)
+<dd>NKF, KAKASI, ChaSen などは以前は  Namazu から外部プロセ
+スとして呼出されていた。この場合、プロセスをファイル毎に起動するので
+時間がかかる。
+現在の版では、これらの perl モジュールを使うしくみが用意されて、
+perl からモジュールとして呼出されるようにできる。
+そうするとプロセスを起動しないで済む分、実行速度が速くなる。
+
+<br>この機能は Namazu-1.3 以前では提供されていない。
+1.4 以降の機能である。
+Namazu に必要な Perl のモジュールが入っているかどうかは
+<pre>
+perl -MText::Kakasi -e ''
+perl -MText::ChaSen -e ''
+perl -MMeCab -e ''
+perl -MNKF -e ''
+</pre>
+のように入力した時に、何も表示されなければいい。
+その状態で namazu で ./configure すると、これらが使われる。
+</dl>
+
+<h2><a name="reference">参照</a></h2>
+
+<dl>
+<dt>KAKASI - 漢字→かな(ローマ字)変換プログラム
+  <dd>漢字かなまじり文をひらがな文やローマ字文に変換することを目
+  的として作成したプログラムと辞書<br>
+  原作:高橋裕信さん、保守:KAKASI Project<br>
+  Namazu ではこれを転じてわかち書き処理に使っている。<br>
+  <a href="http://kakasi.namazu.org/">http://kakasi.namazu.org/</a>
+  <br>
+
+<dt>開発・配布元の情報
+  <dd>
+  <a href="http://www.namazu.org/">http://www.namazu.org/</a>
+<dt>よくある質問と答 (FAQ)日本語
+  <dd>
+  <a href="http://www.namazu.org/FAQ.html">http://www.namazu.org/FAQ.html</a>
+<dt>Namazu メイリングリスト
+  <dd>
+  <a href="http://www.namazu.org/ml.html">http://www.namazu.org/ml.html</a>
+<!--
+<dt>やまだあきらさんの namazu.el (Emacs/Mule client)
+  <dd>
+  <a href="http://arika.org/linux/tools/namazu-el/">http://arika.org/linux/tools/namazu-el/</a>
+-->
+<dt>Namazu開発版
+  <dd><a href="http://www.namazu.org/development.html">http://www.namazu.org/development.html</a>
+</dl>
+
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2014 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: tutorial.html,v 1.44.4.39 2014-03-25 14:03:14 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

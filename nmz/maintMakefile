@@ -1,0 +1,13 @@
+## for MAINTAINERS.
+
+# Convert regex-ruby.[ch] to regex.[ch] with adding nmz
+# prefix to all extern functions.
+add-prefix:
+	echo "/* Add nmz prefix by Satoru Takabayashi */" > regex.c
+	echo "/* Add nmz prefix by Satoru Takabayashi */" > regex.h
+	cextract regex-ruby.c | perl get-extern-funcs.pl  > extern-funcs
+	perl add-prefix.pl  nmz  regex-ruby.h < extern-funcs >> regex.h
+	perl add-prefix.pl  nmz  regex-ruby.c < extern-funcs |\
+	perl -pe 's/\b(scan_oct|scan_hex|xmalloc|xrealloc)\b/nmz_$$1/g'\
+	     >> regex.c
+	rm extern-funcs

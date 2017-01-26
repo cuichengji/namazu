@@ -1,0 +1,241 @@
+
+CVSへのアクセス
+
+Anonymous CVS で最新のソースコードを誰でも入手できます。
+方法は次の通りです。
+
+% cvs -d :pserver:anonymous@cvs.namazu.org:/storage/cvsroot co -P namazu
+
+また、2001-06-25から安定版 (2.0.x) と開発版 (2.1.x) に分岐
+しました。安定版のソースを入手したい場合には
+
+% cvs -d :pserver:anonymous@cvs.namazu.org:/storage/cvsroot co -r stable-2-0 namazu
+
+としてください。
+
+==============================================================
+
+GNU Build Tools
+
+CVS から入手した Namazu を make するには、あらかじめ以下の
+パッケージがインストールされている必要があります。
+
+	- GNU m4 1.4
+	- GNU autoconf 2.50 (もしくはそれ以上)
+	- GNU automake 1.6 (もしくはそれ以上)
+	- GNU libtool 1.4 (もしくはそれ以上)
+	- GNU gettext 0.13 (もしくはそれ以上)
+
+いずれも GNU のミラー(e.g. ftp://ftp.ring.gr.jp/pub/GNU) 
+から手に入れることができます。
+
+CVS からソースを取得したら、まずautogen.sh スクリプトを実行
+してください。
+
+===============================================================
+
+メッセージカタログ翻訳の手順
+
+1. 各poファイルの未翻訳部分を翻訳する
+2. ja_JP.SJIS.po に関しては、ja.po の翻訳後に make_sjis_po を
+   必ず実行する。これで ja.po における変更が ja_JP.SJIS.po にも
+   反映される。
+3. po 以下で、make update-po を実行することによって、全 po を
+   namazu.pot に同期させることができる。
+
+基本的にはこれの繰り返しです。:)
+
+なお、GNU gettext 0.10.37 以降では Big5 や Shift_JIS な文字列を
+'\' でエスケープする必要はなくなりましたが、'\' でエスケープ
+された文字列を含むカタログを処理するためには、環境変数
+OLD_PO_FILE_INPUT および OLD_PO_FILE_OUTPUT を設定する必要が
+あります。具体的には
+
+% env OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes make update-po
+
+などとしてください。
+ただし、Namazu 2.0.18 以降は、'\' でエスケープしないようにし
+ましたので、環境変数を定義せずに make update-po を実行してく
+ださい。
+
+% make update-po
+
+================================================================
+
+Namazu のコーディング規則 - Perl編
+
+mknmz固有の事情
+
+  * ハッシュのキーを文字列で指定するときは必ず '' で括る。例:
+    × $NMZ{log}  ○ $NMZ{'log'}
+  => log という関数があるため perl 5.004 では warning が出る
+
+  * debugメッセージを出力するときは必ず 
+    util::dprint() を使う
+
+  * verboseメッセージを出力するときは必ず 
+    util::vprint() を使う
+
+  * エラーなどの理由で die するときは必ず 
+    util::cdie() を使う
+
+  * ファイルを開くときには必ず util::efopen() (エラーの時に
+    util::cdie() する)または util::fopen() を使う
+
+  * ファイルを閉じるときには必ず util::fclose() を使う
+
+  * while (<>) {} や while (<$fh>) {} を禁止する。$_ はグロー
+    バル変数であるため、危険。代わりに
+    while (defined(my $line = <$fh>)) {} とする。
+
+  * 一時ファイルを作るときは必ず 
+    my $tmpfile = util::tmpnam("NMZ.foobar");
+    として一時ファイルの名前を取得する。
+
+  * ファイルの中身をまるごと読み込むときは util::readfile()
+    を使う。 join '' <$fh> より速いはず。
+
+  * ファイルを rename するときは必ず util::Rename() を使う。
+    OS/2 対策。
+
+  * プログラム全体に影響をおよぼすグローバル変数は
+    pl/var.pl.in に定義する。
+
+  * mknmz 内だけに影響をおよぼすグローバル変数は
+    scripts/mknmz.pl.in に定義する。 $SYSTEM のみ例外。
+
+  * ユーザが mknmz.conf, ~/.mknmzrc にて変更したいであろう変
+    数は pl/conf.pl.in に定義する。
+
+
+書法
+
+  * 必ず -w オプションを用いる  
+     #! /usr/bin/perl -w
+  * 必ず use strict する
+  * local() は使わない
+  * 変数は使う位置で宣言する
+    - C言語のようにブロックの最初で宣言する必要はない
+  * 変数の宣言時にはできる限り初期化を行う
+  * for は for my $tmp (@foo) { ... } のように用いる
+    - my $tmp の部分が要 ($tmpのスコープをループ内に限定する)
+  * 戻り値は陽に return する
+    - サブルーチン最後の式が return される、というルールに頼らない
+  * built-in関数呼び出しの際は省略できる丸括弧はできるだけ省く
+    - ○ substr $str, $offset, $len;  × substr($str, $offset, $len)
+  * 正規表現では $&, $', $` を使わない
+    - プログラム全体が遅くなるため
+  * サブルーチンの呼び出しは foobar() とする
+    - &foobar は不可 ("&" は不要)
+  * サブルーチンの定義ではプロトタイプ宣言を行う
+    - sub foobar($$$) { ... } のように
+  * $_ はできる限り使わない
+    - $_ はグローバル変数なので危険
+  * open() は使わない。 use IO::File を用いて
+    my $fh = new IO::File; $fh->open() とする
+  * ファイルは destructor にまかせず、陽に閉じる
+    - util::fclose() を用いる (2.0.13 以降改定)
+  * リファレンスは大いに活用する
+  * 既存の perl module を活用する
+    - 車輪の再発明をしない
+  * $| といった特殊変数はできるだけ用いない
+    - $| は STDOUT->autoflush(1) で代用できる
+  * グローバル変数はできるだけ使わない
+  * コードはできる限りモジュール化する
+    - APIを定めて拡張を容易にする
+  * 必要に応じて Object Oriented Programming を取り入れる
+    - すべてを OOP で書くことはない
+  * 長い正規表現には適宜 /x モディファイアを適用する
+  * 変数を使った正規表現には安全なら /o モディファイアを適用
+    する
+  * コメントは英語で書く
+
+
+名前規則
+
+  * テンポラリな変数は型を問わず tmp という名前にする
+  * for 文のカウンタには $i, $j, $k を用いる
+    - 3段より深くしないように気をつける
+  * サブルーチン名は動詞 (+目的語)、変数名は名詞
+    - e.g. update_registry()
+  * 語の連結にはアンダースコア ('_') を用いる
+    - e.g. get_os_name(), $os_name
+  * 局所変数の名前は小文字
+  * グローバル変数の名前は capitalize し、アンダースコアを省
+    略する (要検討)
+    - $IndexType
+  * 配列、ハッシュの変数名は複数形にする (要検討)
+    - @files
+  * 変数名の極端な省略はしない
+    - $on (OS name) などは不可
+  * が、必要に応じて省略する (要検討)
+  * 省略のルールは明確化する
+    - file handle -> fh
+    - pointer     -> ptr
+    - index       -> idx
+    - current     -> cur
+    - protocol    -> proto
+    - length      -> len
+    - string      -> str
+    - argument    -> arg
+    - source      -> src
+    - destination -> dest
+    - control     -> ctrl
+    - module      -> mod
+    - language    -> lang
+    - initialize  -> init
+    - variable    -> var
+    - 他にもあれば追加する
+  * package が異なれば同じサブルーチン名を用いて良い
+
+
+インデント
+
+  * インデントは 4文字単位
+
+    $foo = 1 + 2 + 3;
+    $bar = ((1 + 2) + 3) * 4;
+    if ($foo == $bar) {
+        print foobar($foo, $bar), "\n";
+    } else {
+        die "error";
+    }
+
+    sub foobar ($$) {
+        my ($foo, $bar) = @_;
+        return $foo + $bar;
+    }
+
+
+Perl関連リンク
+
+  * CPAN
+    <ftp://ring.asahi-net.or.jp/archives/lang/perl/CPAN/>
+  * Perl Style
+    <ftp://ftp.dti.ad.jp/pub/lang/CPAN/doc/FMTEYEWTK/style/slide-index.html>
+  * perl5.005_02のドキュメント
+    <http://www.kt.rim.or.jp/%7ekbk/perl5.005/index.html>
+  * perl5.004_04のドキュメント
+    <http://www.kt.rim.or.jp/%7ekbk/perl5.doc/index.html>
+  * Perl information memo
+    <http://www.st.rim.or.jp/~cond/perlinfo/index.html>
+  * /pub/IIJ/dist/utashiro/perl directory
+    <ftp://ftp.iij.ad.jp/pub/IIJ/dist/utashiro/perl>
+  * /pub/lang/CPAN/authors/Hirofumi_Watanabe directory
+    <ftp://ftp.dti.ad.jp/pub/lang/CPAN/authors/Hirofumi_Watanabe>
+  * FMTEYEWTK
+    <ftp://ftp.dti.ad.jp/pub/lang/CPAN/doc/FMTEYEWTK/index.html>
+  * Yahoo! - Computers and Internet:Programming Languages:Perl
+    <http://www.yahoo.co.jp/Computers_and_Internet/Programming_Languages/Perl/>
+  * JPerl for Win32
+    <http://www.yk.rim.or.jp/~hizumi/perl/index.html>
+  * Index of /archives/lang/perl/CPAN/modules/by-authors/Gurusamy_Sarathy
+    <http://ring.nacsis.ac.jp/archives/lang/perl/CPAN/modules/by-authors/Gurusamy_Sarathy/>
+  * Learning Perl/Tk
+    <http://tanaka-www.cs.titech.ac.jp/~ueki/PerlTk/index.html>
+  * ActiveState Tool Corp. - Professional tools for Perl developers
+    <http://www.activestate.com/>
+  * Index of /archives/lang/perl/CPAN/modules/by-module/Tk
+    <http://ring.nacsis.ac.jp/archives/lang/perl/CPAN/modules/by-module/Tk/>
+  * What's wrong with Perl   
+    <http://www.stud.ifi.uio.no/~larsga/download/artikler/perl.html>

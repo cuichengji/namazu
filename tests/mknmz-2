@@ -1,0 +1,23 @@
+#! /bin/sh
+#
+# Test for incremental indexing.
+#
+LOG=`pwd`/test-log
+TARGET=`$srcdir/select-data`
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d idx2; then
+    mkdir idx2
+else
+    rm -f idx2/NMZ.*
+fi
+
+targets=`cat idx1/NMZ.field.uri`
+
+for target in $targets; do
+   ../scripts/mknmz --no-delete -O idx2 $target \
+	>> $LOG
+    test "$?" != "0" && exit 1  # error if not success
+done;
+
+exit 0;

@@ -1,0 +1,137 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-12.pl.in,v 1.1.4.2 2007-05-09 14:42:12 opengl2772 Exp $
+# Copyright (C) 2007 Tadamasa Teranishi
+#               2007 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu.cgi.
+#
+
+use strict;
+require Cwd;
+use File::Copy;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1';
+
+my %encode = (
+    'ja' => 'EUC-JP',
+    'ja_JP.eucJP' => 'EUC-JP',
+    'ja_JP.SJIS' => 'Shift_JIS',
+    'ja_JP.ISO-2022-JP' => 'ISO-2022-JP',
+    'en' => 'ISO-8859-1',
+    'fr' => 'ISO-8859-1',
+    'de' => 'ISO-8859-1',
+    'es' => 'ISO-8859-1',
+    'pl' => 'ISO-8859-2',
+    'C' => 'ISO-8859-1',
+    'POSIX' => 'ISO-8859-1',
+);
+
+sub check_charset($);
+
+pltests::putline($LOG, "  *** starting $0");
+
+foreach my $lang (sort keys %encode) {
+
+    if (-f $RC) {
+        unlink("$RC");
+    }
+    pltests::putline($RC, "Index $cwd");
+    pltests::putline($RC, "Lang $lang");
+    pltests::duprcs($RC);
+
+    check_charset($lang);
+}
+
+my $lang;
+my $cset;
+
+$lang = 'eo';
+$cset = 'ISO-8859-3';
+$encode{$lang} = $cset;
+copy("$INDEX/NMZ.head", "$INDEX/NMZ.head.$lang");
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::putline($RC, "Lang $lang");
+pltests::putline($RC, "Charset \"$lang\" \"$cset\"");
+pltests::duprcs($RC);
+
+check_charset($lang);
+
+exit 0;
+
+sub
+check_charset($)
+{
+    my ($lang) = @_;
+
+    delete $ENV{'LANGUAGE'};
+    delete $ENV{'LC_ALL'};
+    delete $ENV{'LC_MESSAGE'};
+    delete $ENV{'LC_CTYPE'};
+    delete $ENV{'LANG'};
+
+    # Check simple searching.
+    @cmd = ("$NAMAZU");
+    my ($staus, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+    unless (defined $result) {
+        exit 1;
+    }
+
+    my $charset = undef;
+    if ($result =~ /^content-type:[^;]*;\s*charset=(.*)$/im) {
+        $charset = $1;
+    }
+    unless (defined $charset) {
+        exit 1;
+    }
+
+    my $msg = sprintf("lang: [%s] ; charset: [%s], [%s]", 
+        $lang, $encode{$lang}, $charset
+    );
+    pltests::putline($LOG, $conts_err) if ($conts_err ne "");
+    pltests::putline($LOG, $msg);
+
+    if ($encode{$lang} ne $charset) {
+        exit 1;
+    }
+}
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

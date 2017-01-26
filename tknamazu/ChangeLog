@@ -1,0 +1,149 @@
+2000-03-01  Ken-ichi Hirose  <kenzo-@tama.or.jp>
+
+	* tknamazu.tcl.in (MainKeyBind): tknamazu option bar key bind 
+	change.
+
+	* tknamazu.hlp.en: Add section 2, 7, 13, 14, etc..
+
+	* tknamazu.hlp.ja: some key word convert to japanese.
+	And Rev erase.
+
+	* tknamazu.hlp.ja_JP.SJIS: Likewise.
+
+2000-02-20  Ken-ichi Hirose  <kenzo-@tama.or.jp>
+
+	* tknamazu.tcl.in: commandline bug fix.
+
+	* tknamazu.hlp.ja: references bug fix.
+
+	* tknamazu.hlp.ja_JP.SJIS: Likewise.
+
+	* tknamazurc.in: SMARTBROWSE and HEADERWIPE default value set.
+
+2000-02-20  Ken-ichi Hirose  <kenzo-@tama.or.jp>
+
+	* tknamazu.hlp.en: rewrite.
+
+	* tknamazurc.in: rewrite.
+
+2000-02-20  Ken-ichi Hirose  <kenzo-@tama.or.jp>
+
+	* tknamazu.hlp.ja: some info add.
+
+	* tknamazu.hlp.ja_JP.SJIS: New file. convert from tknamazu.hlp.ja.
+
+	* tknamazu.tcl.in(Quit): Dialog make myself.
+	(LoadResources): change value sepalater TAB to SPACE.
+
+	* Makefile.am(pkgdata_DATA): Add tknamazu.hlp.ja_JP.SJIS.
+
+2000-02-19  Satoru Takabayashi  <satoru-t@is.aist-nara.ac.jp>
+
+	* tknamazu.hlp.ja: Change URI of Namazu website.
+
+	* tknamazu.hlp.en: Change URI of Namazu website.
+
+2000-02-19  Ken-ichi Hirose <kenzo-@tama.or.jp>
+
+	* tknamazu.tcl.in: command line option change for Namazu 2.0.
+	many code rewrite.
+
+	* tknamazu.hlp.ja: some info add.
+
+	* configure.in: change version & add wish8.3.
+
+1999-12-19  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* Makefile.am: Removed unnessesary `@SET_MAKE@'.
+	(pkgdatadir): Removed.
+
+1999-11-03  Ken-ichi Hirose <kenzo-@@tama.or.jp>
+
+    * configure.in(AC_OUTPUT): add tknamazurc.
+    Makefile.am(pkgdata_DATA): change tknmzrc to tknamazurc.
+    tknamazurc.in: add tknamazurc.in.
+
+    * tknamazu.tcl.in: change system resource file from
+    tknmzrc to tknamaurc.
+
+1999-11-02  Ken-ichi Hirose <kenzo-@@tama.or.jp>
+
+    * tknamazu.tcl.in: fix man section search regexp.
+
+    * tknamazu.tcl.in: change calc value of header wipe.
+
+1999-10-07  Ken-ichi Hirose <kenzo-@tama.or.jp>
+
+	* tknamazu.tcl.in: Marge current code.
+	New function "Sort".
+	New function "Smart Jump".
+	New function "Header Wipe".
+	New function "Site Search".
+	New value "LANG".
+		:
+
+	* tknamazu.hlp.jp: Rename tknamazu.hlp.
+
+	* tknamazu.hlp.en: Make help file in english.
+
+	* tknamazu_logo.ppm: Rename tknamazu.ppm.
+
+	* tknamazu_icon.ppm: Convert mini-tknamazu.xpm.
+
+	* mini-tknamazu.ico: Convert mini-tknamazu.xpm to Windows icon.
+
+	* Makefile.am(pkgdata_DATA): Added mini-tknamazu.ico.
+
+	* configure.in(WISH): Move wish8.0jp to top.
+
+1999-10-01  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* tknamazu.tcl.in: Quit to make $(HOME)/.tknmzrc.
+	
+	* tknmzrc: Comment-out all sections currently.
+	
+1999-09-30  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* Makefile.am(pkgdata_DATA): Added tknmzrc and removed tknamazu.spec.in
+	(EXTRA_DIST): Added tknamazu.spec.in
+	
+	* tknmzrc: New File.
+	
+	* tknamazu.tcl.in: Changed to make $(HOME)/.tknmzrc if it doesn't exist.  
+	
+1999-09-20  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* configure.in: Added AC_PREREQ(2.13).
+
+	* Makefile.am(AUTOMAKE_OPTIONS): Added 1.4.
+
+1999-09-10  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* Makefile.am(ext_namazu): New Variable.
+	(ext_mknmz): New Variable.
+	(pkgdata_DATA): Added tknamazu.spec.in.
+	(EXTRA_DIST): Added tknamazu.spec.
+
+	* configure.in: Find namazu and mknmz location.
+
+	* tknamazu.tcl.in(NAMAZU): Configured at make all.
+	(MKNMZ): Likewise.
+
+	* tknamazu.spec.in: New File.
+
+1999-09-07  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* README.tknamazu: Renamed README.
+
+	* AUTHORS: New File.
+
+	* AUTHORS, COPYING, ChangeLog, INSTALL, NEWS: New Files. 
+
+	* aclocal.m4, configure.in, configure: New Files.
+
+	* Makefile.am(pkgdatadir): Used instead of tknamazudir. 
+	(pkgdata_DATA): Used instead of tknamazu_DATA.
+	(CLEANFILES): Only tknamazu.
+
+	* tknamazu.tcl.in(version): Set by configure.
+	(LANGUAGE): Set JAPANESE by default.

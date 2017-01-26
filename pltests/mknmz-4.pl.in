@@ -1,0 +1,110 @@
+#!%PERL% -w
+#
+# $Id: mknmz-4.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for deleting documents in an index.
+#
+
+use strict;
+require Cwd;
+use File::Copy;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = pltests::selectdata();
+my $INDEX = "$cwd/idx4";
+my $TMPDATA = "$cwd/tmp-data";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+# Copy docments.
+if (-d "$TMPDATA") {
+    unlink(<$TMPDATA/*>);
+} else {
+    mkdir("$TMPDATA", 0755);
+}
+for my $file (<$TARGET/*>) {
+    copy($file, $TMPDATA);
+}
+
+# Simple indexing.
+@cmd = ("$MKNMZ", "-O", "$INDEX", "$TMPDATA");
+pltests::putline($LOG, "  ", \@cmd);
+my $status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+my $prevdocnum = 0;
+my $doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files (\d+)/m) {
+    $prevdocnum = $1;
+} else {
+    exit 1;
+}
+
+# Remove some documents.
+unlink(<$TMPDATA/*.txt>);
+
+# Update the index.
+@cmd = ("$MKNMZ", "--update=$INDEX");
+pltests::putline($LOG, "  " . join(" ", @cmd));
+$status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+my $postdocnum = 0;
+$doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files (\d+)/m) {
+    $postdocnum = $1;
+} else {
+    exit 1;
+}
+
+pltests::putline($LOG, "predocnum: $prevdocnum postdocnum: $postdocnum");
+
+if ($prevdocnum <= $postdocnum) {
+    exit 1;
+}
+
+exit 0;

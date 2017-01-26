@@ -1,0 +1,56 @@
+#! /bin/sh
+#
+# Test for mknmz's --html-split option with updating.
+#
+LOG=`pwd`/test-log
+TARGET=$srcdir/data/html-split
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d idx10; then
+    mkdir idx10
+else
+    rm -f idx10/NMZ.*
+fi
+
+TMPDATA=`pwd`/tmp-data
+# Copy docments.
+if test -d tmp-data; then
+    rm -rf tmp-data
+fi
+cp -rp $TARGET tmp-data
+
+# Index with --html-split option.
+../scripts/mknmz --html-split -O idx10 $TMPDATA >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+origdocnum=`../scripts/gtnmz idx10/NMZ.r`
+
+# Update 1.html.
+perl -i.bak -pe s/xyzzy// $TMPDATA/1.html
+echo amarok >> $TMPDATA/1.html
+
+# Update the index with --html-split option.
+../scripts/mknmz --update=idx10 --check-filesize >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+docnum=`../scripts/gtnmz idx10/NMZ.r`
+test $docnum != $origdocnum && exit 1  # error if not equal
+
+# Remove 2.html.
+rm $TMPDATA/2.html
+
+# Update the index with --html-split option.
+../scripts/mknmz --update=idx10 --check-filesize >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+docnum=`../scripts/gtnmz idx10/NMZ.r`
+docnum2=`expr $docnum + $docnum`
+test $docnum2 != $origdocnum && exit 1  # error if not equal
+
+# Nothing changed.
+
+# Update the index with --html-split option.
+../scripts/mknmz --update=idx10 --check-filesize >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+docnum=`../scripts/gtnmz idx10/NMZ.r`
+docnum2=`expr $docnum + $docnum`
+test $docnum2 != $origdocnum && exit 1  # error if not equal
+
+exit 0

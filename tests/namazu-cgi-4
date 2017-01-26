@@ -1,0 +1,129 @@
+#! /bin/sh
+#
+# Test for namazu.cgi with NMZ.access.
+#
+# NOTE: If error occurred, consult idx1/NMZ.access.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+pwd=`pwd`
+
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+duprcs
+
+tmpaccess="$pwd/idx1/NMZ.access"
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=namazu&idxname=idx1&lang=C'
+export SCRIPT_NAME QUERY_STRING 
+
+REMOTE_HOST='foo.bar.jp'
+REMOTE_ADDR='1.2.3.4'
+export REMOTE_HOST REMOTE_ADDR
+
+cd ../src
+
+# should be denied - ||
+cat <<EOF > $tmpaccess
+deny all
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null || exit 1
+
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+allow all
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+deny all
+allow all
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+# should be denied - ||
+cat <<EOF > $tmpaccess
+allow all
+deny all
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null || exit 1
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+deny all
+allow foo.bar.jp
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+deny all
+allow bar.jp
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+# should be denied - ||
+cat <<EOF > $tmpaccess
+deny all
+allow foo
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null || exit 1
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+deny all
+allow 1.2.3.4
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+# should be allowed - &&
+cat <<EOF > $tmpaccess
+deny all
+allow 1.2.3
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null && exit 1
+
+# should be denied - ||
+cat <<EOF > $tmpaccess
+deny all
+allow 2.3.4
+EOF
+
+./namazu.cgi | \
+grep "You don't have a permission to access the index" > /dev/null || exit 1
+
+rm -f $tmprc
+rm -f $tmpaccess
+
+exit 0

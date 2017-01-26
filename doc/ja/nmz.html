@@ -1,0 +1,412 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Specification of NMZ.* files</title>
+</head>
+<body lang="ja">
+<h1>NMZ.* ファイルの仕様</h1>
+<hr>
+
+<h2>目次</h2>
+
+<ul>
+<li><a href="#i">NMZ.i</a>
+<li><a href="#ii">NMZ.ii</a>
+<li><a href="#w">NMZ.w</a>
+<li><a href="#wi">NMZ.wi</a>
+<li><a href="#r">NMZ.r</a>
+<li><a href="#p">NMZ.p</a>
+<li><a href="#pi">NMZ.pi</a>
+<li><a href="#t">NMZ.t</a>
+<li><a href="#field">NMZ.field.{subject,from,date,message-id,...}</a>
+<li><a href="#field-i">NMZ.field.{subject,from,date,message-id,...}.i</a>
+<li><a href="#access">NMZ.access</a>
+<li><a href="#status">NMZ.status</a>
+<li><a href="#result">NMZ.result</a>
+<li><a href="#head">NMZ.head</a>
+<li><a href="#foot">NMZ.foot</a>
+<li><a href="#body">NMZ.body</a>
+<li><a href="#tips">NMZ.tips</a>
+<li><a href="#log">NMZ.log</a>
+<li><a href="#lock">NMZ.lock</a>
+<li><a href="#lock2">NMZ.lock2</a>
+<li><a href="#slog">NMZ.slog</a>
+</ul>
+
+<h2><a name="i">NMZ.i</a></h2>
+<p>単語検索用のインデックスファイル (転置ファイル, inverted ファイル)</p>
+
+<h3>構造</h3>
+
+単語毎に、[その単語を含む文書 ID][スコア]を並べて「レコード」を作る。
+その長さは可変になるので、先頭に、そのデータ長を記録する。
+<pre>
+
+    [単語1用 データ長][文書ID][スコア][文書ID][スコア]...
+    [単語2用 データ長][文書ID][スコア][文書ID][スコア]...
+    [単語3用 データ長][文書ID][スコア][文書ID][スコア]...
+       :
+</pre>
+
+<h3>注意点</h3>
+
+<ul>
+<li>文書IDは小さい順に並ぶ --重要
+<li>文書IDは差分だけを記録する。<br>
+例: 1, 5, 29, 34 -&gt; 1, 4, 24, 5
+<li>データはすべて pack 'w' で保存される (BER圧縮)
+</ul>
+
+
+<h2><a name="ii">NMZ.ii</a></h2>
+<p>NMZ.iの seek 用インデックス</p>
+
+<h3>構造</h3>
+
+<pre>
+
+    [NMZ.i中の単語1の位置][NMZ.i中の単語2の位置]
+    [NMZ.i中の単語3の位置]...
+</pre>
+
+
+<h3>注意点</h3>
+<ul>
+<li>すべてバイナリデータ (pack 'N')
+</ul>
+
+
+<h2><a name="w">NMZ.w</a></h2>
+<p>単語の一覧表</p>
+
+<h3>構造</h3>
+
+<p>
+単なる行指向のテキスト。昇順に並ぶ。行番号をもとに
+NMZ.ii をseekできる。 (行番号 = 単語ID)
+</p>
+
+
+<h3>注意点</h3>
+
+<ul>
+<li>単語の並びは昇順
+<li>正規表現/中間/後方一致はこのファイル全体を grep する。
+<li>JIS X 0208の文字はEUC-JPで記録される
+</ul>
+
+
+<h2><a name="wi">NMZ.wi</a></h2>
+<p>NMZ.w の seek 用インデックス</p>
+
+<h3>構造</h3>
+
+<pre>
+
+    [NMZ.w中の単語1の位置][NMZ.w中の単語2の位置]
+    [NMZ.w中の単語3の位置]...
+</pre>
+
+
+<h3>注意点</h3>
+
+<ul>
+<li>すべてバイナリデータ (pack 'N')
+</ul>
+
+
+<h2><a name="r">NMZ.r</a></h2>
+
+<p>インデックスに登録されているファイルのリスト</p>
+
+<h3>構造</h3>
+
+<p>
+インデックスに登録されている文書ファイルを一行にひとつづつ記
+録している。ただし、 '# ' からはじまる行はインデックスから削
+除されたファイルを意味する。 '## ' からはじまる行はコメント。
+例:
+</p>
+
+<pre>
+
+    /home/foo/bar1.html
+    /home/foo/bar2.html
+    /home/foo/bar3.html
+    ## indexed: Sun, 08 Jan 2006 02:28:00 +0900
+    (空行)
+    # /home/foo/bar1.html
+    ## deleted: Sun, 08 Jan 1998 12:34:56 +0900
+</pre>
+
+<h2><a name="p">NMZ.p</a></h2>
+<p>フレイズ検索用のインデックス</p>
+
+<h3>解説</h3>
+
+<p>
+2つの単語を 16bitのハッシュ値に変換して記録する。フレイズ検索
+の際にはあらかじめフレイズを構成する各単語を ANDで検索し、その
+後で NMZ.p を参照して語の順序を確認する。ただし、2単語づつの順
+序しか記録していないのでたとえば "foo bar baz" で検索すると
+"foo bar" と "bar baz" を含む文書もヒットしてしまう。また、ハッ
+シュ値の衝突により不適当な文書がヒットすることもある。欠点はあ
+るもののそれなりに機能する。
+</p>
+
+<h3>構造</h3>
+
+<pre>
+
+                 |←                     データバイト数1                      →|
+[データバイト数1][ハッシュ値\x0000を含む文書ID 1][ハッシュ値\x0000を含む文書ID 2]...
+                 |←                     データバイト数2                      →|
+[データバイト数2][ハッシュ値\x0001を含む文書ID 1][ハッシュ値\x0001を含む文書ID 2]...
+...
+[データバイト数n][ハッシュ値\xffffを含む文書ID 1]...
+</pre>
+
+
+<h3>注意点</h3>
+
+<ul>
+<li>文書IDは小さい順に並ぶ --重要
+<li>文書IDは差分だけを記録する。<br>
+例: 1, 5, 29, 34 -&gt; 1, 4, 24, 5
+<li>データはすべて pack 'w' で保存される (BER圧縮)
+</ul>
+
+<h2><a name="pi">NMZ.pi</a></h2>
+<p>フレイズ検索用のインデックスのインデックス</p>
+
+<h3>構造</h3>
+
+<pre>
+
+    [NMZ.p中の\x0000の位置][NMZ.p中の\x0001の位置] ...
+    [NMZ.p中の\xffffの位置]
+</pre>
+
+
+<h3>注意点</h3>
+
+<ul>
+<li>すべてバイナリデータ (pack 'N')
+<li>常に 256 Kb
+</ul>
+
+
+<h2><a name="t">NMZ.t</a></h2>
+<p>文書のタイムスタンプ、欠番の情報を記録</p>
+
+<h3>解説</h3>
+
+<p>
+ファイルのタイムスタンプを 32bitで記録する。検索結果の日付順の
+ソートに利用される。また、値が -1 のときはその文書は欠番とみな
+される。
+</p>
+
+<h3>構造</h3>
+
+<pre>
+
+    [文書ID1のタイムスタンプ][文書ID2のタイムスタンプ]...
+</pre>
+
+<h3>注意点</h3>
+<ul>
+<li>すべてバイナリデータ (pack 'N')
+<li>2038年問題を抱えている
+</ul>
+
+<h2><a name="field">NMZ.field.{subject,from,date,message-id,...}</a></h2>
+<p>フィールド情報を記録するファイル</p>
+
+<h3>解説</h3>
+
+<p>
+フィールド指定の検索に使われる。構造は単なる行単位のテキスト。
+正規表現のエンジンに読まれる。行番号をそのまま文書IDとして使え
+る。検索結果を表示する際にも用いられる。
+</p>
+
+<h3>構造</h3>
+
+<p>
+単なる行指向のテキスト。(行番号 = 文書ID)
+</p>
+
+<h3>注意点</h3>
+
+<p>
+単なる行指向のテキストなのでエディタなどで書き換えてもいい。
+ただし、その際は必ず <a href="manual.html#rfnmz">rfnmz</a>
+で <a
+href="#field-i">NMZ.field.{subject,from,date,message-id,...}.i</a>
+ファイルを再構築すること。
+</p>
+
+
+<h2><a name="field-i">NMZ.field.{subject,from,date,message-id,...}.i</a></h2>
+<p>NMZ.field.{subject,from,date,message-id,...} の seek 用インデックス</p>
+
+<h3>構造</h3>
+
+<pre>
+
+    [文書ID1のフィールドの位置][文書ID2のフィールドの位置]...
+</pre>
+
+
+<h3>注意点</h3>
+
+<ul>
+<li>すべてバイナリデータ
+<li>すべてバイナリデータ (pack 'N')
+</ul>
+
+<h2><a name="access">NMZ.access</a></h2>
+<p>アクセスを制限するための設定ファイル</p>
+
+<h3>構造</h3>
+
+<p>
+IPアドレス・ホスト名・ドメイン名によるアクセス制限を行う。
+<code>deny</code> でアクセスを許可しないホストを、
+<code>allow</code> でアクセスを許可するホストを指定する。IP
+アドレスを指定したときは前方一致で評価され、ホスト名・ドメイ
+ン名で指定したときは後方一致で評価される。<code>all</code>
+は「すべてのホスト」を表す。設定は上から順に評価される。例:
+</p>
+
+<pre>
+
+    deny all
+    allow localhost
+    allow 123.123.123.
+    allow .example.jp
+</pre>
+
+<p>
+この例では、 localhost または IPアドレスが 123.123.123. から
+始まるホスト、または .example.jp ドメインに属するホストからの
+みのアクセスを許可する。それ以外のホストからのアクセスは拒否
+する。
+</p>
+
+<p>
+Webサーヴァが Apache の場合、ホスト名・ドメイン名によるアク
+セス制限を行うには、 httpd.conf に
+</p>
+
+<pre>
+
+    HostnameLookups On
+</pre>
+
+<p>
+の設定が必要。
+</p>
+
+
+<h2><a name="status">NMZ.status</a></h2>
+<p>インデックスを更新するために必要なデータを保存する。</p>
+
+
+<h2><a name="result">NMZ.result</a></h2>
+<p>検索結果の書式を指定するファイル</p>
+
+<h3>解説</h3>
+
+<p>
+${フィールドの名前} の部分はそのフィールドの内容に置き換
+えられる。つまり、 ${title} なら NMZ.field.title の内容
+に置き換わる。${namazu::counter}, ${namazu::score} は特
+別な意味を持つ。それぞれ、検索結果の番号、スコアに置き換
+わる。
+</p>
+
+<p>
+標準では NMZ.result.normal と NMZ.result.shortが 用意されて
+いる。利用者は自由に NMZ.result.* を作成できる。
+</p>
+
+<h2><a name="head">NMZ.head</a></h2>
+
+<p>
+検索結果の冒頭部分。
+</p>
+
+
+<h2><a name="foot">NMZ.foot</a></h2>
+
+<p>
+検索結果の末尾部分。
+</p>
+
+
+<h2><a name="body">NMZ.body</a></h2>
+
+<p>
+検索式の説明。キーワードが与えられなかったときに表示される。
+</p>
+
+<h2><a name="tips">NMZ.tips</a></h2>
+
+<p>
+検索のコツ。検索に何もヒットしなかったときに表示される。
+</p>
+
+
+<h2><a name="log">NMZ.log</a></h2>
+
+<p>
+インデックスの更新ログ。
+</p>
+
+
+<h2><a name="lock">NMZ.lock</a></h2>
+
+<p>
+検索時のロックファイル。
+</p>
+
+
+<h2><a name="lock2">NMZ.lock2</a></h2>
+
+<p>
+インデックス作成時のロックファイル。
+</p>
+
+
+<h2><a name="slog">NMZ.slog</a></h2>
+
+<p>
+検索されたキーワードのログ。
+</p>
+
+<h3>注意点</h3>
+<ul>
+<li>書き込み時にロックを行っていない
+</ul>
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2008 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: nmz.html,v 1.12.8.6 2008-03-04 20:57:16 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

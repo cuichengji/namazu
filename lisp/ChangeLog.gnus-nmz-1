@@ -1,0 +1,28 @@
+2013-06-19  Tadamasa Teranishi  <yw3t-trns@asahi-net.or.jp>
+
+	* gnus-nmz-1.el: add 'coding: iso-2022-jp-unix'
+
+2000-02-16  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* gnus-nmz-1.el: Change Copyright notes, and Version up to -1.0.2.
+
+2000-01-31  MIYOSHI Masanori  <miyoshi@ask.ne.jp>
+
+	* gnus-nmz-1.el (gnus-nmz-view): Support hierarchical mail groups.
+	(namazu-view-function-alist): Modify match pattern for gnus-nmz-view.
+
+1999-09-04  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* gnus-nmz-1.el (gnus-nmz-gnus-summary-exit): New function.
+	In summary buffer press "q", switch-to *namazu* buffer.
+
+1999-09-02  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* gnus-nmz-1 (namazu-view-function-alist): add gnus-nmz-view
+	(gnus-nmz-nnml-spool-regex): New variable.
+	(gnus-nmz-cache-regex): New variable.
+	(gnus-nmz-view): New function.
+	(gnus-nmz-with-windows): New variable.
+
+	* gnus-nmz-1.el: いずれは田中さんの gnus-nmz.el とマージする予定ですが、
+	いまのところは gnus-nmz version -1 なのです。

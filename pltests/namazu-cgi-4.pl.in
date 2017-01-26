@@ -1,0 +1,117 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-4.pl.in,v 1.1.4.4 2008-02-02 07:02:56 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2008 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+# Test for namazu.cgi with NMZ.access.
+#
+# NOTE: If error occurred, consult idx1/NMZ.access.
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::duprcs($RC);
+
+my $tmpaccess="$cwd/idx1/NMZ.access";
+
+# To make messages English
+$ENV{'LANG'} = 'C';
+$ENV{'LANGUAGE'} = 'C';
+delete $ENV{'LC_ALL'};
+delete $ENV{'LC_MESSAGES'};
+delete $ENV{'LC_CTYPE'};
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+
+pltests::putline($LOG, "  *** starting $0");
+
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1&lang=C';
+$ENV{'REMOTE_HOST'}='foo.example.jp';
+$ENV{'REMOTE_ADDR'}='1.2.3.4';
+
+my @deny_test = ("deny all\n",			# should be denied
+		 "allow all\ndeny all\n",	# should be denied
+		 "deny all\nallow foo\n",	# should be denied
+		 "deny all\nallow 2.3.4\n",	# should be denied
+		);
+my @allow_test = ("allow all\n",		# should be allowed
+		 "deny all\nallow all\n",	# should be allowed
+		 "deny all\nallow foo.example.jp\n",	# should be allowed
+		 "deny all\nallow example.jp\n",	# should be allowed
+		 "deny all\nallow 1.2.3.4\n",	# should be allowed
+		 "deny all\nallow 1.2.3\n",	# should be allowed
+		);
+
+foreach my $nmzaccess (@deny_test){
+    open OUT, ">$tmpaccess";
+    print OUT $nmzaccess;
+    close(OUT);
+    @cmd = ("$NAMAZU");
+    my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+    unless (defined $result) {
+        exit 1;
+    }
+    unless ($result =~ /You don't have a permission to access the index/) {
+	pltests::putline($LOG, "failed: $nmzaccess\n");
+	pltests::putline($LOG, $result);
+        exit 1;
+    }
+}
+foreach my $nmzaccess (@allow_test){
+    open OUT, ">$tmpaccess";
+    print OUT $nmzaccess;
+    close(OUT);
+    @cmd = ("$NAMAZU");
+    my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+    unless (defined $result) {
+        exit 1;
+    }
+    if ($result =~ /You don't have a permission to access the index/) {
+	pltests::putline($LOG, "failed: $nmzaccess\n");
+	pltests::putline($LOG, $result);
+        exit 1;
+    }
+}
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+    if (-f $tmpaccess) {
+        unlink("$tmpaccess");
+    }
+}

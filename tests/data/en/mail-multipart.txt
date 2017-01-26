@@ -1,0 +1,29 @@
+To: bug-namazu@namazu.org
+Subject: Test for Namazu
+Message-Id: <20000226103443E.test@namazu.org>
+Date: Sat, 26 Feb 2000 10:34:43 +0900
+From: test@namazu.org
+Content-Type: Multipart/Mixed;
+ boundary="--Next_Part(Sat_Feb_26_10:34:38_2000_300)--"
+Content-Transfer-Encoding: 7bit
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)--
+Content-Type: Text/Plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+Namazu is a full-text search system intended for easy
+use.  This file is for testing.
+
+test@namazu.org
+
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)--
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="plain.txt.gz"
+
+H4sICFQIuzgAA3BsYWluLnR4dAAljMEJhTAQRO9bxTTwU4MVeLKBRScaiBGyG1Cr1/hP82B4b6I5
+4lEx6q53E/kvkkERW84/5+kwap032GXOHak4y8LlE6l2STMGYNpeLabMrvfP33oqaxDpNJSvHY66
+ygP4cRlAeAAAAA==
+
+----Next_Part(Sat_Feb_26_10:34:38_2000_300)----

@@ -1,0 +1,40 @@
+#! /bin/sh
+#
+# Test for entity encoding
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd/idx20" > $tmprc
+echo "Replace $pwd/tmp-data/B $pwd/tmp-data/test?foo=<>&bar=" >> $tmprc
+duprcs
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=namazu&max=40'
+export SCRIPT_NAME QUERY_STRING
+
+cd ../src
+RESULT=`./namazu.cgi | grep 'foo=<>&bar=' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+        echo $RESULT >> $LOG
+        exit 1
+fi
+
+RESULT=`./namazu.cgi | grep '&amp;max=40&amp;whence=40' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+       echo $RESULT >> $LOG
+       exit 1
+fi
+
+exit 0

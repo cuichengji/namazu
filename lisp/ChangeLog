@@ -1,0 +1,99 @@
+2013-06-19  Tadamasa Teranishi  <yw3t-trns@asahi-net.or.jp>
+
+	* namazu.el: add 'coding: iso-2022-jp-unix'
+
+2000-02-24  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* namazu.el (namazu-split-dir): use namazu-dir-alist.
+	(namazu-make-field-completion-alist): Ditto. (and Fix :-)
+
+	* namazu.el (namazu-make-field-completion-alist): Fix, namazu-dir`s'.
+
+2000-02-16  Hideyuki SHIRAI  <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el: New face setting, if (eq hilit-background-mode 'dark).
+	(namazu-msg-highlight-function): New Variable for highlight message function settting.
+	(namazu-view-file): Bind "," key to namazu-view-top.
+
+2000-02-12  Toshiaki Tanaka  <toshiaki@ksj1.kansai-sc.toshiba.co.jp>
+
+	* namazu.el: Customization support. Add namazu-index-history,
+	namazu-keyword-history for easy searching.
+
+2000-02-06  Hideyuki SHIRAI  <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el: (namazu-view-file, namazu-view-msg): New functions, viewer for file and viewer for message.
+	(namazu-msg-visible-field): List of visible headers in message.
+	(namazu-view-other-window, *-other-frame): New variables, as clear as it is written.
+	
+2000-02-01  Hideyuki SHIRAI  <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el: (namazu-cs-read|write): New variables for namazu process.
+	(namazu-output-(current-list|pages)-pattern): Fix, for pattern match.
+
+	* browse-url-for-emacs-19.28.el: New file. browse-url.el for Emacs 19.28.
+
+2000-01-24  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* namazu.el (namazu-make-field-completion-alist): Ignore NMZ.field.`foo'.i.
+
+2000-01-28  MIYOSHI Masanori  <miyoshi@ask.ne.jp>
+
+	* namazu.el: (namazu-font-lock-keywords): Support font-lock for Emacs 19.28. 
+	(namazu-config-file-path): New variable for configuration file.
+	(namazu-make-field-completion-alist): Avoid error when namazu-default-dir is nil.
+	(namazu-field-complete): Avoid completion error at beginning of buffer.
+	(namazu-field-complete): Correct typo.
+	(match-string): Supplemental definition of match-string.
+	(namazu-search-config-file): New function. Search Namazu configuration file.
+	(namazu-read-config-file): New function. Read Namazu configuration file.
+	(namazu-get-default-index-dir): New function. Get default value for namazu-default-dir.
+	(namazu-default-dir): Get default value from configuration file.
+
+2000-01-25  Hideyuki SHIRAI  <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el (namazu-output-url-pattern): Sync up Namazu Ver.2.0, again ^^;
+	Support 'REPLACE /home/hoge ~/' in ~/.namazurc.
+
+2000-01-25  Hideyuki SHIRAI <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el (namazu-version): namazu.el 1.0.3
+	(namazu-url-regex): New variable for external file access.
+	(namazu-browse-url): Give priority "browse-url" to "browse-url-browser-function".
+	(namazu-output-url-pattern): Sync up Namazu Ver.2.0.
+	(namazu-escape-key): Abolish, no escape for search key.
+	
+2000-01-20  MIYOSHI Masanori <miyoshi@ask.ne.jp>
+
+	* namazu.el: Support Emacs 19.28, again.
+	(namazu-font-lock-keywords): Set mouse-face for url-pattern.
+
+1999-09-30  Ryuji Abe <raeva@t3.rim.or.jp>
+
+	* Makefile.am: New File.
+	
+	* elisp-comp: New File that derived from automake-1.4.
+
+1999-09-07  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* namazu.el (namazu-cs): if OS/2, emx and windows-nt, use SJIS.
+	(namazu-minibuffer-field-map): New keymap.
+	(namazu): use namazu-minibuffer-field-map, when "Enter Keyword: ".
+	(namazu-re-search): Ditto.
+	(namazu-field-complete): New function. completion of "+fileds:".
+	(namazu-make-field-completion-alist): New function. make +fileds:-alist.
+
+1999-09-02  KOSEKI Yoshinori  <kose@yk.NetLaputa.ne.jp>
+
+	* gnus-nmz-1.el: new file.
+
+	* namazu.el (namazu-cs): if windows-nt, use SJIS.
+	(namazu-view): use namazu-view-function-alist.
+	(namazu-view-function-alist): New variable. --  view function alist.
+	(namazu-html-pattern): Abolish, integrate namazu-view-function-alist.
+	(namazu-browse-url): New function.
+	(namazu-man): New function.
+
+1999-05-10  Hideyuki SHIRAI <shirai@rdmg.mgcs.mei.co.jp>
+
+	* namazu.el: Version 1.00 released.

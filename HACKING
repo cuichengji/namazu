@@ -1,0 +1,28 @@
+
+CVS Access
+
+You can also check out the very newest version via Anonymous CVS.
+Here's now:
+
+% cvs -d :pserver:anonymous@cvs.namazu.org:/storage/cvsroot co -P namazu
+
+Namazu has been branched into the stable version (2.0.x) and
+the development version (2.1.x) on 2001-06-25. If You want to
+check out the stable version, type the following information instead:
+
+% cvs -d :pserver:anonymous@cvs.namazu.org:/storage/cvsroot co -r stable-2-0 namazu
+
+==============================================================
+
+GNU Build Tools
+
+If you want to build Namazu via CVS, you need to install
+the following packages:
+
+	- GNU m4 1.4
+	- GNU autoconf 2.50 (or later)
+	- GNU automake 1.6 (or later)
+	- GNU libtool 1.4 (or later)
+	- GNU gettext 0.13 (or later)
+
+After check out, run ./autogen.sh at top of the source tree.

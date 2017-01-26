@@ -1,0 +1,92 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-1.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu.cgi.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1';
+
+pltests::putline($LOG, "  *** starting $0");
+
+my $docnum;
+my $doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files (\d+)/m) {
+    $docnum = $1;
+} else {
+    exit 1;
+}
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::duprcs($RC);
+
+# Check simple searching.
+@cmd = ("$NAMAZU");
+my ($staus, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+
+my $hitnum = undef;
+if ($result =~ /<!-- HIT -->(\d+)<!-- HIT -->/) {
+    $hitnum = $1;
+}
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "docnum: $docnum hitnum: $hitnum");
+
+if ($docnum != $hitnum) {
+    exit 1;
+}
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

@@ -1,0 +1,21 @@
+#! /bin/sh
+#
+# Test for namazu.  Searching an index having updated documents.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+
+docnum=`perl -lne 'print $1 if /^Updated Documents:\s+(\d+)/' idx7/NMZ.log`
+
+# Check simple searching.
+cd ../src
+./namazu xyzzy ../tests/idx7 >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+# Check the number of retrieved documents.
+cd ../src
+hitnum=`./namazu -c xyzzy ../tests/idx7`
+echo "docnum:" $docnum, "hitnum:" $hitnum >> $LOG
+test "$docnum" != "$hitnum" && exit 1  # error if not matched
+
+exit 0

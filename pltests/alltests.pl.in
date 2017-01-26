@@ -1,0 +1,134 @@
+#!%PERL% -w
+#
+# $Id: alltests.pl.in,v 1.3.2.5 2011-07-19 12:10:36 opengl2772 Exp $
+# Copyright (C) 2004-2011 Tadamasa Teranishi
+#               2004-2011 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+use strict;
+require 'pltests.pl';
+
+my @TESTS = (
+    'env.pl',
+    'mknmz-1.pl', 'mknmz-2.pl', 'mknmz-4.pl', 
+    'gcnmz-1.pl',
+    'mknmz-5.pl', 'mknmz-6.pl', 'mknmz-7.pl', 'mknmz-8.pl',
+    'mknmz-10.pl', 'mknmz-12.pl', 'mknmz-14.pl', 'mknmz-15.pl',
+    'mknmz-16.pl', 'mknmz-17.pl', 'mknmz-18.pl',
+    'idxdiff-1.pl', 'idxdiff-3.pl',
+    'namazu-1.pl', 'namazu-2.pl', 'namazu-3.pl', 'namazu-4.pl',
+    'namazu-5.pl', 'namazu-6.pl', 
+    'namazu-7.pl', 'namazu-8.pl', 'namazu-9.pl', 
+    'namazu-10.pl', 'namazu-11.pl', 'namazu-12.pl',
+    'namazu-cgi-1.pl', 'namazu-cgi-2.pl', 
+    'namazu-cgi-3.pl', 'namazu-cgi-4.pl', 'namazu-cgi-5.pl',
+    'namazu-cgi-7.pl', 'namazu-cgi-8.pl',
+    'namazu-cgi-9.pl', 'namazu-cgi-10.pl',
+    'namazu-cgi-12.pl',
+    'ja-namazu-cgi-3.pl',
+    'chasen-1.pl', 'chasen-2.pl', 'chasen-3.pl',
+    'mecab-1.pl', 'mecab-2.pl', 'mecab-3.pl',
+    'kakasi-1.pl', 'kakasi-2.pl', 'kakasi-3.pl',
+);
+my @XFAIL_TESTS = ();
+
+$ENV{'MKNMZNORC'} = 1;
+$ENV{'NAMAZUNORC'} = 'ALL';
+
+print "  *** starting $0\n";
+
+#if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+#    my $comspec = "cmd";
+#    $comspec = $ENV{'COMSPEC'} if (defined $ENV{'COMSPEC'});
+#    if ($comspec =~ m/command\.com$/i) {
+#        $comspec = pltests::checkcmd('win95cmd.exe');
+#        unless (defined $comspec) {
+#            die 'win95cmd.exe not found.';
+#        }
+#        $ENV{'COMSPEC'} = $comspec;
+#    }
+#}
+
+my $failed = 0;
+my $xpass = 0;
+my $xfail = 0;
+my $all = 0;
+for my $test (@TESTS) {
+    my @cmd = ("perl", "$test");
+    pltests::systemcmd(@cmd);
+    if ($? == 0) {
+        my $xfail_test = 0;
+        for my $fail_test (@XFAIL_TESTS) {
+            if ($fail_test eq $test) {
+                $xfail_test = 1;
+            }
+        }
+
+        $all++;
+        if ($xfail_test == 1) {
+            $xpass++;
+            $failed++;
+            print "XPASS: $test\n";
+        } else {
+            print "PASS: $test\n";
+        }
+    } elsif (($? >> 8) != 77) {
+        my $xfail_test = 0;
+        for my $fail_test (@XFAIL_TESTS) {
+            if ($fail_test eq $test) {
+                $xfail_test = 1;
+            }
+        }
+
+        $all++;
+        if ($xfail_test == 1) {
+            $xfail++;
+            print "XFAIL: $test\n";
+        } else {
+            $failed++;
+            print "FAIL: $test\n";
+        }
+    }
+}
+
+my $banner;
+if ($failed == 0) {
+    if ($xfail == 0) {
+        $banner = "All $all tests passed";
+    } else {
+        $banner = "All $all tests behaved as expected ($xfail expected failures)";
+    }
+} else {
+    if ($xpass == 0) {
+        $banner = "$failed of $all tests failed";
+    } else {
+        $banner = "$failed of $all tests did not behave as expected ($xpass unexpected passes)";
+    }
+}
+
+my $dash = $banner;
+$dash =~ s/./=/g;
+print "$dash\n";
+print "$banner\n";
+print "$dash\n";
+
+exit ($failed != 0);

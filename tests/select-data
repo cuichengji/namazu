@@ -1,0 +1,21 @@
+#! /bin/sh
+#
+# Select appropriate documents for testing according to locale.
+#
+
+base=`pwd`/data
+base=$srcdir/data
+
+for lang in "$LC_ALL" "$LC_CTYPE" "$LANG"; do
+    if test -n "$lang" -a "$lang" = "C"; then
+        lang="en"
+    fi
+    cand=`echo "$lang" | LC_ALL="C" perl -nle 'print $1 if /^(..)/'`
+    if test -n "$cand" -a -d "$base/$cand"; then
+	echo "$base/$cand"
+	exit 0
+    fi
+done
+
+echo "$base/en"  # default: English
+

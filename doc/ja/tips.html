@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<link rel="stylesheet" href="../namazu.css">
+<link rev="made" href="mailto:developers@namazu.org">
+<title>Namazu tips</title>
+</head>
+<body lang="ja">
+<h1>Namazuの豆知識</h1>
+<hr>
+
+<h2>目次</h2>
+<ul>
+<li><a href="#indexing">インデックス作成の高速化</a></li>
+<li><a href="#saving-memory">メモリを節約したインデックス作成</a></li>
+<li><a href="#weight">HTML要素によるスコアの重みづけ</a></li>
+<li><a href="#html">HTMLの処理</a></li>
+<li><a href="#line-adjustment">行頭行末の処理</a></li>
+<li><a href="#digest">HTML文書の要約作成</a></li>
+<li><a href="#mailnews">Mail/News の要約作成</a></li>
+<li><a href="#symbol">記号を含む単語のインデックス処理</a></li>
+<li><a href="#phrase">(あやしげな)フレイズ検索の実現</a></li>
+<li><a href="#update-index">文書の更新・削除に対応インデック
+スの更新</a></li>
+</ul>
+
+<h2><a name="indexing">インデックス作成の高速化</a></h2>
+
+<ul>
+<li>Perlモジュールを利用する<br>
+NKF, KAKASI (または ChaSen、MeCab) をそれぞれコマンドとして呼び出し
+たときと較べて 1.5倍 - 2倍くらい速くなります。
+  <ul>
+  <li><a href="ftp://ftp.ie.u-ryukyu.ac.jp/pub/software/kono/nkf171.shar">NKF</a></li>
+  <li><a href="http://www.daionet.gr.jp/~knok/kakasi/">Text::Kakasi</a></li>
+  <li><a href="http://www.daionet.gr.jp/~knok/chasen/">Text::ChaSen</a></li>
+  <li><a href="http://mecab.sourceforge.net/src/">MeCab</a></li>
+  </ul>
+</li>
+
+<li><code>--media-type=mtype</code> オプションを指定する<br>
+mknmz は File-MMagic モジュールを使って文書形式の自動判別を
+行います。対象ファイルの文書形式があらかじめわかっているなら--
+media-type=mtype を指定することで自動判別の処理を停止できま
+す。1,2割くらい速くなります。
+<br>
+
+対象ファイルが Mail/News なら --media-type=message/rfc822 を
+指定する代わりに --mailnews を指定できます。同じく MHonArc
+なら --media-type='text/html; x-type=mhonarc' の代わりに
+--mhonarc で指定できます。
+</li>
+
+<li>mknmzrc の <code>$ON_MEMORY_MAX</code> の値を大き
+くする<br>
+
+標準では 5 MBに設定されています。mknmz はこの値に従って、メ
+モリ上で処理する文書ファイルの量を制限しています。メモリを 1
+GBくらい積んだ計算機を使っているなら、この値に 100 MB を設定
+しても大丈夫でしょう。作業ファイルへの書き出し回数が減ります。
+</li>
+
+<li>高速な計算機を使う<br> 高速な CPU + 大量のメモリ + 高速
+な HDDを積んだ計算機を使うと効果的です。$ON_MEMORY_MAX の変
+更をお忘れなく。
+</li>
+</ul>
+
+<h2><a name="saving-memory">メモリを節約したインデックス作成</a></h2>
+
+<p>
+インデックス作成にはたくさんメモリを必要とします。mknmz の実
+行時に Out of memory! というエラーが発生する場合には、次の対
+策が考えられます。
+</p>
+
+<ul>
+<li>mknmzrc の $ON_MEMORY_MAX の値を小さくする<br>
+
+標準では、mknmz は 5 MB に設定されています。この値はおおよそ
+メモリを 64 MB 程度積んだ計算機を想定しています。 64 MB より
+少ないメモリしか持たない計算機で mknmz を実行する場合は
+mknmzrc の $ON_MEMORY_MAX の値を小さくするといいでしょう。
+</li>
+
+<li>mknmz に --checkpoint オプションを指定する<br>
+
+mknmz は mknmzrc の $ON_MEMORY_MAX の値で、一度にメモリに読
+み込む文書ファイルの量を制限しています。そして、読み込んだ文
+書ファイルの量が $ON_MEMORY_MAX に達するたびに、作業ファイル
+を書き出します。
+
+--checkpoint を指定すると、mknmz はこのときに自分自身を exec
+し直します。結果として mknmz のプロセスはぐっと小さくなりま
+す。興味のある方は挙動を top で眺めてください。
+</li>
+</ul>
+
+ただし、処理速度が極端に落ちますのでご注意ください。
+
+
+<h2><a name="weight">HTML要素によるスコアの重みづけ</a></h2>
+
+<p>
+標準では次の規則に従って重みづけを行います。この値は経験的に
+求めたものです。理論的な根拠はありません。
+</p>
+
+
+<ul>
+<li><code>&lt;title&gt; 16</code></li>
+<li><code>&lt;h1&gt; 8</code></li>
+<li><code>&lt;h2&gt; 7</code></li>
+<li><code>&lt;h3&gt; 6</code></li>
+<li><code>&lt;h4&gt; 5</code></li>
+<li><code>&lt;h5&gt; 4</code></li>
+<li><code>&lt;h6&gt; 3</code></li>
+<li><code>&lt;a&gt; 4</code></li>
+<li><code>&lt;strong&gt;, &lt;em&gt;, &lt;code&gt;, &lt;kbd&gt;, &lt;samp&gt;, &lt;cite&gt;, &lt;var&gt; 2</code></li>
+</ul>
+
+<p>
+また、 <code>&lt;meta name="keywords"
+content="</code><var>foo bar</var><code>"&gt;</code> の
+<var>foo bar</var> に対しては 32 のスコアがつきます。
+</p>
+
+
+<h2><a name="html">HTMLの処理</a></h2>
+
+<p>
+Namazu ではインデックス作成の際に &amp;quot;, &amp;amp;,
+&amp;lt;, &amp;gt; および &amp;#9-10, &amp;#32-126 の named
+entity と numbered entity を復号しています。内部処理を日本語
+EUC で行うため ISO-8859-1 の右半分 (0x80-0xff) の記号は処理
+できません。同じ理由により UCS-4 の numbered entity にも対応
+不可能です。
+</p>
+
+
+<h2><a name="line-adjustment">行頭行末の処理</a></h2>
+<p>
+行頭・行末の空白・タブ、行頭の &gt; | # : を削除します。また、
+行末が日本語で終わる場合は改行コードを無視します (日本語の単
+語が行末で分断されてしまうのを防ぐ) 。これら処理は特にメイル
+のファイルをなどを扱う際に効果を発揮します。また、英文
+hyphenation の復元も行います。
+</p>
+
+<h2><a name="digest">HTML文書の要約作成</a></h2>
+
+<p>
+HTML は文書の構造を定義します。&lt;h[1-6]&gt; によって定義さ
+れる文書の見出しの情報を利用すれば、簡単に要約のようなものを
+作成できます。要約は標準では 200 文字に設定されています。見
+出しだけを集めて足りない部分は文書の先頭から補います。また、
+対象が単なるテキストファイルだった場合には文書の先頭から 200
+文字をそのまま使います。
+</p>
+
+<h2><a name="mailnews">Mail/News の要約作成</a></h2>
+<p>
+Mail/News のファイルを扱う際は「◯◯@△△と申します」のよう
+に自分の名前を名乗る行や、引用時の「◯◯さんは△△の記事にお
+いて□□時頃書きました」のような引用の情報、<code>&gt;
+</code> などで表される引用部分をできるだけ要約に含めないよう
+に処理しています。これらのメッセージは要約には含まれませんが、
+検索対象には入ります。
+</p>
+
+
+<h2><a name="symbol">記号を含む単語のインデックス処理</a></h2>
+<p>
+記号の処理は難しい問題です。例えば <code>(foo is
+bar.)</code> のような文があったときに単純に空白区切りでイン
+デックスを作ると <code>"(foo", "is", "bar.)"</code> のように
+登録されてしまい、これでは foo や bar で検索できなくて困りま
+す 。
+</p>
+
+<p>
+この問題を回避するためには記号をすべて取り払ってしまえば最も
+楽なのですが、 <code>.emacs, TCP/IP</code> といった記号混じ
+りの単語で検索したい場合もあります。そこで、Namazu では
+<code>tcp/ip</code> のような文があった場合、 <code>"tcp/ip",
+"tcp", "ip"</code> と 3 つに分解してインデックスに登録します。
+</p>
+
+<p>
+また、 <code>(tcp/ip)</code> という文があった場合には
+<code>"(tcp/ip)", "tcp/ip", "tcp", "ip"</code> と 4 つに分解
+します。しかし、入れ子の処理は行っていないので、
+<code>((tcp/ip))</code> は <code>"((tcp/ip))", "(tcp/ip)",
+"tcp", "ip"</code> と処理されます。最初の例では
+<code>"(foo", "foo", "is", "bar.)", "bar.", "bar"</code> と
+登録されるため foo でも bar でも検索できます。
+</p>
+
+
+<h2><a name="phrase">(あやしげな)フレイズ検索の実現</a></h2>
+
+<p>
+フレイズ検索を素朴に実装すると、インデックスのサイズが巨大に
+なってしまいます。そこで、 Namazu では単語をハッシュ値に変換
+する方法により、インデックスのサイズを小さくしています。
+</p>
+
+<p>
+フレイズ "foo bar" が検索式として与えられると、 Namazu は
+foo, bar についてアンド検索を行い、次にフレイズ情報を用いて
+結果を絞り込みます。
+</p>
+
+<p>
+フレイズの情報は 2語単位で 16 bitのハッシュ値に変換して記録
+しているため、 3語以上のフレイズは正確に検索できません。たと
+えば "foo bar baz" というフレイズで検索すると、
+</p>
+
+<p>
+...<br>
+foo bar ...<br>
+... bar baz
+</p>
+
+<p>
+のように "foo bar" と "bar baz" の含まれる文書に誤ってヒット
+してしまいます。また、ハッシュ値の衝突が起きたときも誤った検
+索結果を引き起こします。しかし、誤ってヒットしてしまった文書
+についても、少なくとも単語 foo, bar, baz はすべて含まれてい
+ます。
+</p>
+
+
+<h2><a name="update-index">文書の更新・削除に対応インデック
+スの更新</a></h2>
+
+<p>
+この仕組みは実際にインデックスから登録済の文書を更新・削除す
+るのではなく、欠番情報を記録することによって実現されています。
+つまり、インデックスに記録された元の情報はそのままで、単にそ
+の文書の IDが欠番になったという情報を記録するだけです。
+</p>
+
+<p>
+文書の更新/削除を含むインデックスの更新を繰り返していくと欠
+番が増えてインデックスの記録効率が悪くなっていきます。そのと
+きは gcnmz を使ってゴミ掃除をします。
+</p>
+
+<hr>
+<p>
+<a href="http://www.namazu.org/">Namazu Homepage</a>
+</p>
+<div class="copyright">
+Copyright (C) 2000-2009 Namazu Project. All rights reserved.
+</div>
+<div class="id">
+$Id: tips.html,v 1.8.8.5 2009-03-12 12:52:09 opengl2772 Exp $
+</div>
+<address>
+developers@namazu.org
+</address>
+</body>
+</html>

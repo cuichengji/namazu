@@ -1,0 +1,8 @@
+<HDML version=3.0 public=true markable=true>
+<display name=top title=Namazuのテスト>
+  <center>Namazu のテスト<br>
+  Namazu は手軽に使えることを第一に目指した日本語全文検索システムです。<br>
+  このファイルはテスト用です。<br>
+  <right>test@namazu.org
+</display>
+</hdml>

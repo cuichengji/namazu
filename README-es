@@ -1,0 +1,66 @@
+          Namazu un sistema de búsqueda de texto
+
+
+Qué es Namazu?
+
+   Namazu es un sistema de búsqueda de texto que pretende
+   ser fácil de usar.  No sólo trabaja como un CGI para
+   un pequeño o medio sistema de búsqueda Web, sino también
+   trabaja como un sistema de búsqueda de uso personal para
+   tus montones de emails.
+
+   Namazu es un software libre bajo los términos del GNU
+   General Public License versión 2.  Mira el fichero COPYING
+   para más detalles.
+
+   En el comienzo de Namazu fue hecho sólo con la intención
+   de uso japonés.
+
+   Nosotros hemos intentado la internacionalización de Namazu.
+   En este momento, nosotros acabamos de comenzar. Hay muchas
+   cosas por hacer. Por favor, ayúdanos.
+
+   Tu puedes encontrar documentación en el directorio `doc'. Y
+   puedes conseguir la última información en
+
+     http://www.namazu.org/
+
+
+¿Dónde está la documentación?
+
+   En el directorio doc de la distribución. Los documentos en 
+   inglés están en el subdirectorio en, los japoneses están en
+   el ja y los españoles en el es.
+
+
+¿Cómo instalarlo?
+
+   Mira el fichero INSTALL para los detalles.
+
+
+¿Qué es el Proyecto Namazu?
+
+   El proyecto Namazu es el grupo de desarrollo y mantenimiento
+   de Namazu. Mira el fichero CREDITS para los detalles.
+
+   Namazu fue desarrollado originalmente por Satoru Takabayashi.
+   Desde la versión 2.0, Namazu ha sido desarrollado por el Proyecto
+   Namazu cooperativamente.
+
+
+Contactos
+
+   Preguntas: ¡Únete a la lista de correo namazu-users-en@namazu.org! 
+     Mira. <http://www.namazu.org/ml.html>
+
+   General:
+     info@namazu.org
+
+   Información sobre errores:
+     bug-namazu@namazu.org
+
+   Administradores de la página Web:
+     webmaster@namazu.org
+
+
+NOTA: La palabra japonesa `Namazu' significa en español `pezgato'.

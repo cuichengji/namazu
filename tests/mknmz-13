@@ -1,0 +1,21 @@
+#! /bin/sh
+#
+# Test for idxname CGI paramater
+#
+LOG=`pwd`/test-log
+SRCIDXDIR=idx1
+IDXDIR=idx16
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d $IDXDIR; then
+    mkdir $IDXDIR
+    mkdir $IDXDIR/foo
+else
+    rm -f $IDXDIR/NMZ.*
+    rm -f $IDXDIR/foo/NMZ.*
+fi
+
+cp $SRCIDXDIR/NMZ.* $IDXDIR
+cp $SRCIDXDIR/NMZ.* $IDXDIR/foo
+
+exit $?

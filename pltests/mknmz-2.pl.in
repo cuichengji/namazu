@@ -1,0 +1,84 @@
+#!%PERL% -w
+#
+# $Id: mknmz-2.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for incremental indexing.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET;
+my $INDEX = "$cwd/idx2";
+my $INDEX1 = "$cwd/idx1";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+$TARGET = pltests::cat("$INDEX1/NMZ.field.uri");
+unless (defined $TARGET) {
+    exit 1;
+}
+$TARGET =~ s!^/([A-Z])\|!$1:!mig;
+$TARGET =~ s/\r/\n/sg;
+$TARGET =~ s/\n+/\n/sg;
+
+my $TARGETS = "tmp.target";
+if (-f $TARGETS) {
+    unlink $TARGETS;
+}
+pltests::putline($TARGETS, $TARGET);
+
+# Simple indexing.
+foreach my $target (split(/\n/, $TARGET)) {
+    @cmd = ("$MKNMZ", "--no-delete", "-O", "$INDEX", "$target");
+    pltests::putline($LOG, "  ", \@cmd);
+    my $status = pltests::logsyscmd($LOG, \@cmd);
+    if ($status != 0) {
+        if (-f $TARGETS) {
+            unlink $TARGETS;
+        }
+        
+        exit 1;
+    }
+}
+
+if (-f $TARGETS) {
+    unlink $TARGETS;
+}
+
+exit 0;

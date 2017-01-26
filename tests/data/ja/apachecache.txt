@@ -1,0 +1,39 @@
+000000003F1A0704 000000003F1A0667 000000003F1A0713 0000000000000001 000000003F1A0704 000000003F1A0704 0000000000000182
+X-URL: http://localhost/tests/data/ja/html.html
+Accept: text/*, image/jpeg, image/png, image/*, */*
+Accept-Charset: iso-8859-1, utf-8;q=0.5, *;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate, identity
+Accept-Language: ja, en
+Connection: close
+Host: localhost
+User-Agent: Mozilla/5.0 (compatible; Konqueror/3.1; FreeBSD)
+
+HTTP/1.1 200 OK
+Date: Sun, 20 Jul 2003 03:05:40 GMT
+Server: Apache/1.3.27 (Unix)
+Last-Modified: Sun, 20 Jul 2003 03:03:03 GMT
+ETag: "9e540-182-3f1a0667"
+Accept-Ranges: bytes
+Content-Length: 386
+Content-Type: text/html
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Namazu のテスト</title>
+</head>
+<body lang="ja">
+<h1>Namazu のテスト</h1>
+
+<p>
+Namazu は手軽に使えることを第一に目指した日本語全文検索
+システムです。このファイルはテスト用です。
+</p>
+
+<hr>
+<address>
+test@namazu.org
+</address>
+</body>
+</html>

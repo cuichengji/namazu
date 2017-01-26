@@ -1,0 +1,79 @@
+/* $Id: namazu.css,v 1.1 2000-02-19 08:52:50 satoru Exp $ */
+
+body { 
+	background-color: White; 
+}
+
+address {
+	text-align: right;
+	font-size: smaller;
+	font-weight: bold;
+}
+
+p.lang-navigator {
+        text-align: right;
+        font-size: small;
+}
+
+div.copyright {
+	text-align: right;
+	font-size: smaller;
+	color: rgb(40%,40%,40%);
+}
+
+div.id {
+	text-align: right;
+	font-size: smaller;
+	font-weight: bold;
+	font-style: italic;
+	color: rgb(70%,70%,70%);
+}
+
+strong.keyword { 
+	color: Red; 
+}
+
+p.example { 
+	text-indent: 1em; 
+	color: Navy;
+	font-weight: bold;
+	font-family: monospace; 
+}
+p.note  { 
+	color: DarkGreen;
+	font-family: monospace; 
+        font-size: small;
+}
+
+code { 
+	color: Navy;
+	font-family: monospace; 
+}
+
+pre { 
+	color: Navy;
+	font-family: monospace; 
+}
+
+code.example { 
+	color: Navy;
+	font-weight: bold;
+	font-family: monospace; 
+}
+
+code.operator  { 
+	color: Navy;
+	font-family: monospace; 
+	font-weight: bold; 
+}
+code.rc  { 
+	color: DarkGreen;
+	font-family: monospace; 
+	font-weight: bold; 
+}
+code.command {
+	color: Navy;
+	font-family: monospace; 
+	font-weight: bold; 
+
+}

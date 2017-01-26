@@ -1,0 +1,39 @@
+Message-Id: <432C1114.3080101@asahi-net.or.jp>
+Date: Sat, 17 Sep 2005 21:50:28 +0900
+From: Yukio USUDA <m6694ha392t@asahi-net.or.jp>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7.11) Gecko/20050728
+X-Accept-Language: ja, en-us, en
+MIME-Version: 1.0
+To: usu@namazu.org
+Subject: multipart-mail test for namazu
+Content-Type: multipart/mixed;
+ boundary="------------060606070702040300050606"
+X-IP: 61.215.208.42
+X-FROM-DOMAIN: asahi-net.or.jp
+X-FROM-EMAIL: m6694ha392t@asahi-net.or.jp
+Delivery-Agent: postfix/virtual 2.1.3+atson1mbox(RELEASE_2005032701) on mda03
+
+This is a multi-part message in MIME format.
+--------------060606070702040300050606
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+
+baz
+
+--------------060606070702040300050606
+Content-Type: application/x-gzip;
+ name="1.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="1.gz"
+
+H4sICBT+K0MAAzEudHh0AEvLz+cCAKhlMn4EAAAA
+--------------060606070702040300050606
+Content-Type: application/x-gzip;
+ name="2.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="2.gz"
+
+H4sICCv+K0MAAzIudHh0AEtKLOICAOmzogQEAAAA
+--------------060606070702040300050606--

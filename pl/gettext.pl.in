@@ -1,0 +1,130 @@
+# Toying at an interface between Perl and GNU gettext .mo format.
+# Copyright (C) 1995 Free Software Foundation, Inc.
+# Fran.ANgois Pinard <pinard@iro.umontreal.ca>, 1995.
+#
+# Modified by NOKUBI Takatsugu.
+# Copyright (C) 1999, 2000 NOKUBI Takatsugu <knok@daionet.gr.jp>
+
+## --------------------------------------------------------------- ##
+## The `&textdomain (DOMAIN_NAME, LANG)' routine reads the given   ##
+## domain into an associative array %_, able to later translate    ##
+## strings.                                                        ##
+## --------------------------------------------------------------- ##
+
+sub textdomain
+{
+    my ($language, $catalog, $domain, $buffer);
+    my ($reverse);
+    my ($magic, $revision, $nstrings, $orig_tab_offset, $trans_tab_offset);
+    my ($orig_length, $orig_pointer, $trans_length, $trans_pointer);
+
+    %_ = ();
+
+    $domain   = $_[0];
+    $language = $_[1];
+    return if ! $language;
+
+    $catalog  = choose_catalog($language, $domain);
+    return if ! $catalog;
+
+    open (CATALOG, $catalog) || return;
+    binmode (CATALOG);
+    sysread (CATALOG, $buffer, (stat CATALOG)[7]);
+    close CATALOG;
+
+    $magic = unpack ("I", $buffer);
+    if (sprintf ("%x", $magic) eq "de120495")
+    {
+	$reverse = 1;
+    }
+    elsif (sprintf ("%x", $magic) ne "950412de")
+    {
+	die "Not a catalog file\n";
+    }
+
+    $revision = &mo_format_value($reverse, $buffer,4);
+    $nstrings = &mo_format_value($reverse, $buffer,8);
+    $orig_tab_offset = &mo_format_value($reverse, $buffer,12);
+    $trans_tab_offset = &mo_format_value($reverse, $buffer,16);
+
+    while ($nstrings-- > 0)
+    {
+	$orig_length = &mo_format_value($reverse, $buffer,$orig_tab_offset);
+	$orig_pointer = &mo_format_value($reverse, $buffer,$orig_tab_offset + 4);
+	$orig_tab_offset += 8;
+
+	$trans_length = &mo_format_value($reverse, $buffer,$trans_tab_offset);
+	$trans_pointer = &mo_format_value($reverse, $buffer,$trans_tab_offset + 4);
+	$trans_tab_offset += 8;
+
+	$_{substr ($buffer, $orig_pointer, $orig_length)}
+	    = substr ($buffer, $trans_pointer, $trans_length);
+    }
+}
+
+sub choose_catalog
+{
+    my ($language, $domain) = @_;
+
+    while (1) {
+	#
+	# To support a binary package for Windows, we should
+	# allow to change LOCALEDIR with the environment variable
+	# `NAMAZULOCALEDIR' after installation is done.
+	#
+	# NOTE: Windows has a nasty "drive letter" convention.
+	#
+	my $base = "@LOCALEDIR@";
+	if (defined $ENV{NAMAZULOCALEDIR}) {
+	    $base = $ENV{NAMAZULOCALEDIR};
+	}
+	my $catalog =  "$base/$language/LC_MESSAGES/$domain.mo";
+	return $catalog if -f $catalog; # if the catalog file exists.
+
+	# Truncate $language by the following order:
+	# ja_JP.eucJP -> ja_JP -> ja
+	unless ($language =~ s/[\._][^\._]+$//) {
+	    return undef;
+	}
+    }
+}
+
+## ----------------------------------------------------------------- ##
+## The `&mo_format_value (ADDRESS)' routine returns the value at a   ##
+## given address in the .mo format catalog, once read into $buffer   ##
+## by `&textdomain'.  This is a service routine of `&textdomain',    ##
+## which uses $buffer and $reverse variables local in that routine.  ##
+## ----------------------------------------------------------------- ##
+
+sub mo_format_value
+{
+    my ($reverse) = shift @_;
+    my ($buffer) = shift @_;
+    unpack ("i",
+	    $reverse
+	    ? pack ("c4", reverse unpack ("c4", substr ($buffer, $_[0], 4)))
+	    : substr ($buffer, $_[0], 4));
+}
+
+## ------------------------------------------------------------ ##
+## The `&_(STRING)' routine translates STRING if there is some  ##
+## translation offered for it in the `%_' associative array, or ##
+## return STRING itself, otherwize.			        ##
+## ------------------------------------------------------------ ##
+
+sub _
+{
+    my $msg = $_[0];
+    $msg =~ s/\$/\\\$/g;
+    defined $_{$msg} ? $_{$msg} : $_[0];
+}
+
+## ------------------------------------------------------------ ##
+## Dummy function.                                              ##
+## ------------------------------------------------------------ ##
+sub N_
+{
+    return $_[0];
+}
+
+1;

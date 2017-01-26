@@ -1,0 +1,66 @@
+#! /bin/sh
+#
+# Test for namazu.  Searching an index created with --html-split option.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+
+docnum=`perl -lne 'print $1 if /^files (\d+)/' idx9/NMZ.status`
+
+# All parts should have "test".
+cd ../src
+hitnum=`./namazu -c test ../tests/idx9`
+echo "docnum:" $docnum, "hitnum:" $hitnum >> $LOG
+test "$docnum" != "$hitnum" && exit 1  # error if not matched
+
+# For 1.html. Each keyword should match only one part.
+hitnum=`./namazu -c xyzzy ../tests/idx9`
+echo xyzzy $hitnum >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'foo foo1'  ../tests/idx9`
+echo "'foo foo1' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'bar bar2' ../tests/idx9`
+echo "'bar bar2' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'baz baz3' ../tests/idx9`
+echo "'baz baz3' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'qux qux4' ../tests/idx9`
+echo "'qux qux4' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'quux quux5' ../tests/idx9`
+echo "'quux quux5' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+# For 2.html. Each keyword should match only one part.
+hitnum=`./namazu -c orabidoo ../tests/idx9`
+echo orabidoo $hitnum >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'zero foo' ../tests/idx9`
+echo "'zero foo' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'bar one' ../tests/idx9`
+echo "'bar one' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'baz two' ../tests/idx9`
+echo "'baz two' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'qux three' ../tests/idx9`
+echo "'qux three' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+hitnum=`./namazu -c 'quux four' ../tests/idx9`
+echo "'quux four' $hitnum" >> $LOG
+test "$hitnum" != "1" && exit 1  # error if not matched
+
+exit 0

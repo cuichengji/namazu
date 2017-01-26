@@ -1,0 +1,30 @@
+#! /bin/sh
+#
+# Test for namazu.
+#
+LOG=`pwd`/test-log
+
+# help
+echo '  *** namazu --help' >>$LOG
+(cd ../src; ./namazu --help >> $LOG)
+
+# show-config
+echo '  *** namazu -C' >>$LOG
+(cd ../src; ./namazu -C >> $LOG)
+
+echo '  *** starting ' $0 >>$LOG
+
+docnum=`perl -lne 'print $1 if /^files (\d+)/' idx1/NMZ.status`
+
+# Check simple searching.
+cd ../src
+./namazu -a namazu ../tests/idx1 >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+# Check the number of retrieved documents.
+cd ../src
+hitnum=`./namazu -c namazu ../tests/idx1`
+echo "docnum:" $docnum, "hitnum:" $hitnum >> $LOG
+test "$docnum" != "$hitnum" && exit 1  # error if not matched
+
+exit 0

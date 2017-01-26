@@ -1,0 +1,322 @@
+Overview of Changes in Namazu 2.0.21 - July 18, 2011
+
+- namazu.cgi:
+* Fix IE6,7 cross-site scripting problem.
+
+- tests, pltests:
+* Add New Tests.
+
+
+Overview of Changes in Namazu 2.0.20 - Sep 23, 2009
+
+- namazu, namazu.cgi:
+* When the blank line is included in the NMZ.field.* file, the bug with
+  the possibility of causing overrunning in the buffer is corrected. 
+
+
+Overview of Changes in Namazu 2.0.19 - Mar 12, 2009
+
+- namazu, namazu.cgi:
+* The bug in an analytical part of a complex retrieval type including
+  the phrase search is corrected.
+
+- mknmz:
+* The check on the size of the file is added.
+
+- pl/htmlsplit.pl:
+* Addition of code conversion processing.
+* The close forgetting of the file is corrected.
+
+- Other filters:
+* The regularization of the text is added.
+* The judgment processing of an internal filter is sped up.
+* It corresponds to pl/extutf8.pl and the pl/extzip.pl extensions
+  module.
+
+- Extensions module:
+* The processing done with an individual filter is integrated as an
+  extensions module.
+* Two enhanced feature modules are added.
+
+Pl/extutf8.pl: UTF-8 processing extension module
+* It is called from the filter for extutf8.pl, and UTF-8 is processed.
+* Those tool and module are used for the UTF-8 processing when the
+  tool necessary for the UTF-8 processing and the judgment of the module
+  can be done in the following order, and it use it.
+
+1. NKF Perl module 2.04 or more
+2. Perl 5.8 or more
+3. Lv command
+4. Unicode.pl module
+
+Pl/extzip.pl: zip processing extension module
+* It is called from the filter for extzip.pl, and zip is processed.
+* Those tool and module are used for the zip processing when the tool
+  necessary for the zip processing and the judgment of the module
+  can be done in the following order, and it use it.
+
+1. Compress::Zlib, Archive::Zip, (IO::String)
+   When IO::String is installed, processing is sped up.
+2. Unzip command
+
+- pltests:
+* The output of the version of some Perl modules is added.
+* The check on whether there is illegal one in the value of the
+  environment variable is added.
+
+
+Overview of Changes in Namazu 2.0.18 - Mar 12, 2008
+
+* Add 'Charset' directive.
+* "charset" was added to "ContentType" of the example in
+  conf/namazurc-sample.
+* "charset" was added to the response header in Error messages for 
+  namazu.cgi.
+* Add HTML, BODY tags in Error messages for namazu.cgi.
+* '\'', '(', ')' is converted into "&#39;", "&#40;", "&#41;" 
+  respectively.
+* Add po/{de, pl}.po files. (But, it doesn't translate.)
+* Change charset from SJIS to Shift_JIS in po/ja_SJIS.po.
+* Change soname (LTVERSION 8:0:1)
+* pltests/env.pl: The checked environment variable and version of
+  the checked Perl module is added.
+* pltests/mknmz-8.pl.in: The confirmation whether the index
+  has been updated is added.
+* pltests/namazu-cgi-12.pl.in: Add new test.
+* tests/mknmz-9: Expand test file.
+* filter/hnf.pl: Correspondence GRP and bug fix.
+* conf/*.win32: Add new files.
+
+Overview of Changes in Namazu 2.0.17 - Mar 12, 2007
+
+* filter/win32/ole*.pl: correspondence Office 2007. [for Windows]
+* filter/win32/olevisio.pl: It corresponds to Visio 2000 of another type.  
+  For Visio 2007/.vdx file. [for Windows]
+* OOo bug correction.
+* for Office Open XML file. [for Windows]
+* nmzcat: SJIS output. [For Windows]
+* mailutime: Bug correction related to passing.
+* To the code in which it considers after 2038(In the direction that doesn't 
+  correspond).
+* File-MMagic: Imported 1.27.
+* For eml file.
+* libnmz: Speed-up of retrieval.
+* nmzchkw.pl: New addition. (contrib)
+* libnmz: The bug around the memory is corrected. (users-ja#821). 
+* namazu and namazu.cgi: The bug that falls into an infinite loop is corrected. 
+* namazu and namazu.cgi: Correction of HTML emphasis tag. (for Windows)
+* gcnmz and nmzmerge: The output of the log is corrected and the format is 
+  corrected. 
+* namazu and namazu.cgi: The possibility that the buffer overflow 
+  cuts it when the template is corrected is corrected. 
+* filter/mp3.pl: MP3-Info 1.21.
+* namazu.spec.in: add nmzcat, nmzegrep.
+* namazu.spec.in: fix filter-requires-namazu.sh.
+* conf/namazurc-sample: It is added to the comment that Suicide_Time
+  is only UNIX.
+* scripts/mknmz.in: The mistake of the number of dummy arguments of
+  process_file() is corrected.
+* filter/pdf.pl: 'Unable to convert pdf file (maybe copying
+  protection)' was corrected at option --debug.
+* filter/msofficexml.pl: Added new fiter.
+* filter/visio.pl: Added a new filter.
+* filter/mp3.pl: Support MP3-Info 1.21's behavior.
+* tests/*: It deals with trouble in which make check fails
+  because of the environment of Mac + gettext 0.14.2.
+* tests/data/ja/*: Added new file.
+* Fix some bugs.
+
+Overview of Changes in Namazu 2.0.16 - Mar 12, 2006
+
+* Directory traversal problem by lang and result of CGI parameter
+  is corrected.
+* Substitution of "-r" that doesn't correspond to ACL of NTFS.
+* It corresponds to the file name including space.
+* For MeCab-perl-0.90rc10.
+
+Overview of Changes in Namazu 2.0.15 - Jan. 29, 2006
+
+* The mistake of the document concerning ISO-8859-* is corrected.
+* RedHat software namazu.spec was taken in.
+  The unnecessary patch was deleted.
+* Include File::MMagic 1.25.
+* Support MeCab.
+* Add -b and --use-mecab options for mknmz.
+* Add --norc option for mknmz and namazu.
+* Add --decode-base64 option for mknmz.
+* Add new filters (Gnumeric, Koffice, Mainman/Pipermail, Zip, Visio).
+* Add new directives for mknmzrc (MECAB, DENY_DDN).
+  To skip when filename is DDN.
+* Add sorting function by date of field.
+* Added new files (nmzcat, nmzegrep).
+* Adapt new filter programs (wvWare 1.0.3, xlhtml 0.5.1, xpdf 3.01).
+* For Windows of filter (msword.pl, excel.pl, powerpoint.pl,
+  postscript.pl, etc...).
+* Ole control filter renewal.
+* ';' can have been used for the delimiter of QUERY_STRING.
+* Add the Perl version test program (pltests).
+* Fix some bugs.
+
+Overview of Changes in Namazu 2.0.14 - December 15, 2004
+
+* Correction for JVN#904429FE.
+
+Overview of Changes in Namazu 2.0.13 - April 14, 2004
+
+* Include File::MMagic 1.20.
+* Add -z and --check-filesize options for mknmz text-processing.
+* Add Polish translations.
+  (Contributed by Kryzystof Drewicz.)
+* Add German translations.
+  (Contributed by Gerald Pfeifer.)
+* Add new filters 
+  (Ichitaro variants, OpenOffice.org, RTF, apachecache, MP3)
+* Add new filter (Macbinary)
+* Adapt new filter programs (wvWare 0.7.4, xpdf 2.02 - 3.00)
+* Add new directives for namazurc (SUICIDE_TIME, REGEX_SEARCH)
+  (to prevent possibility of remote DoS, reported by sheepman.)
+* Add new directives for mknmzrc (HTML_ATTRIBUTES)
+  (This pattern specifies attribute of a HTML tag which should be
+  searchable.)
+* Change soname (LTVERSION 7:0:0, lib/libnmz.so.6 -> lib/libnmz.so.7)
+* Support $WAKATI="module_mecab"; in mknmzrc. (experimental)
+* Fix MacOSX compilation problem (getopt.c deviation from gengetopt-2.5)
+* Fix some bugs and possibility of security hole.
+
+Overview of Changes in Namazu 2.0.12 - September 3, 2002
+
+* Fix more cross-site scripting issue around NMZ.warnlog.
+
+Overview of Changes in Namazu 2.0.11 - September 2, 2002
+
+* Change output warning to NMZ.warnlog file instead stderr
+  (for cross-site scripting issue on some environments)
+* Update some filters.
+* Fix possibility of buffer overflow.
+* Fix shell execution issue on rpm/deb files.
+* Adaptation to xpdf 1.0x (filter/pdf.pl).
+* Fix possibility of relative path vulnerability on Win95/98.
+* Improve HTML filter (exclude scripting language code).
+* Add German template files.
+
+Overview of Changes in Namazu 2.0.10 - Dec 27, 2001
+
+* Fix another cross-site scripting vulnerability.
+* Fix possibility of buffer overflow.
+
+Overview of Changes in Namazu 2.0.9 - Nov 30, 2001
+
+* Fix another cross-site scripting vulnerability.
+* Fix old gfilter.pl problem in overwriting upgrade.
+* Update hnf filter.
+* Win32 OLE filters support MS-Office XP. (experimental)
+
+Overview of Changes in Namazu 2.0.8 - Nov 27, 2001
+
+* Fix cross-site scripting vulnerability.
+
+Overview of Changes in Namazu 2.0.7 - Sep 13, 2001
+
+* Bug fix release.
+* Fix nmz_is_lang_ja() to return correct value.
+* Fix header files installation.
+* Fix mknmz checkpoint bug.
+* Added extensions of Ichitaro 7 and 8.
+* Fixed the bug when target directories contain the
+  current directory. (Only Win32 Platforms)
+* Fixed the AND query bug that namazu ignores
+  the keywords which don't match at all.
+* Lookup both environment variables of SCRIPT_NAME
+  and DOCUMENT_URI (instead of DOCUMENT_NAME). (namazu.cgi)
+* More portability improvements.
+
+Overview of Changes in Namazu 2.0.6 - Aug 10, 2001
+
+* Fix path delimiter problem on Windows environment.
+ (namazu-win32-ja#00411)
+* Fix html parse problem.
+ (namazu-bugs-ja#23)
+* Added ContentType directive in namazurc.
+ (namazu-bugs-ja#34)
+* Fix ignore $FILTERDIR specification.
+ (namazu-bugs-ja#45)
+* Fix locale related environment variables handling.
+* Add -L and --indexing-lang options for mknmz text-processing.
+* Fix ERR_TOO_MANY_HIT handling and total documents counting. 
+* Add more scoring(ranking) methods.
+  DOCLENGTH, FRESHNESS, URILENGTH
+* Add helper scripts lnnmz, adnmz and nmzmerge.
+* Add more document filters.
+  deb, dvi, hdml, postscript, rpm
+* Improve Win32 OLE filters.
+* Include File::MMagic 1.12.
+* Many improvements and bugfixes.
+
+Overview of Changes in Namazu 2.0.5 - Oct 10, 2000
+
+* Fix several bugs.
+* Add Spanish and French translations.
+  (Contributed by Jose Juan Zapater and Stephane Legrand.)
+* Add some new directives in namazurc.
+  MaxHit, MaxMatch
+* Include new upstream version of File::MMagic perl module (1.09).
+* Using libtool 1.3.5.
+* MSWord filter now supports wv 0.6.0 <http://wvWare.sourceforge.net>.
+
+Overview of Changes in Namazu 2.0.4 - Apr 10, 2000
+
+* Fix a security hole which may remove your file at an
+  indexing process. It is occurred only if doccat
+  <http://www.dehenken.co.jp/products/doccat/> is installed on
+  your system.
+
+Overview of Changes in Namazu 2.0.3 - Apr 05, 2000
+
+* Fix a non-critical security hole: An arbitrary HTML tag in a query
+  is printed as it is in search results.
+* Fix several bugs.
+* Add a couple of test suites.
+* Support Perl 5.6.0. warnings are no longer printed.
+* Speed up mknmz.  Finding targets becomes fast by orders of magnitude.
+
+Overview of Changes in Namazu 2.0.2 - Mar 17, 2000
+
+* Fix several bugs.
+* Add excel.pl for handling a Microsoft Excel document with xlHtml.
+* Abolish mknmz --ole option that is not needed.
+* Add mknmz --html-split option for handling <a name="...">.
+
+Overview of Changes in Namazu 2.0.1 - Feb 28, 2000
+
+* Test suites are supplied. Just type `make check'.
+* Fix bugs discovered after 2.0 was released.
+
+Overview of Changes in Namazu 2.0 - Feb 20, 2000
+
+* NLS support using GNU gettext is added.
+* Using GNU automake-1.4.
+* The configure script determines host name and domain name.
+* Namazu core search engine library is provided.
+* Using GNU libtool-1.3.3.
+* Perl XSUB module support for mknmz is added.
+* New index structure has no compatibility with previous one.
+* Index size is reduced by about 50%.
+* Updating index becomes more easier. 
+* namazu and namazu.cgi are separated.
+* Using File::MMagic perl module for file type detection.
+* New filters are added. MS Word, PDF, TeX, etc.
+* Support access control by NMZ.access.
+* Customizable results display by NMZ.result.
+* Display NMZ.tips if nothing matches.
+* Support sorting results in an arbitrary field.
+* Keyword emphasizing in results display.
+* Support long options for namazu and mknmz.
+* Check point (Re-execution) support for mknmz.
+* New config file mknmzrc is introduced.
+* Old config file namazu.conf is renamed to namazurc.
+* Config file parser is improved.
+* bnamazu is refined.
+* New tool nmzgrep is included.
+* New nmz-config helper script is included.
+* Documentation are totally rewritten.
+* Official Web site has moved to <http://www.namazu.org/>.

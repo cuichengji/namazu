@@ -1,0 +1,129 @@
+#!%PERL% -w
+#
+# $Id: mknmz-10.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for priority of mknmzrc and command line option.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = pltests::selectdata();
+my $INDEX12 = "$cwd/idx12";
+my $INDEX13 = "$cwd/idx13";
+my $FDIR = "$cwd/../tests/data/filter";
+my $MKNMZ = pltests::binpath('mknmz');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX12") {
+    unlink(<$INDEX12/NMZ.*>);
+} else {
+    mkdir("$INDEX12", 0755);
+}
+
+if (-d "$INDEX13") {
+    unlink(<$INDEX13/NMZ.*>);
+} else {
+    mkdir("$INDEX13", 0755);
+}
+
+my $RC = "$cwd/tmp.mknmzrc-10";
+if (-f $RC) {
+    unlink $RC;
+}
+pltests::putline($RC, "package conf;");
+pltests::putline($RC, '$ALLOW_FILE=".*\\\\.txt";');
+
+#
+@cmd = ("$MKNMZ", "-f", "$RC", "-O", "$INDEX12", "$TARGET");
+pltests::putline($LOG, "", \@cmd);
+pltests::logsyscmd($LOG, \@cmd);
+
+#
+@cmd = ("$MKNMZ", "-f", "$RC", "--allow=.*\\.html", "-O", "$INDEX13", "$TARGET");
+pltests::putline($LOG, "", \@cmd);
+pltests::logsyscmd($LOG, \@cmd);
+
+if (-f $RC) {
+    unlink $RC;
+}
+
+my $found = 0;
+my $notfound = 0;
+open(IN, "$INDEX12/NMZ.field.uri") || exit 1;
+while(my $line = <IN>) {
+    chomp $line;
+    if ($line =~ /\.txt/) {
+        $found++;
+    } else {
+        $notfound++;
+    }
+    pltests::putline($LOG, $line);
+}
+close(IN);
+
+if ($notfound != 0) {
+    exit 1;
+}
+if ($found == 0) {
+    exit 1;
+}
+
+#
+$found = 0;
+$notfound = 0;
+open(IN, "$INDEX13/NMZ.field.uri") || exit 1;
+while(my $line = <IN>) {
+    chomp $line;
+    if ($line =~ /\.html/) {
+        $found++;
+    } else {
+        $notfound++;
+    }
+    pltests::putline($LOG, $line);
+}
+close(IN);
+
+if ($notfound != 0) {
+    exit 1;
+}
+if ($found == 0) {
+    exit 1;
+}
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink $RC;
+    }
+}

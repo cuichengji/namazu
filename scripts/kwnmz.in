@@ -1,0 +1,197 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# $Id: kwnmz.in,v 1.4.8.3 2005-09-24 12:25:07 opengl2772 Exp $
+#
+# kwnmz - program to make NMZ.field.keywords
+#         by furukawa@tcp-ip.or.jp
+# modified by osamu2001@livedoor.com
+# Copyright (C) 2001-2005 Namazu Project  All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+use strict;
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+push(@INC, $PKGDATADIR . "/pl");
+require 'nmzidx.pl';
+
+my $rate = 0.5;
+my $num = 10;
+my $len = 16;
+my $e_pat = undef;
+my $e_flag = undef;
+my $j_pat = undef;
+my $j_flag = undef;
+
+my $backup = 1;
+my $meta = 1;
+
+my @tfidf;
+
+while (@ARGV && $ARGV[0] =~ s/^\-//){
+    my $argv = shift;
+
+    &usage, exit if $argv eq '-help';
+    $backup = 0, next if $argv eq '-no-backup';
+    $meta = 0, next if $argv eq '-no-meta';
+
+    while ($argv =~ s/^(.)//){
+        $len = ($argv eq '')? shift: $argv, last if $1 eq 'l';
+        $rate = ($argv eq '')? shift: $argv, last if $1 eq 'r';
+        $num = ($argv eq '')? shift: $argv, last if $1 eq 'n';
+
+        $e_pat = ($argv eq '')? shift: $argv, last if $1 eq 'e';
+        $e_pat = '/^[\da-z_]{3}/' if $1 eq 'E';
+        $j_pat = ($argv eq '')? shift: $argv, last if $1 eq 'j';
+        $j_pat = '/(^(\xa5.){3})|(^([\xb0-\xf4].){2})/' if $1 eq 'J';
+
+        $backup = 0 if $1 eq 'b';
+        $meta = 0 if $1 eq 'm';
+    }
+}
+
+if (defined $e_pat){
+    $e_flag = ($e_pat =~ s/^\!\/(.*)\/$/$1/);
+    $e_pat =~ s/^\/(.*)\/$/$1/;
+}
+
+if (defined $j_pat){
+    $j_flag = ($j_pat =~ s/^\!\/(.*)\/$/$1/);
+    $j_pat =~ s/^\/(.*)\/$/$1/;
+}
+
+if (@ARGV){
+    for my $argv (@ARGV){
+        $argv =~ s/NMZ$// unless -d $argv;
+        $argv = '.' if $argv eq '';
+        &kwnmz($argv, $num, $rate, \&judge, $meta, $backup);
+    }
+}else{
+    &kwnmz('.', $num, $rate, \&judge, $meta, $backup);
+}
+
+sub judge{
+    my $word = shift;
+    return 0 unless $len > length $word;
+    if (0x80 & ord $word){
+        return 1 unless defined $j_pat;
+        return ($word =~ /$j_pat/ xor $j_flag);
+    }else{
+        return 1 unless defined $e_pat;
+        return ($word =~ /$e_pat/ xor $e_flag);
+    }
+}
+
+sub kwnmz{
+    my($dir, $num, $rate, $judge, $meta, $backup) = @_;
+    $num = 10 unless defined $num;
+    $rate = 0.5 unless defined $rate;
+    my %table = ();
+    if (! -f "$dir/NMZ.i") {
+        print "Cannot open index. : $dir\n";
+        return;
+    }
+    my $nmzi = new nmzidx($dir, 'r');
+    defined($nmzi) or die("NMZ.lock2 found. Maybe this index is being updated by another process now.");
+
+    my $nmzo = new nmzidx($dir, 'w');
+
+    {
+        my $word;
+        my %list_i;
+
+        my $word_number = 0;
+        my $word_hit_number = 0;
+        my $number_of_document = $nmzi->open_flist->{'size'};
+        my $lim = $number_of_document * $rate;
+        my $wh = $nmzi->open_word;
+        exit 1 unless $wh->{'size'};
+
+        while (defined $wh->read(\$word, \%list_i)){
+            print "$word_hit_number/$word_number\n" unless ++$word_number % 10000;
+            next if defined($judge) && !&$judge($word);
+            my $hit = scalar keys %list_i;
+
+            # a term hitting too much doesn't help for narrowing a search
+            next if $lim && $hit > $lim;
+
+            # a term hitting only once doesn't help for
+            # extracting related documents because there are
+            # no documents containing this term.
+            next if $hit <= 1;
+
+            ++$word_hit_number;
+            $hit = log($number_of_document/$hit);
+            for my $fileno (keys %list_i){
+                $tfidf[$fileno]{$word} = $list_i{$fileno} * $hit;
+                if (scalar(keys %{$tfidf[$fileno]}) > ($num << 1)){
+                    my @sorted_words = sort{
+                        $tfidf[$fileno]->{$b} <=> $tfidf[$fileno]->{$a}
+                        or $a cmp $b} keys %{$tfidf[$fileno]};
+                    for my $i ($num..$#sorted_words){
+                        delete $tfidf[$fileno]{$sorted_words[$i]};
+                    }
+                }
+            }
+        }
+    }
+    print "NMZ.w search finished!\n";
+
+    {
+        my $fi;
+        my $fo = $nmzo->open_field('keywords');
+        $fi = $nmzi->open_field('keywords') if $meta;
+        for my $tmp (@tfidf){
+            my $keywords;
+            $keywords = $fi->{'keywords'}->getline if defined $fi->{'keywords'};
+            if (!defined($keywords) || $keywords =~ /^ /){
+                my $cnt = 0;
+                $keywords = '';
+                for my $word (sort {$tmp->{$b} <=> $tmp->{$a} or $a cmp $b} keys %$tmp){
+                    $keywords .= " $word";
+                    last unless ++$cnt < $num;
+                }
+                $keywords .= "\n";
+            }
+            $fo->{'keywords'}->putline($keywords);
+        }
+    }
+    $nmzo->replace_db($backup);
+    $nmzi->close;
+}
+
+
+sub usage{
+    print
+        ("Usage: kwnmz [options] <target(s)>\n" .
+         "  --help              show this help and exit.\n" .
+         "  -b, --no-backup     do not backup original file.\n" .
+         "  -m, --no-meta       do not protect meta tag field.\n" .
+         "  -n num              number of keyword per file. (default: 10)\n" .
+         "\n" .
+         "  -l MAX_LENGTH       set MAX_LENGTH of valid word. (default: 16)\n" .
+         "  -r MAX_RATE         set MAX_RATE (hit/total). (default: 0.5)\n" .
+         "\n" .
+         "  -e PATTERN          set PATTERN for ascii words which should be allowed.\n" .
+         "  -E                  same as '-e /^[\\da-z_]{3}/'\n" .
+         "  -j PATTERN          set PATTERN for non-ascii words which should be allowed.\n" .
+         "  -J                  same as '-j /(^(\\xa5.){3})|(^([\\xb0-\\xf4].){2})/'\n"
+         );
+}

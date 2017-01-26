@@ -1,0 +1,166 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# $Id: nmzmerge.in,v 1.1.4.5 2006-10-14 14:16:27 opengl2772 Exp $
+#
+# nmzmerge.pl - program to merge index
+#         by furukawa@tcp-ip.or.jp
+#
+
+use strict;
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+push(@INC, $PKGDATADIR . "/pl");
+require 'nmzidx.pl';
+require 'util.pl';
+
+&usage, exit unless @ARGV == 3;
+
+&nmzmerge(@ARGV);
+
+sub nmzmerge{
+    my ($dir0, $dir1, $dir2) = @_;
+
+    my $nmz0 = new nmzidx($dir0, 'w');
+
+    my $nmz1 = new nmzidx($dir1, 'r');
+    my $nmz2 = new nmzidx($dir2, 'r');
+
+    my $offset = 0;
+    {
+        my $nmz0_file = $nmz0->open_flist;
+
+        my $nmz1_file = $nmz1->open_flist;
+        unless (defined $nmz1_file->{'t'}) {
+            $nmz1_file->close;
+            $nmz0->remove_tmpdb;
+            $nmz0->close;
+            $nmz1->close;
+            $nmz2->close;
+            return;
+        }
+        my @field = keys %{$nmz1_file->{'field'}};
+        $nmz1_file->close;
+
+        my $nmz2_file = $nmz2->open_flist;
+        unless (defined $nmz2_file->{'t'}) {
+            $nmz2_file->close;
+            $nmz0->remove_tmpdb;
+            $nmz0->close;
+            $nmz1->close;
+            $nmz2->close;
+            return;
+        }
+        @field = (@field, (keys %{$nmz2_file->{'field'}}));
+        $nmz2_file->close;
+
+        for my $field (@field){
+            $nmz0_file->{'field'}->open($nmz0, $field) unless defined $nmz0_file->{'field'}->{$field};
+        }
+        @field = sort keys %{$nmz0_file->{'field'}};
+
+        $nmz1_file = $nmz1->open_flist;
+        $offset = &nmzfile(\@field, $nmz0_file, $nmz1_file);
+        $nmz1_file->close;
+
+        $nmz2_file = $nmz2->open_flist;
+        &nmzfile(\@field, $nmz0_file, $nmz2_file);
+        $nmz2_file->close;
+
+        $nmz0_file->close;
+    }
+
+    {
+        my $nmz0_word = $nmz0->open_word;
+        my $nmz1_word = $nmz1->open_word;
+        my $nmz2_word = $nmz2->open_word;
+
+        my ($w1, $w2, %list1, %list2);
+        my $word1 = $nmz1_word->read(\$w1, \%list1);
+        my $word2 = $nmz2_word->read(\$w2, \%list2);
+
+        my $ndx = 0;
+
+        while (defined(my $c = &wordcmp($word1, $word2))){
+            my %list;
+            my $word;
+
+            if ($c <= 0){
+                $word = $word1;
+                %list = %list1;
+                $word1 = $nmz1_word->read(\$w1, \%list1);
+            }
+            if ($c >= 0){
+                $word = $word2;
+                for my $key (keys %list2){
+                    $list{$key + $offset} = $list2{$key};
+                }
+                $word2 = $nmz2_word->read(\$w2, \%list2);
+            }
+            $nmz0_word->write($word, \%list);
+            print "word $ndx: $word\n" unless ++$ndx % 100;
+        }
+    }
+
+    {
+        my $nmz0_phrase = $nmz0->open_phrase;
+        my $nmz1_phrase = $nmz1->open_phrase;
+        my $nmz2_phrase = $nmz2->open_phrase;
+
+        for (my $ndx = 0; $ndx < 0x10000; $ndx++){
+            my (@list, @list2);
+            $nmz1_phrase->read(\@list);
+            $nmz2_phrase->read(\@list2);
+
+            for my $key (@list2){
+                push(@list, $key + $offset);
+            }
+
+            $nmz0_phrase->write(\@list);
+            printf("phrase %04X\n", $ndx) unless $ndx & 0xff;
+        }
+    }
+
+    $nmz0->write_status($nmz1);
+
+    if (my $log = $nmz0->log_open("[Merge]")){
+        $log->printf("%-20s %s\n", "Total Files:", util::commas($nmz0->{'flist'}->{'offset'}));
+        $log->printf("%-20s %s\n", "Total Keywords:", util::commas($nmz0->{'word'}->{'offset'}));
+        $nmz0->log_close;
+    }
+
+    $nmz0->replace_db(0);
+}
+
+sub nmzfile{
+    my $ref_field = shift;
+    my $nmzo_file = shift;
+    my $nmzi_file = shift;
+
+    my $dir = $nmzi_file->{'dir'};
+    my $size = $nmzi_file->{'size'};
+    my $ndx = 0;
+    my %list;
+
+    while (defined $nmzi_file->read(\%list)){
+        ++$ndx;
+        for my $field (@$ref_field){
+            $list{'field'}{$field} = '' unless defined $list{'field'}{$field};
+        }
+        print "$dir: $ndx/$size\n" unless $ndx % 100;
+        $nmzo_file->write(\%list);
+    }
+    return $ndx;
+}
+
+sub wordcmp{
+    my ($w1, $w2) = @_;
+    return undef unless defined $w1 or defined $w2;
+    return -1 if defined $w1 and !defined $w2;
+    return 1 if defined $w2 and !defined $w1;
+    return $w1 cmp $w2;
+}
+
+sub usage{
+    print("Usage: nmzmerge destination_dir source_dir1 source_dir2\n");
+}

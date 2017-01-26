@@ -1,0 +1,46 @@
+#! /bin/sh
+#
+# Test for namazu.cgi. 
+# Check whether `<', `>', and/or `"' in a query are escaped correctly.
+# They should be escaped not printed in unescaped.
+#
+LOG=`pwd`/test-log
+pwd=`pwd`
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+echo "Template $pwd/idx1" >> $tmprc
+duprcs
+
+cd ../src
+SCRIPT_NAME='namazu.cgi'
+
+for query in '%3C' '%3E' '%3C%3E' '%3E%3C' '%26' '%22' '%3C%22%26%3E' \
+	     '<'   '>'   '<>'     '><' #   '&'   '"'   '<"&>' \
+do
+    QUERY_STRING="query=$query&idxname=idx1"
+    export SCRIPT_NAME QUERY_STRING
+    echo query: $query >> $LOG
+    output=`./namazu.cgi | \
+    perl -nle 'print $1 if /<title>.+?&lt;(.+?)&gt;<\/title>/i; \
+    print $1 if /<input type="text" name="query" size="40" value="(.+?)">/i'|\
+    uniq -d`  # two output should be same.
+    echo output: $output >> $LOG
+
+    # Error if output contains [<>"].
+    echo $output | perl -ne 'exit 1 if /[<>"]/' || exit 1
+
+    # Normalize.
+    query=`echo $query | perl -ple 's/%(..)/pack("c",hex($1))/eg'`
+    output=`echo $output | perl -ple 's/&quot;/"/g; \
+				      s/&amp;/&/g;   \
+				      s/&lt;/</g;    \
+				      s/&gt;/>/g;'`
+
+    echo $query, $output >> $LOG
+    test "$query" != "$output" && exit 1  # error if not equal
+done
+
+exit 0

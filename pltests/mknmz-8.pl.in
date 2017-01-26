@@ -1,0 +1,188 @@
+#!%PERL% -w
+#
+# $Id: mknmz-8.pl.in,v 1.1.4.4 2008-03-03 10:13:48 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2008 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+#
+# Test for mknmz's --html-split option with updating.
+#
+
+use strict;
+require Cwd;
+use File::Copy;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $TARGET = "$cwd/../tests/data/html-split";
+my $INDEX = "$cwd/idx10";
+my $MKNMZ = pltests::binpath('mknmz');
+my $TMPDATA = "$cwd/tmp-data";
+
+sub get_files($);
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+if (-d "$INDEX") {
+    unlink(<$INDEX/NMZ.*>);
+} else {
+    mkdir("$INDEX", 0755);
+}
+
+# Copy docments.
+if (-d "$TMPDATA") {
+    unlink(<$TMPDATA/*>);
+} else {
+    mkdir("$TMPDATA", 0755);
+}
+for my $file (<$TARGET/*>) {
+    copy($file, $TMPDATA);
+}
+
+# Indexing with --html-split option.
+@cmd = ("$MKNMZ", "--html-split", "-O", "$INDEX", "$TMPDATA");
+pltests::putline($LOG, "  ", \@cmd);
+my $status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+my $origdocnum = pltests::gtnmz("$INDEX/NMZ.r");
+unless (defined $origdocnum) {
+    exit 1;
+}
+
+my ($orign_a, $orign_d) = get_files("$INDEX/NMZ.r");
+
+# Update 1.html.
+copy("$TMPDATA/1.html", "$TMPDATA/1.html.bak");
+open IN, "<$TMPDATA/1.html.bak";
+open OUT, ">$TMPDATA/1.html";
+while(my $line = <IN>) {
+    $line =~ s/xyzzy//;
+    print OUT $line;
+} 
+close(IN);
+close(OUT);
+
+open OUT, ">>$TMPDATA/1.html";
+OUT->autoflush(1);
+print OUT "amarok";
+close(OUT);
+open IN, "<$TMPDATA/1.html";
+my @tmp = <IN>;
+close(IN);
+
+# Update the index with --html-split option.
+@cmd = ("$MKNMZ", "--update=$INDEX", "--check-filesize");
+pltests::putline($LOG, "  ", \@cmd);
+$status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+my $docnum = pltests::gtnmz("$INDEX/NMZ.r");
+unless (defined $docnum) {
+    exit 1;
+}
+if ($docnum != $origdocnum) {
+    exit 1;
+}
+
+my ($a, $d) = get_files("$INDEX/NMZ.r");
+pltests::putline($LOG, "added: $orign_a / $a");
+
+if ($orign_a == $a) {
+    exit 1;
+}
+
+
+# Remove 2.html.
+unlink "$TMPDATA/2.html";
+
+# Update the index with --html-split option.
+@cmd = ("$MKNMZ", "--update=$INDEX", "--check-filesize");
+pltests::putline($LOG, "  ", \@cmd);
+$status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+$docnum = pltests::gtnmz("$INDEX/NMZ.r");
+unless (defined $docnum) {
+    exit 1;
+}
+if (($docnum * 2) != $origdocnum) {
+    exit 1;
+}
+
+# Nothing changed.
+
+# Update the index with --html-split option.
+@cmd = ("$MKNMZ", "--update=$INDEX", "--check-filesize");
+pltests::putline($LOG, "  ", \@cmd);
+$status = pltests::logsyscmd($LOG, \@cmd);
+if ($status != 0) {
+    exit 1;
+}
+
+$docnum = pltests::gtnmz("$INDEX/NMZ.r");
+unless (defined $docnum) {
+    exit 1;
+}
+if (($docnum * 2) != $origdocnum) {
+    exit 1;
+}
+
+($a, $d) = get_files("$INDEX/NMZ.r");
+pltests::putline($LOG, "deleted: $orign_d / $d");
+
+if ($orign_d == $d) {
+    exit 1;
+}
+
+exit 0;
+
+sub get_files($)
+{
+    my ($file) = @_;
+
+    if (!open(IN, "$file")) {
+        warn "Can not open file : $file";
+        exit 1;
+    }
+    my @all   = <IN>;
+    close(IN);
+    @all      = grep {! /^\#\#/} @all;
+    @all      = grep {! /^$/} @all;
+
+    my @added = grep {! /^\#/} @all;
+    my @deleted  = grep {  /^\#/} @all;
+
+    my $a = @added;
+    my $d = @deleted;
+
+    return ($a, $d);
+}

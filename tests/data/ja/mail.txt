@@ -1,0 +1,8 @@
+To: bug-namazu@namazu.org
+Subject: Re: =?iso-2022-jp?B?TmFtYXp1GyRCJE4lRiU5JUgbKEI=?=
+Message-Id: <20000211171609D.test@namazu.org>
+Date: Fri, 11 Feb 2000 17:16:09 +0900
+From: test@namazu.org
+
+Namazu は手軽に使えることを第一に目指した日本語全文検索
+システムです。このファイルはテスト用です。

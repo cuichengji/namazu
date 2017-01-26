@@ -1,0 +1,8 @@
+#!/bin/sh
+
+LC_ALL=ja_JP.eucJP
+LANGUAGE=ja_JP.eucJP
+LANG=ja_JP.eucJP
+
+#namazu `echo -n $* | nkf -e` | nkf -w
+namazu `echo -n $* | iconv -f UTF-8 -t EUC-JP` | iconv -f EUC-JP -t UTF-8

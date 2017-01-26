@@ -1,0 +1,116 @@
+dnl
+dnl configure for Tknamazu
+dnl $Id: configure.in,v 1.4.8.1 2004-04-20 14:27:07 opengl2772 Exp $
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(tknamazu.tcl.in)
+AC_PREREQ(2.13)
+AM_INIT_AUTOMAKE(tknamazu, 1.90)
+
+dnl Checks for programs.
+dnl AC_PROG_INSTALL
+dnl AC_PROG_MAKE_SET
+
+dnl Check for namazu
+
+AC_ARG_WITH(
+	namazu,
+	[  --with-namazu=PATH      set namazu location [search path]],
+	AC_MSG_RESULT(using $with_namazu for namazu)
+	NAMAZU=$with_namazu,
+	[AC_PATH_PROG(NAMAZU, namazu, no)]
+)
+if test "$NAMAZU" = "no"; then
+    AC_MSG_ERROR(namazu not found)
+fi
+AC_ARG_WITH(
+	mknmz,
+	[  --with-mknmz=PATH       set mknmz location [search path]],
+	AC_MSG_RESULT(using $with_mknmz for mknmz)
+	MKNMZ=$with_mknmz,
+	[AC_PATH_PROG(MKNMZ, mknmz, no)]
+)
+if test "$MKNMZ" = "no"; then
+    AC_MSG_ERROR(mknmz not found)
+fi
+AC_ARG_WITH(
+    indexdir,
+    [  --with-indexdir=DIR     defalut namazu index are in DIR [guessed]],
+    [INDEXDIR=${withval}], [INDEXDIR='']
+)
+test -z "$INDEXDIR" && INDEXDIR='/usr/local/share/namazu/index'
+AC_SUBST(INDEXDIR)
+
+dnl *
+dnl * Checking tknamazu
+dnl *
+
+AC_ARG_WITH(
+	wish,
+	[  --with-wish=PATH        set wish location [search path]],
+	AC_MSG_RESULT(using $with_wish for wish)
+	WISH=$with_wish,
+	dnl checking for wish (ugly)
+	[AC_PATH_PROGS(WISH, wish8.0jp wish4.2jp wish8.3 wish8.2 wish8.1 wish, no)]
+)
+if test "$WISH" = "no"; then
+    AC_MSG_ERROR(wish not found)
+fi
+AC_ARG_WITH(
+	lynx,
+	[  --with-lynx=PATH        set lynx browser location [search path]],
+	AC_MSG_RESULT(using $with_lynx for lynx)
+	LYNX=$with_lynx,
+	[AC_PATH_PROG(LYNX, lynx, no)]
+)
+if test "$LYNX" = "no"; then
+    AC_MSG_ERROR(lynx not found)
+fi
+AC_ARG_WITH(
+	groff,
+	[  --with-groff=PATH       set groff location [search path]],
+	AC_MSG_RESULT(using $with_groff for groff)
+	GROFF=$with_groff,
+	[AC_PATH_PROGS(GROFF, jgroff groff nroff, no)]
+)
+if test "$GROFF" = "no"; then
+    AC_MSG_WARN(*** groff not found: tknamazu cannot browse man pages ***)
+fi
+AC_ARG_WITH(
+	info,
+	[  --with-info=PATH        set info location [search path]],
+	AC_MSG_RESULT(using $with_info for info)
+	INFO=$with_info,
+	[AC_PATH_PROG(INFO, info, no)]
+)
+if test "$INFO" = "no"; then
+    AC_MSG_WARN(*** info not found: tknamazu cannot browse info files ***)
+fi
+AC_ARG_WITH(
+	zcat,
+	[  --with-zcat=PATH        set zcat location [search path]],
+	AC_MSG_RESULT(using $with_zcat for zcat)
+	ZCAT=$with_zcat,
+	[AC_PATH_PROG(ZCAT, zcat, no)]
+)
+if test "$ZCAT" = "no"; then
+    AC_MSG_WARN(zcat not found)
+fi
+AC_ARG_WITH(
+    netscape,
+    [  --with-netscape=PATH    set netscape location [search path]],
+    AC_MSG_RESULT(using $with_netscape for netscape)
+    NETSCAPE=$with_netscape,
+    [AC_PATH_PROG(NETSCAPE, netscape, no)]
+)
+if test "$NETSCAPE" = "no"; then
+    AC_MSG_WARN(netscape not found)
+fi
+
+
+dnl * 
+dnl * Output Files.
+dnl * 
+
+AC_OUTPUT([Makefile tknamazu.tcl tknamazu.spec tknamazurc]) 

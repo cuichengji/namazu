@@ -1,0 +1,120 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-3.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+# Test for namazu.cgi. 
+# Check whether `<', `>', and/or `"' in a query are escaped correctly.
+# They should be escaped not printed in unescaped.
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+sub uniq_d (@){
+    my (@lines) = @_;
+    my %uniq;
+    foreach my $line (@lines){
+	unless($uniq{$line}){
+	    $uniq{$line} = 1;
+	}else {
+	    $uniq{$line}++;
+	}
+    }
+    # two output should be same.
+    my @duplines;
+    foreach my $line (keys %uniq){
+	if ($uniq{$line} >= 2){
+	    push(@duplines, $line);
+	}
+    }
+    return @duplines;
+}
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::putline($RC, "Template $cwd/idx1");
+pltests::duprcs($RC);
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+my @query_strings = ('%3C', '%3E', '%3C%3E', '%3E%3C', '%26', '%22',
+		     '%3C%22%26%3E', '<', '>', '<>', '><'); # '&'  '"'  '<"&>'
+
+pltests::putline($LOG, "  *** starting $0");
+
+foreach my $query (@query_strings){
+
+    $ENV{'QUERY_STRING'} = 'query=' . $query . '&idxname=idx1';
+    pltests::putline($LOG, "query: $query");
+    @cmd = ("$NAMAZU");
+    my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+    unless (defined $result) {
+        exit 1;
+    }
+    my @output;
+    foreach my $line (split "\n", $result){
+	if ($line =~ /<title>.+?&lt;(.+?)&gt;<\/title>/i){
+	    push(@output, $1);
+	}
+	if ($line =~ /<input type="text" name="query" size="40" value="(.+?)">/i){
+	    push(@output, $1);
+	}
+    }
+    my $duplines = join("\n", uniq_d(@output));
+
+    pltests::putline($LOG, "output: $duplines");
+
+    # Error if output contains [<>"].
+    exit 1 if ($duplines =~ /[<>"]/);
+
+    # Normalize.
+    my $decoded_query = $query;
+    $decoded_query =~ s/%(..)/pack("c",hex($1))/eg;
+
+    my $output = $duplines;
+    $output =~ s/&quot;/"/g;
+    $output =~ s/&amp;/&/g;
+    $output =~ s/&lt;/</g;
+    $output =~ s/&gt;/>/g;
+
+    pltests::putline($LOG, "$decoded_query$output");
+    exit 1 if ($decoded_query ne $output);
+}
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}
+

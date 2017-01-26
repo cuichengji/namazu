@@ -1,0 +1,45 @@
+#! /bin/sh
+#
+# Test for gcnmz.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+TARGET=`$srcdir/select-data`
+TMPDATA=`pwd`/tmp-data
+
+if test ! -d idx5; then
+    mkdir idx5
+else
+    rm -f idx5/NMZ.*
+fi
+
+if test -d idx6; then
+    rm -rf idx6
+fi
+
+# Copy idx4 for testing gcnmz.
+cp -rp idx4 idx6
+
+
+# Copy docments.
+if test -d tmp-data; then
+    rm -rf tmp-data
+fi
+cp -rp $TARGET tmp-data
+
+# Remove some documents.
+cd $TMPDATA
+find . -type f -name '*.txt' -print | xargs rm -f
+cd ../
+
+
+# Simple indexing to make a reference index.
+cd ../scripts 
+./mknmz -O ../tests/idx5 $TMPDATA >> $LOG
+test "$?" != "0" && exit 1  # error if not success
+
+# Apply gcnmz for idx6.
+./gcnmz --quiet --no-backup ../tests/idx6
+test "$?" != "0" && exit 1  # error if not success
+
+exit 0

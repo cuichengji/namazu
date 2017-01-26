@@ -1,0 +1,104 @@
+#! %PERL% -w
+#
+# -*- Perl -*-
+# nmzcat - print file content on the standard output.
+#
+# $Id: nmzcat.in,v 1.3.2.6 2014-02-08 08:16:02 opengl2772 Exp $
+#
+# Copyright (C) 2004 Yukio USUDA All rights reserved.
+# Copyright (C) 2004-2014 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+
+require 5.004;
+use strict;
+use English;
+
+if (@ARGV == 0) {
+    print "usage: nmzcat <target>...\n";
+    exit 1;
+}
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+my $LIBDIR     = $PKGDATADIR . "/pl";     # directory where library etc. are in.
+
+my $Document = undef;
+
+unshift @INC, $LIBDIR;
+require "util.pl" || die "unable to require \"util.pl\"\n";
+require "document.pl" || die "unable to require \"document.pl\"\n";
+require "var.pl" || die "unable to require \"var.pl\"\n";
+require "conf.pl" || die "unable to require \"conf.pl\"\n";
+require "ext.pl" || die "unable to require \"ext.pl\"\n";
+
+my $tmpdir = "/tmp/NMZ$$";
+if ($English::OSNAME eq "MSWin32") {
+    $tmpdir = "$ENV{'TMP'}/NMZ$$";
+}
+if (mkdir($tmpdir, 0700)) {
+    $var::OUTPUT_DIR = $tmpdir;
+} else {
+    die "unable to make temporary directory \"$tmpdir\"\n";
+}
+util::set_lang();
+if (util::islang("ja") && $conf::NKF =~ /^module_nkf/) {
+    require 'codeconv.pl';
+    require NKF || die "unable to require \"NKF\"\n";
+    util::dprint(_("code conversion: using NKF module\n"));
+    $var::USE_NKF_MODULE = 1;
+}
+
+$Document = mknmz::document->new();
+$Document->init();
+my $uri;
+
+foreach my $fname (@ARGV) {
+    my $content = util::readfile($fname);
+    util::dprint("read file: $fname\n");
+
+    $Document->init_doc($uri, $fname, \$content, undef);
+    my $orig_filename = $Document->get_orig_filename();
+    my $author = $Document->get_field_info('author');
+    my $title = $Document->get_field_info('title');
+    my $contref= $Document->get_filtered_contentref();
+    my $headings = $Document->get_headings();
+    my $mimetype = $Document->get_mimetype();
+
+    $$contref =~ s/\s+//s;
+    $headings =~ s/\s+//s;
+    my $result = "";
+    $result = "filename: $orig_filename\n";
+    $result .= "mimetype: $mimetype\n";
+    $result .= "author  : $author\n";
+    $result .= "title   : $title\n";
+    $result .= "content :\n$$contref\n";
+    $result .= "headings:\n$headings\n";
+    if (util::islang("ja") && ($English::OSNAME eq "MSWin32")) {
+        $result = codeconv::eucjp_to_shiftjis($result);
+    }
+    print $result;
+}
+
+rmdir $tmpdir or die "unable to remove temporary directory \"$tmpdir\"\n";
+
+muda(
+    $var::USE_NKF_MODULE, $var::OUTPUT_DIR,
+    $conf::NKF
+    );
+
+sub muda {};
+

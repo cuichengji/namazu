@@ -1,0 +1,1335 @@
+v1.4.0.0-beta-8
+        [1999-05-04]
+
+	* Fixed -s option bug [namazu 594]
+          - masao@ulis.ac.jp (Masao Takaku) - report
+	* Fixed NMZ.[tr].PID bug  [namazu 598]
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+
+v1.4.0.0-beta-7
+        [1999-04-18]
+
+	* Fixed -s option bug in mknmz
+	  - [sugiura@kt.rim.or.jp (Sugiura Shiro)] - report [namazu 566]
+	* Fixed ${TARGET,DENY}_FILE values in conf.pl
+	  - [Satoru Takabayashi <satoru-t@is.aist-nara.ac.jp>] -
+	* Fixed wanted() bug in mknmz
+          - masao@ulis.ac.jp (Masao Takaku) - report [namazu 541]
+	* Fixed mojibake bug when namazu.cgi receives long long 
+	  Japanese keyword.
+	  - [Chiaki Ishikawa <Chiaki.Ishikawa@personal-media.co.jp>] - report
+
+	
+v1.4.0.0-beta-6
+        [1999-04-12]
+
+	* Fixed load_target_list bug in mknmz 
+	  (this occurs when LF at the end of file is omitted)
+	  - [sugiura@kt.rim.or.jp (Sugiura Shiro)] - report
+	* Fixed DB_MAX counting bug in namazu.c
+	  - [Hideyuki SHIRAI (白井秀行) <shirai@rdmg.mgcs.mei.co.jp>] - report
+	* Modified a regex in mailnews_citation_filter
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - report
+	* Added "--" command line option
+	  - [KOIE Hidetaka (鯉江英隆) <hide@koie.org>] - patch
+	* Modified @Flist related code in 
+	  parse_command_line_options() of mknmz.pl
+	  - Takeshi ITOH <titou@bits.co.jp> -
+	* Fixed do_remain_processing() bug in mknmz
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed get_author() bug in html.pl
+          - masao@ulis.ac.jp (Masao Takaku) - report [namazu 468]
+	
+v1.4.0.0-beta-5
+        [1999-03-12]
+	
+	* Changed a date format in NMZ.head to be ISO 8601 compliant
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed RFC filter bug that was too slow
+	  - [sugiura@kt.rim.or.jp (Sugiura Shiro)] - report
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+	
+v1.4.0.0-beta-4
+        [1999-03-05]
+
+	* Applied Ken-ichi Hirose's patch for Win32
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	* Modified util::fopen() for OS/2
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	
+
+v1.4.0.0-beta-3
+        [1999-03-02]
+	
+	* Modified put_log() in mknmz to add "\n" at the end of messages
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified mailnews_citation_filter() in filter.pl a little bit
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Replaced all $PSC with / in mknmz and lib/*.pl
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified mknmz to exclude $&
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified util::fopen() a little bit
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified message.c to replace '\xff' with '	' in strings
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified *.c to be compliance with 
+	  DEC C V5.8-009 on Digital UNIX V4.0 (Rev. 1091)
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.4.0.0-beta-2
+        [1999-02-27]
+
+	* Modified $REMAIN_HEADER in conf.pl
+	  - [sugiura@kt.rim.or.jp (Sugiura Shiro)] - report
+	* Included new version of gcnmz supporting v1.4 index
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - contributed
+	* Modified CGI output to add automatically "&whence=xx" when
+	  NMZ.head contains no "whence=0" description.
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Added -q option into namazu to suppress extra messages except
+	  search results.
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed weight_element() bug in html.pl
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+	* Modified html.pl a little. [\s\S] -> /./s
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+	* Fixed NMZ.keys bug in mknmz
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - patch
+	  - [Satoru Takabayashi <satoru@isoternet.org>] - addition
+	* Added some win32 specific processings
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	* Changed regex.c a litte around #include config.h
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+	* Modified NMZ.{head,foot} related code in mknmz to substitute
+	  automatically Namazu version number.
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - comment
+	* Modified gcnmz to handle NMZ.keys and NMZ.total
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+ 	* Modified $PSC related code in mknmz for MSWin32 and os2
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+ 	* Modified fopen() in util.pl to convert / to \  for MSWin32 and os2
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.4.0.0-beta-1
+        [1999-02-23]
+
+	* Fixed URL replacing bug in mknmz when using -s option
+	  - [tmu@ikegami.co.jp (MURASHITA Takuya)] - report
+	* Fixed -f option of namazu bug
+	  - [tmu@ikegami.co.jp (MURASHITA Takuya)] - report
+	
+
+v1.4.0.0-alpha-7
+        [1999-02-22]
+
+	* Fixed module_chasen1 bug in configure.in
+	  - [masao@ulis.ac.jp (Masao Takaku)] - patch
+	* Changed usage output from STDERR to STDOUT in mknmz and namazu
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - comment
+	* Modified regex.c to include "config.h"
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+	* Fixed Win32 specific bug in mknmz (path separator normalization)
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+	* Fixed Win32 specific bug in mknmz (problem at Rename())
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+	
+
+v1.4.0.0-alpha-6
+        [1999-02-18]
+
+	* Fixed lrget() bug in search.c
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Implemented a feature to support ALIAS directive in namazu.conf
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Improved a feature to support multiple REPLACE directive
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+
+v1.4.0.0-alpha-5
+        [1999-02-18]
+
+	* Modified Makefile.am to use $(DESTDIR) for install-data-local:
+	  - [Motoyuki Kasahara <m-kasahr@sra.co.jp>] - patch
+	* Modified html related codes in html.pl and filter.pl
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Implemented a feature to support multiple REPLACE directive in namazu.conf
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+
+v1.4.0.0-alpha-4
+        [1999-02-16]
+
+	* Modified checkpoint mechanism to be a little bit efficient
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified put_log() in mknmz to add a content of @ARGV
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified configure.in to replace 'test -z $foo' with 'test -z "$foo"'
+	  - [masao@ulis.ac.jp (Masao Takaku)] - patch
+
+
+v1.4.0.0-alpha-3
+        [1999-02-16]
+
+	* Fixed search.c by removing a variable named Hash
+	  - [yoshihide hirose <hirose@niko.fast.co.jp>]	- report
+	* Modified load_document() in mknmz
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+
+v1.4.0.0-alpha-2
+        [1999-02-15]
+
+	* Fixed configure.in, Makefile.am 
+	  - [sugiura@kt.rim.or.jp (Sugiura Shiro)] - report
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - patch
+	* Improved pack 'w' related code.
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed mknmz's -s option bug
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+	
+v1.4.0.0-alpha-1
+        [1999-02-13]
+
+	* Fixed score weighting mechanism bug occurred with ChaSen
+	  - [masao@ulis.ac.jp (Masao Takaku)] - report
+	* Abolished NMZ.h, NMZ.le, NMZ.be
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Implemented index compression with pack 'w'
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+	
+v1.3.1.0-alpha-11
+        [1999-02-13]
+
+	* Modified all hash expressions ($foo{bar} -> $foo{'bar'})
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - report
+	* Modified conf.pl.in to correct CGI_ACTION substitution miss
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed url_decchiagator() bug in mknmz
+	  - [yoshihide hirose <hirose@niko.fast.co.jp>]	- report
+	* Added read_file() into util.pl and modified mknmz to use it
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed mknmz's -T option bug in mknmz (code conversion)
+	  - [NISHIDA Keisuke <knishida@nn.iij4u.or.jp>] - report
+	* Fixed configure bug for --without-japanese
+	  - [yoshihide hirose <hirose@niko.fast.co.jp>]	- report
+	
+
+v1.3.1.0-alpha-10
+        [1999-02-13]
+
+	* Added eucjp_to_shiftjis() function to codeconv.pl
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified usage() bug in mknmz (occurred on Win32 or OS/2)
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - report
+	* Modified configure.in, etc. for OS/2
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - comment
+	* Modified wdnmz to support Win32 and OS/2
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+	
+v1.3.1.0-alpha-9
+        [1999-02-10]
+
+	* Modified wakati.pl to use Text::ChaSen1::sparse_tostr_long()
+	  - [masao@ulis.ac.jp (Masao Takaku)] - patch
+	* Simplified src/Makefile.am
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - patch
+	* Changed method of creating script files such as gcnmz
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - patch
+	* Replaced --with-cgi-dir of configure with --with-cgi-location
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Changed logging system in mknmz
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+	
+v1.3.1.0-alpha-8
+        [1999-02-09]
+
+	* Added checkpoint feature into mknmz (experimental)
+	  - [kita@sec.rd.nttdata.co.jp (Kita, Jun'ichiro)] - comment
+	* Changed some subroutine and variable names in mknmz.pl
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified configure.in to exclude messaging with echo
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.3.1.0-alpha-7
+        [1999-02-08]
+
+	* Modified configure.in and Makefile.am
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - patch
+
+	
+v1.3.1.0-alpha-6
+        [1999-02-08]
+
+	* Modified configure.in and Makefile.am
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - patch
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - patch
+
+	
+v1.3.1.0-alpha-5
+        [1999-02-08]
+
+	* Inserted AC_EXEEXT into configure.in to support .exe file
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - comment
+	* Excluded SYSTEM definition in Makefile and configure
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - comment
+	* Changed *.pl to use $^O value instead of "%SYSTEM%"
+	  - [Ryuji Abe <raeva@t3.rim.or.jp>] - comment
+	* Fixed mhonarc_filter bug (occurred in a few environment)
+	  - [Hirotaka Aoki <aoki@technoa.co.jp>] - report and code
+	* Fixed phrase search bug when phrase index is no available
+	  - [Seiji Yamashita <s_yam@na.rim.or.jp>] - report
+	* Changed all "[\s\S]" regex into "." with "s" modifier
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed query parser bug
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+
+v1.3.1.0-alpha-4
+        [1999-02-06]
+
+	* Fixed mknmz's bug which cannot use an external wakati command
+	  - [masao@ulis.ac.jp (Masao Takaku)] - patch
+	* Modified Makefile.am, acconfig.h, configure.in, etc. for OS/2
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	* Changed a directory where binary programs are put
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+
+v1.3.1.0-alpha-3
+        [1999-02-03]
+
+	* Fixed mknmz's bug which cannot append files into index
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Automake'ization
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - code
+
+	
+v1.3.1.0-alpha-2
+        [1999-02-02]
+
+	* Supported Text::Kakasi, Text::Chasen, NKF module in mknmz
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.3.1.0-alpha-1
+        [1999-01-30]
+
+	* brushed up mknmz.pl code
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* divided mknmz.pl code
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+v1.3.0.2
+        [1999-01-21]
+
+	* Added /robots.txt treatment feature
+	  - [Gorochan ^o^ <kunito@hal.t.u-tokyo.ac.jp>] - code
+	* Added -t option to specify a target file regex in mknmz
+	  - [Seiji Yamashita <s_yam@na.rim.or.jp>] - comment
+	* Changed behavior when attempting to phrase search without its index
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	
+
+v1.3.0.1
+        [1998-12-25]
+
+	* Changed policy to allow '~' to be in URL
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed gcnmz bug which doesn't consider NMZ.lock2
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+	* Added a feature to limit the length of QUERY_STRING
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.3.0.1-beta-1
+        [1998-12-12]
+
+	* Fixed index update timing problem (NMZ.fields.*, NMZ.t, NMZ.r)
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed invalid html <UL> inside <P> in the result page
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+	* Fixed gcnmz memory consuming bug
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - patch
+	* Fixed gcnmz NMZ.*.BAK bug
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - patch
+	* Fixed mailutime bug under OS/2
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	* Fixed NMZ.total bug
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - report
+	* Fixed mknmz -W option bug
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed mknmz -I option bug
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Fixed namazu -F option bug
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Modified mknmz to handle a drive letter with -F option
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	* Added -c option to output only hit counts to namazu
+	  - [masao@ulis.ac.jp (Masao Takaku)] - patch
+	* Modified configure script
+	  - [SATOH Fumiyasu <fumiya@cij.co.jp>] - file
+	* Modified Makefile.in
+	  - [SATOH Fumiyasu <fumiya@cij.co.jp>] - file
+	* Fixed shiftjis_to_euc bug in mknmz.pl
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - report
+	* Modified html detection code
+	  - [SHIOZAKI Takehiko <takehi-s@ascii.co.jp>] - patch
+	* Corrected messages in mknmz.pl
+	  - ["Burton A. Leland . 1315" <burt@mdli.com>] - patch
+	* Added -X option to nkf in mknmz.pl
+	  - [hosokawa@ntc.keio.ac.jp (HOSOKAWA Tatsumi)] - comment
+	* removed -Ea option from kakasi in mknmz.pl
+	  - [Masakazu Hanawa <hanawa@idg.co.jp>] - comment
+	* Changed an escape sequence to designate ASCII code
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+	* Changed my mind to write ChangeLog and ToDo in English :-)
+	  - [Satoru Takabayashi <satoru@isoternet.org>] -
+
+	
+v1.3.0.0 -- below text is written in Japanese
+        [1998-10-31]
+	
+	* CGIとして呼び出されたときに dbname の数を DB_MAXで制限するように
+	  した
+	* 複数の dbname が与えられたとき同一の dbname を uniq するようにした
+	
+	
+v1.3.0.0-beta-13
+	[1998-10-29]
+
+	* NMZ.head.{en,ja} の中の 
+	  <FORM METHOD="GET" ACTION="/somewhere/namazu.cgi"> 
+	  の ACTION の部分を自動で修正するようにした。これにより 
+	  NMZ.head.{en,ja} の ACTION の修正は不要になります。
+	  - [藤原誠/ Makoto Fujiwara <makoto@ki.nu>] - comment
+	* mknmz に 
+	  -W: 日付によるソート用のインデックス作らない
+	  というオプションをつけた
+	* 新しい gcnmz を添付
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* mknmz のコマンドラインオプション取得のバグを修正	  
+	  - [masao@ulis.ac.jp (Masao Takaku)] - bug report
+
+	
+v1.3.0.0-beta-12
+	[1998-10-26]
+
+	* たぶん Sherlock で文字化けしない
+	* mknmz に
+	  -T (dir) : NMZ.{head,foot,body}.* のディレクトリを指定する
+	  オプションをつけた
+	  - [Takashi Tomokiyo <tomokiyo+@cs.cmu.edu>] - comment
+	* <SELECT NAME="dbname">
+	  <OPTION VALUE="hoge">hoge
+	  ...
+	  のとき正しく SELECTED がつくようにした。
+	  - [Takashi Tomokiyo <tomokiyo+@cs.cmu.edu>] - bug report
+	* vfnmz を OS/2 で動くようにした
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	* clnmz を OS/2, Win32 で動くようにした
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - comment
+	* Win32 と OS/2 の Makefile を新しいものにする
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - file
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - file
+	
+v1.3.0.0-beta-11
+	[1998-10-21]
+
+	* lang=ja のときに MIMEヘッダに charset=iso-2022-jp をつける
+	  ようにした
+	* mknmz -q で無口になるようにした
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	  
+
+v1.3.0.0-beta-10
+	[1998-10-17]
+
+	* 検索結果の <TITLE> ... </TITLE> に検索式を入れるようにした
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - comment
+	* +url: でマッチさせるときに REPLACE を適用した
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - comment
+	* MHONARC_MESSAGE_FILE の正規表現を修正
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - comment
+	* NMZ.field に To: を追加
+
+	
+v1.3.0.0-beta-9
+	[1998-10-17]
+
+	* mknmz の -F で指定したリストの中に
+	    /foo/bar/baz/
+	  のように最後が / で終わる (Win32, OS/2 なら \) 行があったときは
+	  その部分を find して展開するようにした
+	  - [kita@sec.rd.nttdata.co.jp (喜多 淳一郎)] - comment
+	* NMZ.log に削除/更新されたファイルの数を載せることにした
+	  (その辺のくわしい履歴は NMZ.r に残ります)
+	* インデックスに登録されている文書の数を保持する NMZ.total という
+	  ファイルを新たに作ることにした
+	* <SELECT NAME="subquery">
+	  <OPTION VALUE="+url:/^http://foo.bar.jp/aaaa//">aaaa
+	  <OPTION VALUE="+url:/^http://foo.bar.jp/bbbb//">bbbb
+	  ...
+	  のように CGI のときに 検索式に subquery を追加可能にした。
+	  - [Koji Kishi <kis@hdsoft.sony.co.jp>] - comment
+	* 上記の変更にともない <FORM> の扱いを多少ましにした。
+        * CGI からの実行に参考ヒット数の表示を reference=off で抑制できる
+	  ようにした。
+	* 同じくコマンドラインでは -r を指定すると表示を抑制できる
+
+	
+v1.3.0.0-beta-8
+	[1998-10-13]
+
+	* 古川さん作のゴミ掃除機 gcnmz を src ディレクトリに収録した
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* ディフォールトの FILE_SIZE_LIMIT を 600 KBに変更した
+	* NMZ.field に Newsgroups: を追加した。要約にも載る
+	  - [kita@sec.rd.nttdata.co.jp (喜多 淳一郎)] - comment
+	* mailutime.pl を改良した。 RFC 822のフォーマットに従っていない 
+	  Date: フィールドにある程度対応
+	* RFC 2046 の 5.2.2.  Partial Subtype なメイルの添付ファイル部分を
+	  処理するようにした
+	  - [Hiroshi Kato <tumibito@mm.rd.nttdata.co.jp>] - code
+	* NMZ.lock2 に pid を残すようにした
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - comment
+
+	
+v1.3.0.0-beta-7
+	[1998-10-08]
+
+	* regex.c, regex.h を新しくした from Ruby 1.1c6
+	* mknmz, namazu の usage を少し変えた
+	* MSIE4MAC "Mozilla/4.0 (compatible; MSIE 4.01; Mac"
+	  用の URLのデコード処理を入れた
+	  - [Jun Morimoto <morimoto@marib.imagica.co.jp>] - code
+
+	
+v1.3.0.0-beta-6
+	[1998-09-30]
+
+	* Mail/News のヘッダの処理のバグ (1.3.0.0由来) を修正
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - report
+	* DELETED:::: という変なメッセジを表示しないようにした
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - comment
+	 
+	
+v1.3.0.0-beta-5
+	[1998-09-29]
+
+	* OS/2 用に sub cfileload() に仕掛けをした
+	  (これで日本語のファイル名も大丈夫らしい)
+	* NMZ.head.ja の最終更新日時を最終更新日に修正
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - comment
+	* 現在 XX 個のファイルがインデックスされ…の数値を文書の
+	  削除/更新を反映していなかったバグを修正
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - report
+	* MHonArcなファイルのときに要約に Author:, From: と両方ついてしま
+	  う問題を修正
+	* mknmz.pl の先頭の行から -w を外した
+	  (Use of uninitialized value at ... がユーザの不安を扇るようなので)
+	
+
+v1.3.0.0-beta-4
+	[1998-09-24]
+
+	* CGIから実行されたときの不正な dbname の判定を新しいルールで
+	  復活させた    
+	    + 先頭が / から始まっていない
+	    + パスに ../ を含まない
+	* mknmz の $SYSTEM を $^O から取得するようにした
+	* パスの区切りの \ を / に変換するときに Shift_JIS を考慮するよう
+	  にした (前回は失敗だった)
+	
+
+v1.3.0.0-beta-3
+	[1998-09-24]
+
+	* NMZ.r 更新日のにコメントをいれるようにした
+	* -Y: 削除された文書の検出を行わない (ディフォルトでは行う)
+	  というオプションを mknmz に追加した
+	* 2行以上に分断された Mail/News のサブジェクトをつなげる際に連結部
+	  が日本語の場合は空白を捨てるようにした
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - comment
+	* mknmz の filename_to_title() で Win32 or OS/2 のときはファイル名
+	  を Shift_JIS から EUC-JP へ変換するようにした (たぶん動く)
+	* パスの区切りの \ を / に変換するときに Shift_JIS を考慮するよう
+	  にした
+
+
+v1.3.0.0-beta-2
+	[1998-09-21]
+
+	* <LINK REV=MADE HREF="mailto:ccsatoru@vega.aichi-u.ac.jp">
+	  から HTML文書の Author を取得するようにした
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - idea
+	* フィールド指定の検索の時に欠番を参照していなかったバグを修正
+	* フィールド指定の検索で漢字の扱いに問題があったバグを修正
+
+v1.3.0.0-beta-1
+	[1998-09-21]
+
+	* 文書の更新/削除を反映したインデックスのアップデートに対応
+	  - [Tatsuo Furukawa <tatsuo@rfcom704.kobe.hp.com>] - idea
+	  (欠番情報は NMZ.t に記録します)
+	* -Z: 文書の更新/削除を反映しない オプションをつけた
+	* 文書のタイムスタンプを元にした検索結果のソートに対応した
+	  (タイムスタンプの情報は NMZ.t (欠番情報と共用) に記録します)
+	* 上の機能のために Mail/News のファイルのタイムスタンプを Date:
+	  に合わせるためのツール mailutime を添付した
+	* NoPhraseIndexOpt が ONのときにインデックスの追加ができないバグを
+	  修正
+
+	
+v1.2.1.0-beta-13
+	[1998-09-19]
+
+	* エンディアンが異なったインデックスを対象としたときにフレイズ検索
+	  ができなかったバグを修正
+ 	
+
+v1.2.1.0-beta-12
+	[1998-09-18]
+
+	* わかち書きの処理で送り仮名を考慮するようにした
+	* ひらがなとカタカナが繋がっていたら分割するようにした
+
+	
+v1.2.1.0-beta-11
+	[1998-09-16]
+
+	* ひらがなをわかち書きしないようにした
+	* 空の PATH_INFO を無視するようにした
+
+
+v1.2.1.0-beta-10
+	[1998-09-14]
+
+	* mknmz のオプションを追加
+	  -D: Date:, From: といったヘッダ要約につけない 
+				(ディフォルトではつける)
+          -X: フィールド検索用のインデックスを作らない
+				(ディフォルトでは作成する)
+	* インデックス作成時に NMZ.field.url を作成するようにした
+	* HTML の title を NMZ.field.subject に記録するようにした
+	* HTML の author を NMZ.field.from に記録するようにした
+	* 検索時に +title: と +subject: を、 +author: と
+	  +from: を同一視することにした
+	* CGI で渡される dbname 異常に長いと core dump してしまう
+	  バグを修正
+	* DBNAMELENG_MAX と QUERYLENG_MAX を 256 に設定した
+	  (データベース名の最大長とクエリーの最大長)
+	* BUFSIZ をやめて BUFSIZE (1024) に統一した
+
+
+v1.2.1.0-beta-9
+	[1998-09-10]
+
+	* 検索式が ' ' だと core dump してしまうバグを修正
+
+
+v1.2.1.0-beta-8
+	[1998-09-09]
+
+	* +subject:{foo bar} のような '{...}' なデリミタに対応
+	* カタカナの判定に 'ー' を追加した
+
+
+v1.2.1.0-beta-7
+	[1998-09-09]
+
+	* わかち書き時に 1 byte と 2 byte文字を分けることにした
+	* NMZ.slog に "..." {...} /.../ といったデリミタ類が記録さ
+	  れるようにした
+	* フレイズ検索した後の検索式のフォームの表示からがおかしくなる
+	  (デリミタ類が消える) バグを修正 (CGIのとき)  -- revised
+
+
+v1.2.1.0-beta-6
+	[09/xx/1998]
+
+	* mknmz に $WORD_LENG_MAX を導入しました
+	* カタカナ語はわかち書きするのをやめた
+
+
+v1.2.1.0-beta-5
+	[09/xx/1998]
+
+	* $& とその仲間たち ($` and $') は非効率的だそうなので使うの
+	  をやめる see. "Mastering Regular Expressions" P.273
+
+
+v1.2.0.5-beta-2
+	[1998-09-05]
+
+	* mknmz 実行時に URL_PREFIX を指定した際に -F オプションの動
+	  作が変だったバグを修正
+	* フレイズ検索した後の検索式のフォームの表示がおかしくなるバグ
+	  を修正 (CGIのとき)
+	* コマンドラインから実行したときに '<hoge>' のようなキーワード
+	  が結果表示の際に消えてしまうバグを修正
+	* 検索時にフレイズ用のインデックスが開けなかったときなどのエラー
+          処理を改善
+
+
+v1.2.0.4
+	[1998-09-04]
+
+	* クエリーが null のときに NMZ.{head,foot} が表示されなかった
+	  バグを修正
+	* 複数インデックス検索時に NMZ.slog が記録されなかったバグを
+	  修正
+	* NMZ.msg.{en,ja} を廃止
+	
+
+v1.2.0.3
+	[1998-08-29]
+
+	* 複数インデックスにフレーズ検索が行えないバグを修正
+
+
+v1.2.0.2
+	[1998-08-27]
+
+	* 検索時に自前でわかち書きするようにした
+        * mknmz に Perl の -w オプションをつけた
+        * NMZ.log に Perlのヴァージョンを出力することにした
+        * Win32, OS/2 のドライヴレターを扱うコードを mknmz に追加
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	* LANG=en のときに結果出力の挙動が変だったのを修正
+	* CHECKBOX の処理が変だったのを修正
+	* MIME の Multipart の処理を修正
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* jperl で動かなかった問題を修正
+	  - ["Hayato YAMANA" <yamana@etl.go.jp>] - report
+
+	
+v1.2.0.1
+	[1998-07-09]
+
+	* <INPUT TYPE="HIDDEN" NAME="dbname" VALUE="db1,db2,db3">
+	  のように dbname の指定をカンマ区切りで複数指定できるようにしま
+	  した (CHECKBOXでも使えます)。
+	* NMZ.{body,msg} が EUC-JP で出力されるバグを修正
+	* Win32 と OS/2 の Makefile を新しいものにする
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - file
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - file
+
+v1.2.0
+	[1998-06-22]
+
+	* (ちょっとあやしい) フレーズ検索を実装しました
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - idea
+	* 正規表現/中間一致/後方一致の検索を可能としました 
+	  (Ruby のコードを使わせていただきました)
+	* namazu のコマンドライン引数の順序を変えました
+	  現在の % namazu [index dir(s)] "key string" から
+	         % namazu "key string" [index dir(s)] のようにキーワードと
+	  インデックスの指定の順序が逆になりました。ご注意ください。
+	* Language の指定を en, ja のようにしました
+	* NMZ.(head|foot|body|msg) はファイル名の末尾に必ず .ja のような言
+	  語指定をつけるようにしました
+	* Language = 'en' のときは mknmz で nkf および 
+	  KAKASI/ChaSen を使わないようにしました。ゆえに英語環境で
+	  も動くと思われます。
+	* 上記のモードで作ったインデックスは正規表現以外ならおそら
+	  く Latin 1 の右半分の文字も使えると思います。
+	  (regex.c は EUC-JP に特化した処理を行っているので)
+	* NMZ.(head|foot|body|msg).[a-z]{2} を mknmz から切り放し
+	  て LIBDIR に置くことにしました。
+	* 用意すれば NMZ.(head|foot|body|msg).[a-z]{2} が使えるようにしま
+	  した。やろうとと思えば
+	    <SELECT NAME="lang">
+	    <OPTION VALUE="en">English
+	    <OPTION SELECTED VALUE="ja">Japanese
+	    <OPTION VALUE="de">German
+	    <OPTION VALUE="fr">French
+	    </SELECT>
+	  のようにして言語を選択することもできます。
+	* 英語のドキュメントをつけてみました。まだまだ不十分なので
+	  順次充実させていく予定です。
+	* 要約の中に罫線や '=========' のような無意味な文字列ができるだけ
+	  含まれないようにしました
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* TABLE要素の summary属性 や title属性を取り出してインデックス処理
+	  するようにしました
+	* wdnmz に NMZ.ii を使ってアクセスする -i オプションをつけました
+	* インデックス中の URLを変換するプログラム clnmz を同梱しました
+	  (NMZ.f の中の URL部分を書き替えて NMZ.fi の整合も取ります)
+	  行われていなかったバグを修正
+	* mknmz に -P オプションを追加しました
+	  -P: フレーズ検索用のインデックスを作成しない
+	* mknmz に -R オプションを追加しました
+	  -R: 正規表現検索用のインデックスを作成しない
+	* mknmz.pl を use strict にした
+	* FastCGIの対応をやめました
+	* HTMLの扱いをいくつか修正しました
+	  - [Masayasu Ishikawa <mimasa@isoternet.org>] - code
+	* Win32で URL の置き換えがうまくいかなかったバグを修正
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+	* NMZ.lock が無視されていたバグを修正
+
+
+v1.1.2.5
+	[1998-06-11]
+
+	* NMZ.lock が無視されていたバグを修正
+	* 複数のインデックスを指定したときに <FORM> の中の dbname の継承が
+	  行われていなかったバグを修正
+
+	
+v1.1.2.4
+	[1998-05-27]
+
+	* mknmz に URLの encode をしない -U オプションを追加
+	  - [Takanori Hayashi <tzhaya@affrc.go.jp>] - comment
+	* Tf Idfの計算に失敗していたバグを修正
+	* Win32 でドライヴが小文字の時に URL がおかしくなるバグを修正
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - report
+
+	
+v1.1.2.3
+	[1998-05-20]
+
+	* namazu のコマンドラインオプションを -ahs のように一括指定できる
+	  ようにしました (もっと早くすれば良かった :-))
+	* make install から CGI のインストールを外して
+	  make install_cgi と別にしました。
+	* コマンドラインから namazu を実行したときに NMZ.slog のホストの欄
+	  に LOCALHOST と記録することにしました。
+	  - [tmu@ikegami.co.jp (MURASHITA Takuya)] - comment
+	* mknmz 実行中に NMZ.lock2 を置いてロックをかけることにしました
+	* mknmz でループしたシンボリックリンクを検出するようにしました
+	* mknmz でインデックスの追加ができなかった不具合を修正
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - report
+	* dbname=foo で指定したときに NMZ.body が正しく読み込まれ
+	  ていなかったバグを修正
+	  - [akira yamada <akira@linux.or.jp>] - report
+	* uuencode_filter の修正
+	  - [Hiroshi Kato <tumibito@mm.rd.nttdata.co.jp>] - report
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* OS/2用の Makefile の不具合を修正
+	* mknmz -F オプションでインデックスを追加したときのバグを修正しま
+	  した。
+	  - [Hiroshi Kato <tumibito@mm.rd.nttdata.co.jp>] - report
+	* 複数のインデックスに検索をかけたときに前方一致検索ができなかった
+	  不具合を修正。
+	  - [SUGITA Shigeki <sugita@ambitious.lib.hokudai.ac.jp>] - report
+	* namazu の中で chdir(), getcwd() を一切使わないようにしました
+
+	
+v1.1.2.2
+	[1998-05-08]
+
+	* tf idf法を実装 (Makefileおよび .namzurc, コマンドラインから指
+	  定できます)
+	* 送り仮名の削除をするオプション -G をmknmz に追加
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* 両端の記号を削除をするオプション -E を mknmz に追加
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* ロボットよけされているファイルを除外するオプション -e を追加
+	  (現在は <META NAME="ROBOTS" CONTENT="(NOINDEX|NONE)"> のみ対応)
+	* <META NAME="DESCRIPTION" COTENT="...."> に対応しました
+	* インデックス済ファイルの登録 (NMZ.r) をフルパスで記録することに
+	  しました
+	* 出力する HTML を 4.0 Strict DTD に変更
+	* 年月日の表記を [1998-04-25] のようにした (Y2K problem)
+	* NMZ.log の日付が gmtime だったのを localtime に変更
+	* HTMLタグの除去の処理を修正 (mknmz.pl)
+	* dbname=foo で指定したときに NMZ.foot が読み込まれていなかったバ
+	  グを修正
+	  - [MURATA Nobuhiro <nob@y-min.or.jp>] - report
+	* -C のメッセージに無意味な WAKATI_TMP が残っていたので削除
+	  (v1.1.2.1 で直したつもりだったんだけど)
+	* Makefile.OS2 が uuencode されたままだったのを修正
+	
+	
+v1.1.2.1
+	[1998-04-22]
+
+	* ${HOME}/.namazurc を参照するようにしました
+	* 検索結果を単純なリスト表示にする -S オプションを追加
+	* いいかげんな man 用のフィルタを作成 (man_filter)
+	* &nbsp; を考慮するようにしました
+	* -C のメッセージに無意味な WAKATI_TMP が残っていたので削除
+	* namazu.conf 中の WAKACHI を WAKATI に変更しました
+	* Makefile中の parser.c の typo を paeser.o に修正
+
+	
+v1.1.2
+	[1998-03-31]
+
+	* 複数のインデックスを検索できるようにしました
+	* バイトオーダの違いを吸収するようにしました
+	  NMZ.le がれば little-endian なインデックス
+	  NMZ.be がれば big-endian なインデックスと判断する
+	* インデックスのバイトオーダを変換するツールを作りました (rvnmz.pl)
+	* Perl 版の検索クライントを contrib に収録しました
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	  - [tmu@ikegami.co.jp (MURASHITA Takuya)] - code
+	* Tcl/Tk による GUI な検索ツールを contrib に収録しました
+	  - [kenzo-@tama.or.jp (Ken-ichi Hirose)] - code
+	* Java による GUI な検索ツールを contrib に収録しました
+	  - [nmatsumu@can.bekkoame.ne.jp (Nozomi Matsumura)] - code
+	* メッセージを日本語/英語で選べるようにしました
+	  - [MORIMOTO Akihiro <morimoto@laser.ee.es.osaka-u.ac.jp>] - cooperation
+	* mknmz にファイルのリストを渡せるようにしました
+	* インデックスを出力するディレクトリを指定するオプション -O を
+	   mknmz につけました
+	  - [kenzo-@tama.or.jp (Ken-ichi Hirose)] - code
+	* WAKACHI -> WAKATI に表記を統一しました
+	* $PROTOCOL を $URL_PREFIX に名前を変更しました
+
+	
+v1.1.1.5
+	[1998-03-09]
+
+	* OS/2 でドライヴの扱いに問題があった点を修正しました
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - report
+	* NMZ.lock のロック機構が働いていなかったバグを修正
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - report
+	* 再帰下降パーザの括弧の扱いを修正
+	  (閉じ括弧と開き括弧が連続している時に問題がありました。
+	   たとえば "( foo ) ( bar )" のようなもの)
+	
+v1.1.1.4
+	[1998-03-02]
+
+	* namazu で日本語分解の際にテンポラリファイルを作らないようにしま
+	  した
+	* Win32 用の Makefile (Makefile.W32) を添付しました
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - file
+	* OS/2 でドライヴの扱いに問題があった点を修正しました
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	  
+	
+v1.1.1.3
+	[1998-02-27]
+
+	* OS/2 に対応しました
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	* 環境変数 NAMAZUCONFPATH で namazu.conf のパスを指定できるように
+	  しました
+	  - [Kaz SHiMZ <kshimz@sfc.co.jp>] - patch
+	* .shtml, .phtml, .html.en, .html.ja といったファイルも HTML とし
+	  て扱うようにしました
+	  - [kjm@rins.ryukoku.ac.jp (KOJIMA Hajime /小島肇)] - comment
+	* wdnmz の出力を Win32, OS/2 のときは SJIS にしました
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - comment
+	* SunOS4 + Perl5.003 の環境でインデックスの更新がおかしくなる問題
+	  を対処しました (日本語の文字列の比較が正しく行われない)
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - comment
+	  - [Hiroshi Kato <tumibito@mm.rd.nttdata.co.jp>] - comment
+	
+v1.1.1.2
+	[1998-02-21]
+	
+	* Makefile の DENY_FILES の指定で '#' の変わりに \\x23 で誤魔化す
+	  ことにした
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - comment
+	* MHonArc のファイルの扱いのバグを修正
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - report
+	* URLに含まれる危険文字のエスケープ処理を修正
+	  - [Jun Morimoto <morimoto@marib.imagica.co.jp>] - report
+	* DENY_FILES, TARGET_FILES の指定の正規表現の問題を修正
+	  - [Gorochan ^o^ <kunito@hal.t.u-tokyo.ac.jp>] - report
+	* NMZ.head の出力で dbname に SELECTED をつける部分のバグ修正
+	  - [Masaki Takayama <takayama@lang.csd.nes.nec.co.jp>] - patch
+	* コマンドラインから実行したときに URL をデコードするはずだったの
+	  が実はしていなかったという不具合を修正
+
+	
+v1.1.1.1
+	[1998-02-16]
+
+	* 検索結果をファイルに出力するオプション -o を namazu に追加
+	* ユーザ定義の設定などをまとめたファイルをインクルードするオプショ
+	  ン -I を  mknmz に追加
+	  - [Hisaaki Shibata <shibata@opost1.netspace.or.jp>] - comment
+	* mknmz.pl の cp() で binmode を設定し忘れていた問題を修正
+	  (Win32 の時だけ問題が起こりました)
+	* srnmz.c の usage 文字列中の行末エスケープを修正
+	  (gcc では問題なくコンパイルできてしまいますが)
+	  - [大黒洋史  <daikoku@lang2.bs1.fc.nec.co.jp>] - report
+	* Makefile の DENY_FILES の指定で '#' 記号を使うのをやめる
+	  (make の種類によってはうまく通らないようなので)
+	  - [大黒洋史  <daikoku@lang2.bs1.fc.nec.co.jp>] - report
+
+	
+v1.1.1
+	[1998-02-12]
+
+	* Mule から使える検索ツール (namazu.el) を同梱しました
+	  - [matz@netlab.co.jp (Yukihiro Matsumoto)] - code
+	  - [akira yamada <akira@linux.or.jp>] - code
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - code
+	* コマンドラインから使える検索ツール (bnamazu) を同梱しました
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - code
+	* NOT 演算 (2項演算子) を実装しました (演算子は ! です)
+	* 演算子 & | ! の代わりに and, or, not でも指定できるようにした
+	* Win32 用のコードを整理しました
+	* GNU-Win32 がなくても Win32 で mknmz が動くようにしました
+	* Win32用パッケージを広瀬さんに用意して頂きました
+	* cp, pwd, date を使わなくしました
+	* namazu.conf でいくつかの設定が行えるようにしました
+	* Makefile を整備しました
+	* インデクサから --WIN32 という実行時のオプションを廃止
+	* $PROTOCOL をディフォルトで \t にして、 \t の場合はターゲット・
+	  ディレクトリのフルパスを元に設定するようにした。
+	* gzipped なファイルを扱えるようにした
+	* MIME Multipart の Mail/News から text/plain 以外を除外するフィル
+	  タを作成 (元となるコードは古川@ヤマハさんに頂きました Thanks!)
+	* Lynx の lynxcgi で使えるようにした (ドキュメントも用意した)
+	* namazu.cgi だけでなく namazu という実行ファイルも作成するように
+	  した
+	* URL 中の危険な文字をそれなりに encode するようにした
+	* ディフォルトで MHonArc のファイルを扱うようにした (注意)
+	* 結果表示の際に URL の置き換えをするための設定 "REPLACE" を
+	  namazu.conf にいれた
+	* 結果表示の際に <BASE HREF="hogehoge"> を出力するような設定 
+	  "BASE" を namazu.conf にいれた
+	* テキストファイルの場合はパスからもキーワードを作るようにした
+	* namazu.conf を指定するオプション -f を namazu につけた
+	* コマンドラインから実行したとき、ディフォルトでは検索結果に
+ 	  <FORM>  ... </FORM> を表示しないようにした
+	* コマンドラインから実行したとき、ディフォルトでは検索結果に
+	  [1] [2] [3]... といった無意味なリンクを表示しないようにした
+	* <FORM> ... </FORM> を強制表示させるオプション -F を namazu につけた
+	* 先の検索結果を表示しないオプション -H を namazu につけた
+	* コンフィギュレーション内容を表示するオプション -C を namazu につ
+	  けた
+	* plain text の時に URL encode をデコードしないオプション -U をつけ
+	  た
+	* RFC フィルタをちょっと修正 (あいかわらず ad hoc)
+	* mailnews_citation_filter をちょっと修正
+	* 検索結果の HTML でヒット数の部分を <!-- HIT --> で囲むようにした
+	* $weighted_str をわかち書きするのを忘れていた重大なバグを修正
+	* 記号を含む単語の処理のバグを修正
+	* 行末の日本語連結処理を行の長さが 40bytes 以上の時のみ行うように
+	  した
+	* uuencode_filter のバグ修正 (by古川@ヤマハさん Thanks!)
+	* <TITLE> 〜 </TITLE> に改行コードが含まれていたときに検索結果の
+	  表示で score の位置がずれてしまう不具合を修正
+	* Makefile 中の KAKASI, ChaSen のパスが srnmz.c に反映されていなかっ
+	  た不具合を修正
+	
+
+v1.1.0a
+	[1997-12-22]
+
+	* 省略できるファイル名の処理のバグを修正
+	  - [susumu-w@ppp.bekkoame.or.jp] - report
+
+v1.1.0
+	[1997-12-21]
+
+	* FastCGI へ対応しました  (くわしくは manual.html を)
+	* Makefile を作成しました (くわしくは manual.html を)
+	  (佐藤文優@cij.co.jp さんが原型を作ってくださいました)
+	* Mail/News の要約をもう少し工夫しました
+	  (冒頭の名乗り出る部分や引用の部分をできるだけ要約に入れないよう
+	   にとの改良です。やまだあきらさんのアイディアを頂きました)
+	* Win32 でコマンドラインから実行したときにメッセージを SJIS で
+	  表示するようにしました
+	* RFC 用の要約作成の機能をつけました (セコイけど)
+	* Mail/News, MHonArc, HTML, RFC などのそれぞれのフィルタ処理をサブ
+	  ルーチンにすっきりまとめました
+	* mknmz.pl を Perl5 風に書き替えました (まだまだだけど)
+	  (今頃になってやっと Perl5 の本を手に入れたという…)
+	* mknmz.pl は細かい部分をいたるところリファインしました
+	* uuencode の除外コードを修正 (微妙に仕様の違いがあるらしい)
+	* 単語登録の部分に微妙な不具合をみつけたので修正しました
+	* ファイルに漢字が含まれない場合はわかち書き処理しないようにした
+	* 省略可能なファイル名の処理を修正しました
+	  - [Kenji Suzuki <kenji@po.ganseki.ne.jp>] - report
+	* main() の keystring が初期化されていなかったバグを修正
+	* NMZ.head のカンマが抜けることがあったバグを修正
+	* ChangeLog の書式を変えてみました:-)
+
+v1.0.4b (patch)
+	[1997-11-20]
+	
+	* Win32 対応用のコードのバグを修正
+	  - [Ken-ichi Hirose <hirose@cp.neec.fc.nec.co.jp>] - patch
+	
+v1.0.4a (patch)
+	[1997-11-14]
+
+	*  ChaSen を用いる場合に小さなバグがあったのを修正
+	*  mergesort() という関数名が衝突することがあるのでリネーム
+	
+v1.0.4
+	[1997-11-13] 
+
+	* MHonArc で作成された HTML を処理するための仕掛けを入れた
+	  - [Takashi Tomokiyo <tomokiyo+@cs.cmu.edu>] - comment
+	  - [MURATA Nobuhiro <nob@y-min.or.jp>] - comment
+	* コマンドラインから実行したときに plain text の出力ができるようにした
+	* Windows 95/NT で動作するようにした。ただしかなり大変
+	  - [Takuji Hayashi <t-hayasi@cals.fujitsu.co.jp>] - code
+	* Mail/News のファイルのヘッダ部分をうまく処理するための仕掛けを入れた
+	* インデックス処理の際にファイルを数字を考慮してソートするようにした
+	* BinHex の部分を無視するコードを組み込む (オプション指定)
+	* 連番のファイルを新しい/古い順のソートで検索結果の表示を行えるよ
+	  うにした
+	  (上の 4 つは古川@ヤマハさんにコードを頂きました)
+	* ファイルが大きすぎるときはスキップするようにした
+	* NMZ.err にエラーの発生したファイルを記録するようにした
+	* 単独の < > の処理をわずかに修正
+	* mknmz.pl の標準出力への出力をバッファリングしないようにした
+	  $|=1
+	  - [前田幸範 /Yukinori Maeda <yuki@zephyr.elcom.nitech.ac.jp>] - comment
+	* $Heading に対して &entity_decode() を行うように修正した
+	  - [HARUNAGA Hirotoshi / 春永浩敏 <harunaga@upu.co.jp>] - report
+	* <LINK REV=MADE HREF="mailto:$ADMIN"> の行に mailto: がなかった
+	  ので修正
+	
+
+v1.0.3
+	[1997-09-28]
+	
+	* HTML のヘディング (<H[1-6]>) を元にした要約の作成を行うようにした
+	  (オプションによって従来通り文書の先頭から作成することも可能)
+	* 日本語のわかち書きに ChaSen も利用できるようにした
+	* ChaSen による品詞情報を利用した処理を行えるようにした (実験段階)
+	* HTML タグを捨てる処理を改良した (manual.html#HTMLTAG 参照)
+	* uuencode の部分を無視するコードを組み込む (オプション指定)
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* スコアの重みづけをする部分の効率を改善した
+	  (インデックス作成の処理が多少速くなりました)
+	* ChaSen を用いるために 2 bytes 英数字*記号の 1 byte 変換のコード
+	  を組み込む
+	  - [akira yamada <akira@linux.or.jp>] - code
+	* ブラウザからの入力に " が含まれていたときの表示の不具合を修正
+	* 実体参照の復元を少し柔軟にした。
+	* </TITLE> が二つ以上存在しても大丈夫なようにした
+	* ソースコードの書式を K&R 風に宗派変えした:-)
+
+
+v1.0.2
+	[1997-09-15]
+	
+	* 日本語、メールを考慮した行頭*行末の処理を行うようにした
+	  - [Rei FURUKAWA <furukawa@dkv.yamaha.co.jp>] - code
+	* 一部の perl で日本語 EUC が正しくソートされない問題を解決する
+	  ルーチンを組み込む (同じく古川@ヤマハさんにコードを頂きました)
+	* インデックス作成の処理をわずかばかり効率化した
+	* インデックス作成の際に処理中のファイルの通し番号を表示するようにした
+	* コマンドラインから実行したときにヒット数が多いと core を吐くバ
+	  グを修正
+	* インデックスを更新すると検索結果に不整合が生じることがあるバグを修正
+	  - [chihara@atl.advantest.co.jp (Kazunori Chihara)] -report
+	* 結果表示のソート*ルーチンのバグ修正 (選択整列法はボツにした)
+
+
+v1.0.1
+	[1997-09-07]
+	
+	* 前方一致検索のバグ修正
+	  - [chihara@atl.advantest.co.jp (Kazunori Chihara)] -report
+	* 検索式の入力に < > & が含まれていたときの結果出力の不具合を修正
+	* 単独の '<', '>' の保護の処理を二重化した
+	* インデックス更新時のファイルの書き換え処理を最後に一括で行うよ
+	  うにした
+	  - [chihara@atl.advantest.co.jp (Kazunori Chihara)] - comment
+	* ロック機構を実装した
+	* dbname に渡される文字列に '/' が含まれていたら無効にするようにした
+
+
+v1.0.0
+	[1997-08-31]
+	
+	* インデックス作成時に実体参照 (named|numberd entity) を復元する
+	  ようにした
+	* スコアの重み付けするタグを増やした 
+	   (<CODE> <SAMP> <VAR> <KBD> <CITE>)
+	* v0.3.3 でつけた nkf -jZ1 のオプションは無意味だと気づき、修正
+	  (出力ではなく読み込む際につけるべきでした)
+	* インデクサの kakasi -Ea -w の '0xa4' バグ吸収処理が無効だったと
+	  気づき、削除
+	  (nkf -eZ1 で読み込んでしまえば関係ないバグだから良しとします)
+	* その他、ソースを読み直して気づいた点をいくつか修正
+
+
+v0.3.3
+	[1997-08-28]
+	
+	* インデックス作成のバグ修正  (merge 処理および '0xa4' 吸収処理)
+	* find.pl のシンボリックリンク対応のバグ修正
+	* アスタリスクの処理を変更 (correcteuc() に統合した)
+	* nkf のオプションを -jZ から -jZ1 に変更 (2 bytes スペース -> 1 byte)
+
+
+v0.3.2
+	[1997-08-22]
+	
+	* <H[1-6]> のスコアが変更されていなかったのに気づき、修正
+
+
+v0.3.1 
+	[1997-08-21]
+	
+	* AND 検索時のスコア計算の方法を変更
+	  ( A と B を比べて小さい方のスコアを採用するようにした)
+	* ブラウザからデータベースを指定できるようにした
+	* NMZ.slog の書式をわずかに変更 (順番を入れ替えた)
+	* ヒットのオーヴァーフローの際の処理を優しくした
+	* <H[1-6]> のスコアをそれぞれ 1 増やした
+	* バイナリ*ファイルのチェックを 1 % 甘くした
+	* インデックス作成時に処理中のファイルの URL を表示することにした
+	* インデクサに kakasi -Ea -w の '0xa4' バグを吸収させるルーチンを
+	  組み込む
+	* ハッシュテーブル作成ルーチンのバグを修正
+	* アスタリスクの処理を修正
+
+
+v0.3.0
+	[1997-08-18]
+	
+	* アスタリスクの指定による前方一致検索 (e.g. foo*) のサポート
+	* 記号を含めた単語の検索 (e.g. tcp/ip) のサポート
+	* HTML を処理する正規表現のバグを修正
+	* symbolic link なディレクトリをたどってくれるように find.pl を
+	  改造して内蔵
+	* インデクサにいろいろ追加していたらインデックスの処理が遅くなっ
+	  てしまった
+	* 記号の処理を追加したことが原因で、インデックスのサイズが大きくなった
+	* インデックス作成の途中で強制終了された場合の処理を取り外した
+	* NMZ.log のバグを修正
+	* NMZ.slog の書式を変更してヒット数と日時が残るようにした
+	  - [shimizu@rodem.ingrid.org (Shimizu Susumu)] - comment
+
+
+v0.2.2
+	[1997-08-15]
+	
+	* <META NAME="keywords" CONTENT="foo bar"> が実は処理されていな
+	  かったというひどいバグを修正
+	* find, cat, mv, touch, chmod などを呼び出すのをやめて perl 
+	  で処理するようにした
+	* NMZ.h の作成にメモリを食いまくるのを修正
+	* インデックス作成の途中で強制終了された場合の処理を追加
+
+
+v0.2.1
+	[1997-08-11]
+	
+	* ヴァージョン番号が変更されていなかったのを修正
+	* メッセージを一部修正
+
+
+v0.2.0
+	[1997-08-11]
+	
+	* 検索範囲絞り込み用ハッシュテーブルを 2 bytes に拡張
+	* 二度目以降の検索の際に前回の表示件数と出力形式の設定が残るようにした
+	* インデクサにバイナリファイルのチェックをするルーチンを組み込む
+	* インデクサの正規表現を一部修正
+	* インデクサの変数の使い方を多少分かりやすくした
+
+
+v0.1.4
+	[1997-08-03]
+	
+	* 検索プログラムのメッセージを一部変更
+	* mknmz.pl のうっかりミスを修正
+	* コードを一部変更
+
+
+v0.1.3
+	[1997-08-01]
+	
+	* cgiparamget() のバグ修正とページ表示の処理をちょこっと変更
+	* find の引数に -print を追加する
+	  - [okkun@mickey.ai.kyutech.ac.jp (Masaru Okumura)] - report
+
+
+v0.1.2
+	[1997-07-31]
+	
+	*  細かい部分を修正した
+
+
+v0.1.1
+	[1997-07-29]
+	
+	*  古いパッチをあてた kakasi -Ea -w のときに起こる '0xa4' バグ
+	   を吸収するルーチンを srnmz.c に組み込む
+	*  mknmz.pl のログ出力の改善
+	*  NMZ.head の自動更新のバグ修正
+	*  NMZ.* の作成場所を実行時のカレントディレクトリに変更
+	*  アンダースコア ('_') もキーワードの文字として求めるようにした
+	*  二度目の検索の際に前回の INPUT が残るようにした
+	*  ブラウザから結果表示の件数と出力フォーマットの指定をできるようにした
+	*  srnmz.c に検索キーのログを保存するルーチンを組み込む
+	*  登録単語リスト表示用ツール wdnmz.pl を作成
+
+
+v0.1.0 
+	[1997-07-25]
+	
+	* 最初のテスト版の完成 
+	  - [akira yamada <akira@linux.or.jp>] - cooperation
+	  - [Hajime BABA <baba@kusastro.kyoto-u.ac.jp>] - cooperation
+
+	[1997-07-23]
+	
+	* インデックスの追加をサポートした
+
+
+	[1997-07-17]
+	
+	* インデックス作成の際に <IMG> タグの ALT エレメントを取り出すよ
+	  うにした
+
+
+	[1997-07-16]
+	
+	* データベースの内部構造を変えて、 AND/OR のマージの効率を改善した。
+
+
+	[1997-07-16]
+	
+	* タグによる重み付けのルールをカスタマイズ可能にした。
+
+
+	[1997-07-16]
+	
+	* <META NAME="keywords" CONTENT="foo bar"> に対応した。
+
+
+	[1997-07-15]
+	
+	* 結果表示の際に番号表示を行うようにした。
+
+
+	[1997-07-15]
+	
+	* AND/OR 時のスコア計算を変更した。
+	  (OR のときは A と B を比べて大きいほうを、AND のときは A と B 
+	  を足す)
+
+
+	[1997-07-12]
+	
+	* テンポラリファイルを作成するルーチンをインデクサに組み込み、
+	  巨大なデータソースにも対応できるようにした。
+
+
+	[1997-07-07]
+	
+	* とりあえず動く段階になった
+
+
+	[1997-06-30]
+	
+	* コーディング開始

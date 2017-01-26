@@ -1,0 +1,43 @@
+#!/bin/sh
+# make_sjis_po - Make ja_JP.SJIS.po from ja.po
+# For maintainers only
+#
+# Original author - Akira Higuchi (a-higuti@math.sci.hokudai.ac.jp)
+# Modified by Ryuji Abe <raeva@t3.rim.or.jp>
+
+cat > tmp.c << EOF
+#include <stdio.h>
+int
+main ()
+{
+  int c;
+  while ((c = getchar ()) != EOF)
+    {
+      if ((c >= 0x81 && c <= 0x9f) || (c >= 0xe0 && c <= 0xfa))
+	{
+	  int x;
+	  printf ("\\\\%3o", c);
+	  if ((x = getchar ()) == EOF)
+	    return 1;
+	  printf ("\\\\%3o", x);
+	}
+      else
+	{
+	  putchar (c);
+	}
+    }
+  return 0;
+}
+EOF
+gcc tmp.c -o tmp.aout &&
+(
+  if test -s po/ja_JP.SJIS.po; then
+    mv po/ja_JP.SJIS.po po/ja_JP.SJIS.po.bak;
+  fi
+  nkf -s po/ja.po | ./tmp.aout | \
+  sed -e "s/charset=EUC-JP/charset=Shift_JIS/g" > tmp.po
+  rm -f tmp.c tmp.aout
+  msgmerge tmp.po po/namazu.pot > po/ja_JP.SJIS.po
+  rm -f tmp.po
+  test -s po/ja_JP.SJIS.po
+)

@@ -1,0 +1,32 @@
+#! /bin/sh
+#
+# Test for namazu.cgi with "ContentType" directive.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+pwd=`pwd`
+. ${srcdir}/commonfuncs
+
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+echo 'ContentType "text/x-hdml"' >> $tmprc
+duprcs
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=namazu&idxname=idx1&lang=C'
+export SCRIPT_NAME QUERY_STRING 
+
+cd ../src
+./namazu.cgi | \
+grep "text/x-hdml" > /dev/null || exit 1
+
+rm -f $tmprc
+
+exit 0

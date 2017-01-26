@@ -1,0 +1,134 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-9.pl.in,v 1.1.4.4 2006-11-04 15:32:59 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+# Test for buffer overflow
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx19";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $INDEX");
+pltests::duprcs($RC);
+
+# To make messages English
+$ENV{'LANG'} = 'C';
+$ENV{'LANGUAGE'} = 'C';
+delete $ENV{'LC_ALL'};
+delete $ENV{'LC_MESSAGES'};
+delete $ENV{'LC_CTYPE'};
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+
+pltests::putline($LOG, "  *** starting $0");
+
+# long cgi paramater (should be chopped by QUERY_MAX)
+my @long_cgi = ("x" x 2048,
+		 '+' . "x" x 2048 . ":foobar",
+		 '/' . "x" x 2048 . '/',
+		);
+
+foreach my $query (@long_cgi){
+    $ENV{'QUERY_STRING'} = "query=$query";
+    pltests::putline($LOG, "query: $query");
+    @cmd = ("$NAMAZU");
+    my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+    unless (defined $result) {
+        exit 1;
+    }
+    pltests::putline($LOG, $result . $conts_err);
+    unless ($result =~ /too long/i) {
+	pltests::putline($LOG, $result);
+        exit 1;
+    }
+}
+$ENV{'QUERY_STRING'} = "query=namazu";
+
+# long SCRIPT_NAME environment variable
+$ENV{'SCRIPT_NAME'} = 'namazu-l' . "o" x 2048 . 'ng.cgi';
+@cmd = ("$NAMAZU");
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result . $conts_err);
+if ($status != 0) {
+    exit 1;
+}
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+
+# long HOME environment variable
+my $env_home = $ENV{'HOME'};
+$ENV{'HOME'} = '/home/l' . "o" x 2048 . 'ong-dir';
+my $env_namazunorc = $ENV{'NAMAZUNORC'};
+$ENV{'NAMAZUNORC'} = 'SYSCONFIG';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result . $conts_err);
+if ($status != 0) {
+    exit 1;
+}
+if (defined $env_home) {
+    $ENV{'HOME'} = $env_home;
+} else {
+    delete $ENV{'HOME'};
+}
+if (defined $env_namazunorc) {
+    $ENV{'NAMAZUNORC'} = $env_namazunorc;
+} else {
+    delete $ENV{'NAMAZUNORC'};
+}
+
+# long LANG environment variable
+$ENV{'LANG'} = 'C-l' . "o" x 2048 .'ong';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+pltests::putline($LOG, $result . $conts_err);
+if ($status != 0) {
+    exit 1;
+}
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

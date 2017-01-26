@@ -1,0 +1,63 @@
+#! /bin/sh
+#
+# Test for Japanese encoding handling.
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+IDX=`pwd`/ja-idx1
+
+. ${srcdir}/commonfuncs
+
+EXEC=no
+
+lc_all=$LC_ALL
+lc_ctype=$LC_CTYPE
+lang=$LANG
+
+for ctype in "$lc_all" "$lc_ctype" "$lang"; do
+    if test -n "$ctype" -a "$ctype" = "C"; then
+        ctype="en"
+        break
+    fi
+    cand=`echo "$ctype" | LC_ALL="C" perl -nle 'print $1 if /^(..)/'`
+    if test -n "$cand"; then
+        ctype=$cand
+        break
+    fi
+done
+
+case $ctype in 
+	ja*)
+		EXEC=yes
+		;;
+esac
+if [ $EXEC = 'no' ]
+then
+        echo "Skipping because of LANG does not begin with ja: $0" >> $LOG
+	exit 77
+fi
+
+unset LANGUAGE
+unset LC_ALL
+unset LC_MESSAGES
+unset LC_CTYPE
+unset LANG
+
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+echo "Lang ja_JP.eucJP" >> $tmprc
+duprcs
+
+HOME="$pwd/../src"
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=³¤&idxname=ja-idx1'
+export SCRIPT_NAME QUERY_STRING
+
+cd ../src
+RESULT=`./namazu.cgi | grep »³ | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	exit 1
+fi
+exit 0

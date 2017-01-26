@@ -1,0 +1,90 @@
+#!%PERL% -w
+#
+# $Id: ja-namazu-cgi-3.pl.in,v 1.1.4.3 2017-01-09 13:43:58 opengl2772 Exp $
+# Copyright (C) 2007-2017 Tadamasa Teranishi
+#               2007-2017 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+#
+# Test for cross-site scripting vulnerability with IE6,IE7 and wrong EUC-JP chracter code.
+#
+
+use strict;
+require Cwd;
+use File::Copy;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx1";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+$ENV{'QUERY_STRING'} = 'query=%8F%EF%9C/%20%8F%EF%9E%20%8F%EF%9C/';
+
+pltests::putline($LOG, "  *** starting $0");
+
+if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+    pltests::putline($LOG, "Skipping because of MSWin32 or os2: $0");
+    exit 77;
+}
+
+if (pltests::get_lang() !~ /^[jJ]a/) {
+    pltests::putline($LOG, "Skipping because of LANG does not begin with ja: $0");
+    exit 77;
+}
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $INDEX");
+pltests::duprcs($RC);
+
+my $ascii = '[\x00-\x7F]';
+my $twoBytes = '(?:[\x8E\xA1-\xFE][\xA1-\xFE])';
+my $threeBytes = '(?:\x8F[\xA1-\xFE][xA1-\xFE])';
+my $character = "(?:$ascii|$twoBytes|$threeBytes)";
+
+@cmd = ("$NAMAZU");
+my ($staus, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$result =~ s/$character//g;
+$result =~ s/[\n\r]//g;
+pltests::putline($LOG, "\"$result\"");
+exit 1 if $result;
+
+$ENV{'QUERY_STRING'} = 'query=%8F%AF%82%20';
+@cmd = ("$NAMAZU");
+($staus, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+$result =~ s/$character//g;
+$result =~ s/[\n\r]//g;
+pltests::putline($LOG, "\"$result\"");
+exit 1 if $result;
+
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

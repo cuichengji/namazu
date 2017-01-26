@@ -1,0 +1,61 @@
+.TH NAMAZU "1" "July 2011" "namazu of Namazu 2.0.21" "Namazu Project"
+.SH NAME
+nmz-config - script to get information about the installed version of Namazu
+.SH SYNOPSIS
+.B nmz-config
+[\-\-prefix\fI[=DIR]\fP] [\-\-exec\-prefix\fI[=DIR]\fP] [\-\-help] [\-\-versio
+n] [\-\-libs] [\-\-cflags]
+.SH DESCRIPTION
+.PP
+\fInmz-config\fP is a tool that is used to configure to determine
+the compiler and linker flags that should be used to compile
+and link programs that use \fINamazu\fP. It is also used internally
+to the .m4 macros for GNU autoconf that are included with \fINamazu\fP.
+.
+.SH OPTIONS
+.l
+\fInmz-config\fP accepts the following options:
+.TP 8
+.B  \-\-help
+Print the help text and exit.
+.TP 8
+.B  \-\-version
+Print the currently installed version of \fINamazu\fP on the standard output.
+.TP 8
+.B  \-\-libs
+Print the linker flags that are necessary to link a \fINamazu\fP program.
+.TP 8
+.B  \-\-cflags
+Print the compiler flags that are necessary to compile a \fINamazu\fP program.
+.TP 8
+.B  \-\-prefix=PREFIX
+If specified, use PREFIX instead of the installation prefix that \fINamazu\fP
+was built with when computing the output for the \-\-cflags and
+\-\-libs options. This option is also used for the exec prefix
+if \-\-exec\-prefix was not specified. This option must be specified
+before any \-\-libs or \-\-cflags options.
+.TP 8
+.B  \-\-exec\-prefix=PREFIX
+If specified, use PREFIX instead of the installation exec prefix that
+\fIGTK+\fP was built with when computing the output for the \-\-cflags
+and \-\-libs options.  This option must be specified before any
+\-\-libs or \-\-cflags options.
+.SH SEE ALSO
+.BR kakasi (1),
+.SH "REPORTING BUGS"
+Report bugs to <http://www.namazu.org/trac-namazu/trac.cgi>
+or <bug-namazu@namazu.org>.
+.SH COPYRIGHT
+Copyright \(co 1997-1999 Satoru Takabayashi All rights reserved.
+.br
+Copyright \(co 2000-2009 Namazu Project All rights reserved.
+.br
+This is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.

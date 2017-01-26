@@ -1,0 +1,22 @@
+libtool.m4 doesn't find ld on Mingw32. Here is `mingw32-patch'.
+
+This patch derived from libtool CVS Repository.
+The original author is Gary V.Vaughn <gary@oranda.demon.co.uk>.
+
+--- libtool-1.3.3/libtool.m4.orig	Thu Jan  6 15:35:07 2000
++++ libtool-1.3.3/libtool.m4	Thu Jan  6 15:38:46 2000
+@@ -249,7 +249,13 @@
+ if test "$ac_cv_prog_gcc" = yes; then
+   # Check if gcc -print-prog-name=ld gives a path.
+   AC_MSG_CHECKING([for ld used by GCC])
+-  ac_prog=`($CC -print-prog-name=ld) 2>&5`
++  case $host in
++  *-*-mingw*)
++    # gcc leaves a trailing carriage return which upsets mingw
++    ac_prog=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
++  *)
++    ac_prog=`($CC -print-prog-name=ld) 2>&5` ;;
++  esac
+   case "$ac_prog" in
+     # Accept absolute paths.
+ changequote(,)dnl

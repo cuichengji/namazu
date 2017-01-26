@@ -1,0 +1,90 @@
+#! /bin/sh
+#
+# Test for cross-site scripting vulnerability 
+# and the check of the character of query
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+echo "EmphasisTags  \"<emphasis>\"   \"</emphasis>\"" >> $tmprc
+duprcs
+
+status=0
+
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query=%09%09"><script>xss&idxname=idx1'
+export SCRIPT_NAME QUERY_STRING
+
+cd ../src
+xss=`./namazu.cgi | perl -ne 'print 1 if /<script>xss/'`
+
+if [ -n "$xss" ]
+then
+    echo "xss check: query=%09 FAIL" >> $LOG
+    status=1
+else
+    echo "xss check: query=%09 PASS" >> $LOG
+fi
+
+
+QUERY_STRING=`perl -e 'print "query=¡ó09¡ó09\"><script>xss&idxname=idx1"'`
+export SCRIPT_NAME QUERY_STRING
+
+xss=`./namazu.cgi | perl -ne 'print 1 if /<script>xss/'`
+
+if [ -n "$xss" ]
+then
+    echo "xss check: query=¡ó09 FAIL" >> $LOG
+    status=1
+else
+    echo "xss check: query=¡ó09 PASS" >> $LOG
+fi
+
+
+QUERY_STRING=`perl -e 'print "query=\t\t\"><script>xss&idxname=idx1"'`
+export SCRIPT_NAME QUERY_STRING
+
+xss=`./namazu.cgi | perl -ne 'print 1 if /<script>xss/'`
+
+if [ -n "$xss" ]
+then
+    echo "xss check: query=\t FAIL" >> $LOG
+    status=1
+else
+    echo "xss check: query=\t PASS" >> $LOG
+fi
+
+
+QUERY_STRING=`perl -e 'print "query=\001\"><script>emphasis&idxname=idx1"'`
+export SCRIPT_NAME QUERY_STRING
+
+result=`./namazu.cgi | perl -ne 'print 1 if /<emphasis>/'`
+
+if [ -n "$result" ]
+then
+    echo "EmphasisTags check: query=\001 FAIL" >> $LOG
+    status=1
+else
+    echo "EmphasisTags check: query=\001 PASS" >> $LOG
+fi
+
+
+QUERY_STRING=`perl -e 'print "query=\x7f\"><script>control-char&idxname=idx1"'`
+export SCRIPT_NAME QUERY_STRING
+
+result=`./namazu.cgi | perl -ne 'print 1 if /\x7f/'`
+
+if [ -n "$result" ]
+then
+    echo "control-char check: query=\x7f FAIL" >> $LOG
+    status=1
+else
+    echo "control-char check: query=\x7f PASS" >> $LOG
+fi
+
+rm -f $tmprc
+exit $status 

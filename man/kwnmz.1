@@ -1,0 +1,56 @@
+.TH NAMAZU "1" "May 2014" "namazu of Namazu 2.0.21" "Namazu Project"
+.SH NAME
+kwnmz \- make NMZ.field.keywords
+.SH SYNOPSIS
+.B (cd index-file-dir; kwnmz [options])
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+kwnmz, make NMZ.field.keyword file from Namazu index.
+The NMZ.filed.keywords file comes from words and scores in the
+index, and store most closely connected keywords with the
+indexed target files.
+.TP
+\fB\-b\fR, \fB\-\-no-backup\fR
+do not backup original file.
+.TP
+\fB\-m\fR, \fB\-\-no-meta\fR
+do not protect meta tag field.
+.TP
+\fB\-n\fR num
+number of keyword per file. (default: 10)
+.TP
+\fB\-l\fR MAX_LENGTH
+set MAX_LENGTH of valid word. (default: 16)
+.TP
+\fB\-r\fR MAX_RATE
+tset MAX_RATE (hit/total). (default: 0.5)
+.TP
+\fB\-e\fR PATTERN
+set PATTERN for ascii words which should be allowed.
+.TP
+\fB\-E\fR
+same as '-e /^[\da-z_]{3}/'
+.TP
+\fB\-j\fR PATTERN
+set PATTERN for non-ascii words which should be allowed.
+.TP
+\fB\-E\fR
+same as '-j /(^(\xa5.){3})|(^([\xb0-\xf4].){2})/'
+.SH "REPORTING BUGS"
+Report bugs to <http://www.namazu.org/trac-namazu/trac.cgi>
+or <bug-namazu@namazu.org>.
+.SH COPYRIGHT
+Copyright \(co 1997-1999 Satoru Takabayashi All rights reserved.
+.br
+Copyright \(co 2000-2014 Namazu Project All rights reserved.
+.br
+This is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+.PP
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.

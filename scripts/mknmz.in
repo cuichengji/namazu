@@ -1,0 +1,2709 @@
+#! %PERL% -w
+# -*- Perl -*-
+# mknmz - indexer of Namazu
+# $Id: mknmz.in,v 1.85.4.103 2013-12-15 04:01:53 opengl2772 Exp $
+#
+# Copyright (C) 1997-1999 Satoru Takabayashi All rights reserved.
+# Copyright (C) 2000-2013 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+
+package mknmz;
+require 5.004;
+use English;
+use lib "%ADDITIONAL_INC%";
+use Cwd;
+use IO::File;
+use File::Find;
+use File::MMagic;
+use Time::Local;
+use strict;  # be strict since v1.2.0
+use Getopt::Long;
+use File::Copy;
+use DirHandle;
+use File::Basename;
+
+use vars qw($SYSTEM);
+# It exists only for back compatibility.
+$SYSTEM = $English::OSNAME;
+
+my $NAMAZU_INDEX_VERSION = "2.0";
+
+my $CodingSystem = "euc";
+my $PKGDATADIR    = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+my $CONFDIR       = "@CONFDIR@";     # directory where mknmzrc are in.
+my $LIBDIR        = $PKGDATADIR . "/pl";      # directory where library etc. are in.
+my $FILTERDIR     = $PKGDATADIR . "/filter";   # directory where filters are in.
+my $TEMPLATEDIR   = $PKGDATADIR . "/template"; # directory where templates are in.
+
+my $DeletedFilesCount = 0;
+my $UpdatedFilesCount = 0;
+my $APPENDMODE = 0;
+my %PhraseHash = ();
+my %PhraseHashLast = ();
+my %KeyIndex = ();
+my %KeyIndexLast = ();
+my %CheckPoint = ("on" => undef, "continue" => undef);
+my $ConfigFile = undef;
+my $MediaType  = undef;
+
+my $ReplaceCode  = undef;  # perl code for transforming URI
+my @Seed = ();
+my @LoadedRcfiles = ();
+my $Magic = new File::MMagic;
+
+my $ReceiveTERM = 0;
+
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+main();
+sub main {
+    my $start_time = time;
+
+    init();
+
+    # At first, loading pl/conf.pl to prevent overriding some variables.
+    preload_modules();
+
+    # set LANG and bind textdomain
+    util::set_lang();
+    textdomain('namazu', $util::LANG_MSG);
+
+    load_modules();
+    my ($output_dir, @targets) = parse_options();
+    my ($docid_base, $total_files_num) = prep($output_dir, @targets);
+
+    my $swap = 1;
+    my $docid_count = 0;
+    my $file_count = 0;
+    my $total_files_size = 0;
+    my $key_count = 0;
+    my $checkpoint = 0;
+    my $flist_ptr = 0;
+    my $processed_files_size = 0;
+
+    if ($CheckPoint{'continue'}) {
+        # Restore variables
+        eval util::readfile($var::NMZ{'_checkpoint'}) ;
+    } else {
+        print $total_files_num . _(" files are found to be indexed.\n");
+    }
+
+    {
+        my $fh_errorsfile = util::efopen(">>$var::NMZ{'err'}");
+        my $fh_flist = util::efopen($var::NMZ{'_flist'});
+        my %field_indices = ();
+        get_field_index_base(\%field_indices);
+
+        if ($CheckPoint{'continue'}) {
+            seek($fh_flist, $flist_ptr, 0);
+        }
+
+        # Process target files one by one
+        while (defined(my $line = <$fh_flist>)) {
+            $flist_ptr += length($line);
+            my $cfile = $line;
+            chomp $cfile;
+            util::dprint(_("target file: ")."$cfile\n");
+
+            my ($cfile_size, $num) = 
+                process_file($cfile, $docid_count, $docid_base, 
+                $file_count, \%field_indices,
+                $fh_errorsfile, $total_files_num);
+            if ($num == 0) {
+                $total_files_num--;
+                next;
+            } else {
+                $docid_count += $num;
+                $file_count++;
+            }
+
+            $total_files_size     += $cfile_size;
+            $processed_files_size += $cfile_size;
+            last if $ReceiveTERM;
+            if ($processed_files_size > $conf::ON_MEMORY_MAX) {
+                if (%KeyIndex) {
+                    $key_count = write_index();
+                    print _("Writing index files..."); 
+                    write_phrase_hash();
+                    print "\n";
+                }
+                $processed_files_size = 0;
+                $checkpoint = 1, last if $CheckPoint{'on'} && defined(<$fh_flist>);
+            }
+        }
+
+        util::fclose($fh_flist);
+        util::fclose($fh_errorsfile);
+    }
+    # This should be out of above blocks because of file handler closing.
+    re_exec($flist_ptr, $docid_count, $docid_base, $start_time, 
+	    $total_files_size, $total_files_num,
+	    $file_count, $key_count) if $checkpoint;
+
+    if (%KeyIndex) {
+        $key_count = write_index();
+        print _("Writing index files...");
+        write_phrase_hash();
+        print "\n";
+    }
+
+    $key_count = get_total_keys() unless $key_count;
+    do_remain_job($total_files_size, $docid_count, $key_count, 
+		   $start_time);
+    exit 0;
+}
+
+#
+# FIXME: Very complicated.
+#
+sub process_file ($$$$\%$$) {
+    my ($cfile, $docid_count, $docid_base, $file_count, 
+	$field_indices, $fh_errorsfile, $total_files_num) = @_;
+
+    my $processed_num = 0;
+    my $file_size = util::filesize($cfile);
+
+    if ($var::Opt{'htmlsplit'} && $cfile =~ $conf::HTML_SUFFIX) {
+        my @parts = ();
+        @parts = htmlsplit::split($cfile, "NMZ.partial")
+            if ($file_size <= $conf::FILE_SIZE_MAX);
+        if (@parts > 1) {
+            my $id = 0;
+            for my $part (@parts) {
+                next if (defined $conf::EXCLUDE_PATH &&
+                    "$cfile#$part" =~ /$conf::EXCLUDE_PATH/);
+                my $fname = util::tmpnam("NMZ.partial.$id");
+                my $fragment  = defined $part ? $part : undef;
+                my $uri   = generate_uri($cfile, $fragment);
+                my $result = namazu_core($fname, 
+					 $docid_count + $processed_num, 
+					 $docid_base, $file_count, 
+					 $field_indices, $fh_errorsfile, 
+					 $total_files_num, 
+					 $uri, $id, $#parts);
+                if ($result > 0) {
+                    $processed_num++;
+                    my $rname = defined $part ? "$cfile\t$part" : "$cfile";
+                    put_registry($rname);
+                }
+                unlink $fname;
+                $id++;
+            }
+            return ($file_size, $processed_num);
+        }
+    }
+    my $result = namazu_core($cfile, $docid_count, $docid_base, 
+			     $file_count, $field_indices, 
+			     $fh_errorsfile, $total_files_num,
+			     undef, undef, undef);
+    if ($result > 0) {
+        $processed_num++;
+        put_registry($cfile);
+    }
+
+    return ($file_size, $processed_num);
+}
+
+# 
+# Load mknmzrcs:
+# 
+#  1. MKNMZRC environment
+# 
+#  2. $(sysconfdir)/$(PACKAGE)/mknmzrc
+# 
+#  3. ~/.mknmzrc
+# 
+#  4. user-specified mknmzrc set by mknmz --config=file option.
+# 
+# If multiple files exists, read all of them.
+# 
+sub load_rcfiles () {
+    my (@cand) = ();
+
+    # To support Windows. Since they have nasty drive letter convention,
+    # it is necessary to change mknmzrc dynamically with env. variable.
+    push @cand, $ENV{'MKNMZRC'} if defined $ENV{'MKNMZRC'};
+    push @cand, "$CONFDIR/mknmzrc";
+    push @cand, "$ENV{'HOME'}/.mknmzrc";
+
+    util::vprint(_("Reading rcfile: "));
+    for my $rcfile (@cand) {
+        if (-f $rcfile) {
+            load_rcfile ($rcfile);
+            util::vprint(" $rcfile");
+        }
+    }
+    util::vprint("\n");
+}
+
+sub load_rcfile ($) {
+    my ($rcfile) = @_;
+    if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+        util::win32_yen_to_slash(\$rcfile);
+    }
+    return if (grep {m/^$rcfile$/} @LoadedRcfiles);
+    do $rcfile;
+    if ($@) {
+        chop $@;
+        push @LoadedRcfiles, "load failed " .$rcfile . "\'$@\'";
+    }else {
+        push @LoadedRcfiles, $rcfile;
+    }
+
+    # Dirty workaround.
+    $LIBDIR = $conf::LIBDIR
+        if (defined $conf::LIBDIR && -d $conf::LIBDIR);
+    $FILTERDIR = $conf::FILTERDIR
+        if (defined $conf::FILTERDIR && -d $conf::FILTERDIR);
+    $TEMPLATEDIR = $conf::TEMPLATEDIR
+        if (defined $conf::TEMPLATEDIR && -d $conf::TEMPLATEDIR);
+}
+
+sub re_exec ($$$$$$$$) {
+    my ($flist_ptr, $docid_count, $docid_base, $start_time, 
+	$total_files_size, $total_files_num, $file_count, $key_count) = @_;
+
+    # store variables
+    {
+	my $fh_checkpoint = util::efopen(">$var::NMZ{'_checkpoint'}");
+
+	print $fh_checkpoint <<EOM;
+	\$DeletedFilesCount = $DeletedFilesCount;
+	\$UpdatedFilesCount = $UpdatedFilesCount;
+	\$APPENDMODE = $APPENDMODE;
+	\$flist_ptr = $flist_ptr;
+	\$docid_count = $docid_count;
+	\$docid_base = $docid_base;
+	\$start_time = $start_time;
+	\$total_files_size = $total_files_size;
+	\$total_files_num = $total_files_num;
+	\$key_count = $key_count;
+	\$file_count = $file_count;
+	\$\$ = $$;
+EOM
+        util::fclose($fh_checkpoint);
+    }
+
+    @ARGV = ("-S", @ARGV) ;
+    print _("Checkpoint reached: re-exec mknmz...\n");
+    util::dprint(join ' ', ("::::", @ARGV, "\n"));
+    exec ($0, @ARGV) ;
+}
+
+sub put_registry ($) {
+    my ($filename) = @_;
+    my $fh_registry = util::efopen(">>$var::NMZ{'_r'}");
+    print $fh_registry $filename, "\n";
+    util::fclose($fh_registry);
+}
+
+
+# Initialization
+#   $CodingSystem: Character Coding System 'euc' or 'sjis'
+sub init () {
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        $CodingSystem = "sjis";
+        if ($CONFDIR !~ /^[A-Z]:|^\\\\/i && $0 =~ m#^([A-Z]:)(/|\\)#i) {
+            $CONFDIR = $1 . $CONFDIR ;
+        }
+        if ($LIBDIR !~ /^[A-Z]:|^\\\\/i && $0 =~ m#^([A-Z]:)(/|\\)#i) {
+            $LIBDIR = $1 . $LIBDIR ;
+        }
+        if ($FILTERDIR !~ /^[A-Z]:|^\\\\/i && $0 =~ m#^([A-Z]:)(/|\\)#i) {
+            $FILTERDIR = $1 . $FILTERDIR ;
+        }
+        if ($TEMPLATEDIR !~ /^[A-Z]:|^\\\\/i && $0 =~ m#^([A-Z]:)(/|\\)#i) {
+            $TEMPLATEDIR = $1 . $TEMPLATEDIR ;
+        }
+    } else {
+        $CodingSystem = "euc";
+    }
+
+    $SIG{'INT'}  = sub {
+        util::cdie("SIGINT caught! Aborted.\n");
+    };
+
+    $SIG{'TERM'}  = sub {
+        print STDERR "SIGTERM caught!\n";
+        $ReceiveTERM = 1;
+    };
+}
+
+sub preload_modules () { 
+    unshift @INC, $LIBDIR;
+    # workaround for test suites.
+    unshift @INC, $ENV{'top_builddir'} . "/pl" if defined $ENV{'top_builddir'};
+
+    require "var.pl" || die "unable to require \"var.pl\"\n";
+    require "conf.pl" || die "unable to require \"conf.pl\"\n";
+    require "util.pl" || die "unable to require \"util.pl\"\n";
+    require "gettext.pl" || die "unable to require \"gettext.pl\"\n";
+    require "ext.pl" || die "unable to require \"ext.pl\"\n";
+}
+
+sub postload_modules () {
+    require "htmlsplit.pl" || die "unable to require \"htmlsplit.pl\"\n";
+}
+
+sub load_modules () {
+    require "usage.pl" || die "unable to require \"usage.pl\"\n";
+    require "codeconv.pl" || die "unable to require \"codeconv.pl\"\n";
+    require "wakati.pl" || die "unable to require \"wakati.pl\"\n";
+    require "seed.pl" || die "unable to require \"seed.pl\"\n";
+    require "gfilter.pl" || die "unable to require \"gfilter.pl\"\n";
+
+    @Seed = seed::init();
+}
+
+sub load_filtermodules () {
+    unshift @INC, $FILTERDIR;
+
+    #
+    # Windows modules must be loaded first.
+    # Because OLE filters have low precedence over normal ones.
+    #
+    load_win32modules() if $English::OSNAME eq "MSWin32";
+
+    # Check filter modules
+    my @filters = ();
+    @filters = glob "$FILTERDIR/*.pl";
+
+    load_filters(@filters);
+}
+
+sub load_win32modules () {
+    # Check filter modules
+    my @filters = ();
+    if (-f "../filter/win32/olemsword.pl") { # to ease developing
+        @filters = glob "../filter/win32/*.pl";
+        unshift @INC, "../filter/win32";
+    } else {
+        @filters = glob "$FILTERDIR/win32/*.pl";
+        unshift @INC, "$FILTERDIR/win32";
+    }
+
+    load_filters(@filters);
+}
+
+sub load_filters (@) {
+    my @filters = @_;
+   
+    for my $filter (@filters) {
+	$filter =~ m!([-\w]+)\.pl$!;
+	my $module = $1;
+	require "$module.pl" || die "unable to require \"$module.pl\"\n";;
+	my (@mtypes, $status, $recursive, $pre_codeconv, $post_codeconv);
+
+	eval "\@mtypes =    ${module}::mediatype();";
+	die $@ if $@;  # eval error
+	eval "\$status =    ${module}::status();";
+	die $@ if $@;
+	eval "\$recursive = ${module}::recursive();";
+	die $@ if $@;
+	eval "\$pre_codeconv  = ${module}::pre_codeconv();";
+	die $@ if $@;
+	eval "\$post_codeconv  = ${module}::post_codeconv();";
+	die $@ if $@;
+	eval "${module}::add_magic(\$Magic);";
+	die $@ if $@;
+
+	for my $mt (@mtypes) {
+        next if (defined $var::Supported{$mt} && 
+                 $var::Supported{$mt} eq 'yes' && $status eq 'no');
+	    $var::Supported{$mt} = $status;
+	    $var::REQUIRE_ACTIONS{$mt} = $module;
+	    $var::RECURSIVE_ACTIONS{$mt} = $recursive;
+	    $var::REQUIRE_PRE_CODECONV{$mt} = $pre_codeconv;
+	    $var::REQUIRE_POST_CODECONV{$mt} = $post_codeconv;
+	}
+    }
+}
+
+# Core routine.
+#
+# FIXME: Too many parameters. They must be cleared.
+#
+sub namazu_core ($$$$$$$$$$) {
+    my ($cfile, $docid_count, $docid_base, 
+	$file_count, $field_indices, $fh_errorsfile, $total_files_num,
+	$uri, $part_id, $part_num) = @_;
+
+    my $headings = "";
+    my $content = "";
+    my $weighted_str = "";
+    my %fields = ();
+    my $msg_prefix = "";
+
+    if ($part_id) {
+        $msg_prefix = "    $part_id/$part_num - ";
+    } else {
+        $msg_prefix = $file_count + 1 . "/$total_files_num - ";
+    }
+
+    unless ($uri) {
+        $uri = generate_uri($cfile);  # Make a URI from a file name.
+    }
+    my ($cfile_size, $text_size, $kanji, $mtype) = 
+	load_document(\$cfile, \$content, \$weighted_str,
+		      \$headings, \%fields);
+
+    {
+        $fields{'mtime'} = (stat($cfile))[9];
+        my $utc = $fields{'mtime'};
+        $utc = time::rfc822time_to_mtime($fields{'date'})
+                if (defined $fields{'date'});
+        if ($utc == -1) {
+            my $date = $fields{'date'};
+            print "$cfile Illegal date format. : $date\n";
+            print $fh_errorsfile "$cfile Illegal date format. : $date\n";
+            $utc = $fields{'mtime'};
+            delete $fields{'date'};
+        }
+        $fields{'utc'} = $utc;
+    }
+
+    util::dprint(_("after load_document: ")."$uri: $cfile_size, $text_size, $kanji, $mtype\n");
+
+    # Check if the file is acceptable.
+    my $err = check_file($cfile, $cfile_size, $text_size, $mtype, $uri);
+    if (defined $err) {
+        if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+            my $uri2 = codeconv::eucjp_to_shiftjis($uri);
+            print $msg_prefix . "$uri2 $err\n";
+        } else {
+            print $msg_prefix . "$uri $err\n";
+        }
+        print $fh_errorsfile "$cfile $err\n"; 
+        return 0;  # return 0 if error
+    }
+
+    # Print processing file name as URI.
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        my $uri2 = codeconv::eucjp_to_shiftjis($uri);
+        print $msg_prefix . "$uri2 [$mtype]\n";
+    } else {
+        print $msg_prefix . "$uri [$mtype]\n";
+    }
+
+    # Add filename.
+    my $filename = defined $cfile ? $cfile : '';
+    codeconv::toeuc(\$filename);
+    $filename = basename($filename);
+    $fields{'filename'} = $filename;
+
+    complete_field_info(\%fields, $cfile, $uri, 
+			\$headings, \$content, \$weighted_str);
+    put_field_index(\%fields, $field_indices);
+
+    put_dateindex($cfile);
+    $content .= "\n\n$filename\n\n";    # add filename
+    $content .= $weighted_str;          # add weights
+    count_words($docid_count, $docid_base, \$content, $kanji);
+    make_phrase_hash($docid_count, $docid_base, \$content);
+
+    # assertion
+    util::assert($cfile_size != 0, 
+		 "cfile_size == 0 at the end of namazu_core.");
+
+    return $cfile_size;
+}
+
+#
+# Make the URI from the given file name.
+#
+sub generate_uri (@) {
+    my ($file, $fragment) = @_;
+    return "" unless defined $file;
+
+    # omit a file name if omittable
+    $file =~ s!^(.*)/($conf::DIRECTORY_INDEX)$!$1/!o; 
+
+    if (defined $ReplaceCode) {
+        # transforming URI by evaling
+        $_ = $file;
+        eval $ReplaceCode;
+        $file = $_;
+    }
+
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        $file =~ s#^([A-Z]):#/$1|#i; # converting a drive part like: /C|
+    }
+
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        $file = codeconv::shiftjis_to_eucjp($file);
+    }
+    if (defined $fragment) {
+        codeconv::toeuc(\$fragment);
+    }
+
+    unless ($var::Opt{'noencodeuri'}) {
+	for my $tmp ($file, $fragment) {
+	    next unless defined $tmp;
+
+	    # Escape unsafe characters (not strict)
+	    $tmp =~ s/\%/%25/g;  # Convert original '%' into '%25' v1.1.1.2
+	    $tmp =~ s/([^a-zA-Z0-9~\-\_\.\/\:\%])/
+		sprintf("%%%02X",ord($1))/ge;
+	}
+    }
+
+
+    my $uri = $file;
+    $uri .= "#" . $fragment if defined $fragment;
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        # restore '|' for drive letter rule of Win32, OS/2
+        $uri =~ s!^/([A-Z])%7C!/$1|!i;
+    }
+    return $uri;
+}
+
+
+sub get_field_index_base (\%) {
+    my ($field_indices) = @_;
+
+    my @keys = split('\|', $conf::SEARCH_FIELD);
+    if ($var::Opt{'meta'}) {
+        push @keys, (split '\|', $conf::META_TAGS);
+    }
+    for my $key (@keys) {
+        $key = lc($key);
+        my $fname    = "$var::NMZ{'field'}.$key";
+        my $tmp_fname = util::tmpnam("NMZ.field.$key");
+        my $size = 0;
+        $size = -s $fname if -f $fname;
+        $size += -s $tmp_fname if -f $tmp_fname;
+        $field_indices->{$key} = $size;
+    }
+}
+
+sub complete_field_info (\%$$\$\$\$) {
+    my ($fields, $cfile, $uri, $headings, $contref, $wsref) = @_;
+
+    for my $field (keys %{$fields}) {
+        if (!defined($fields->{$field}) or $fields->{$field} =~ /^\s*$/) {
+            delete $fields->{$field};
+        }
+    }
+
+    unless (defined($fields->{'title'})) {
+        $fields->{'title'} = gfilter::filename_to_title($cfile, $wsref);
+    }
+    unless (defined($fields->{'date'})) {
+        my $mtime = $fields->{'mtime'};
+        my $date = util::rfc822time($mtime);
+        $fields->{'date'} = $date;
+    }
+    unless (defined($fields->{'uri'})) {
+        $fields->{'uri'} = $uri;
+    }
+    unless (defined($fields->{'size'})) {
+        $fields->{'size'} = -s $cfile;
+    }
+    unless (defined($fields->{'summary'})) {
+        $fields->{'summary'} = make_summary($contref, $headings, $cfile);
+    }
+    unless (defined($fields->{'from'}) || defined($fields->{'author'})) {
+        $fields->{'from'} = getmsg("unknown");
+    }
+}
+
+#
+# Currently, messages for NMZ.* files should be encoded in
+# EUC-JP currently. We cannot use gettext.pl for the messsage
+# because gettext.pl may use Shift_JIS encoded messages.
+# So, we should use the function instead of gettext().
+#
+# FIXME: Ad hoc impl.  getmsg() is effective only for "unknown".
+#
+sub getmsg ($) {
+    my ($msg) = @_;
+
+    if (util::islang_msg("ja")) {
+        if ($msg eq "unknown") {
+            return "不明";
+        }
+    }
+    return $msg;
+}
+
+sub make_summary ($$$) {
+    my ($contref, $headings, $cfile) = @_;
+
+    # pick up $conf::MAX_FIELD_LENGTH bytes string
+    my $tmp = "";
+    if ($$headings ne "") {
+        $$headings =~ s/^\s+//;
+        $$headings =~ s/\s+/ /g;
+        $tmp = $$headings;
+    } else {
+        $tmp = "";
+    }
+
+    my $offset = 0;
+    my $tmplen = 0;
+    while (($tmplen = $conf::MAX_FIELD_LENGTH + 1 - length($tmp)) > 0
+           && $offset < length($$contref))
+    {
+        $tmp .= substr $$contref, $offset, $tmplen;
+        $offset += $tmplen;
+        $tmp =~ s/(([\xa1-\xfe]).)/$2 eq "\xa8" ? '': $1/ge;
+        $tmp =~ s/([-=*\#])\1{2,}/$1$1/g;
+    }
+
+    # -1 means "LF"
+    my $summary = substr $tmp, 0, $conf::MAX_FIELD_LENGTH - 1;
+    # Remove a garbage Kanji 1st char at the end.
+    $summary = codeconv::chomp_eucjp($summary);
+
+    $summary =~ s/^\s+//;
+    $summary =~ s/\s+/ /g;   # normalize white spaces
+
+    return $summary;
+}
+
+
+# output the field infomation into NMZ.fields.* files
+sub put_field_index (\%$) {
+    my ($fields, $field_indices) = @_;
+
+    my $aliases_regex = 
+	join('|', sort {length($b) <=> length($a)} keys %conf::FIELD_ALIASES);
+
+    for my $field (keys %{$fields}) {
+        util::dprint("Field: $field: $fields->{$field}\n");
+        if ($field =~ /^($aliases_regex)$/o) {
+             unless (defined($fields->{$conf::FIELD_ALIASES{$field}})) {
+                 $fields->{$conf::FIELD_ALIASES{$field}} = $fields->{$field};
+             }
+             undef $fields->{$field};
+        }
+    }
+
+    my @keys = split '\|', $conf::SEARCH_FIELD;
+    if ($var::Opt{'meta'}) {
+        my @meta = split '\|', $conf::META_TAGS;
+        while (my $meta = shift(@meta)) {
+            $meta = $conf::FIELD_ALIASES{$meta}
+                if (defined $conf::FIELD_ALIASES{$meta});
+
+            push @keys, $meta;
+        }
+
+        # uniq @keys
+        my %mark = ();
+        @keys = grep { ! $mark{$_}++ } @keys;
+        undef(%mark);
+    }
+    for my $key (@keys) {
+	my $lkey = lc($key);
+	my $fname    = util::tmpnam("NMZ.field.$lkey");
+	my $fh_field = util::efopen(">>$fname");
+	my $output = "";
+	if (defined($fields->{$key})) {
+	    if ($key ne 'uri') { # workaround for namazu-bugs-ja#30
+		$fields->{$key} =~ s/\s+/ /g;
+		$fields->{$key} =~ s/\s+$//;
+		$fields->{$key} =~ s/^\s+//;
+	    }
+	    $output = $fields->{$key};
+
+	    # -1 means "LF"
+	    $output = substr $output, 0, $conf::MAX_FIELD_LENGTH - 1;
+	    # Remove a garbage Kanji 1st char at the end.
+	    $output = codeconv::chomp_eucjp($output);
+
+            $output =~ s/\n.*$//s;
+            $output .= "\n";
+	} else {
+	    $output = "\n";
+	}
+	print $fh_field $output;
+        util::fclose($fh_field);
+
+	# put index of field index
+	{
+	    my $fname        = util::tmpnam("NMZ.field.$lkey.i");
+	    my $fh_field_idx = util::efopen(">>$fname");
+	    print $fh_field_idx pack("N", $field_indices->{$lkey});
+	    $field_indices->{$lkey} += length $output;
+            util::fclose($fh_field_idx);
+	}
+    }
+
+}
+
+# put the date infomation into NMZ.t file
+sub put_dateindex ($) {
+    my ($cfile) = @_;
+    my $mtime = (stat($cfile))[9];
+
+    my $fh_dataindex = util::efopen(">>$var::NMZ{'_t'}");
+    print $fh_dataindex pack("N", $mtime);
+    util::fclose($fh_dataindex);
+}
+
+
+# load a document file
+sub load_document ($$$$\%) {
+    my ($orig_cfile, $contref, $weighted_str, $headings, $fields)
+      = @_;
+    my $cfile = $$orig_cfile;
+
+    return (0, 0, 0, 0) unless (-f $cfile && util::canopen($cfile));
+
+    # for handling a filename which contains Shift_JIS code for Windows.
+    # for handling a filename which contains including space.
+    my $shelter_cfile = "";
+    if (($cfile =~ /\s/) ||
+        ($English::OSNAME eq "MSWin32"
+        && $cfile =~ /[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]|[\x20\xa1-\xdf]/) )
+    {
+        $shelter_cfile = $cfile;
+        $cfile = util::tmpnam("NMZ.win32");
+        unlink $cfile if (-e $cfile);
+        copy($shelter_cfile, $cfile);
+    }
+
+    my $file_size = util::filesize($cfile); # not only file in feature.
+    if ($file_size > $conf::FILE_SIZE_MAX) {
+        return ($file_size, $file_size, 0, 'x-system/x-error; x-error=file_size_max');
+    }
+
+    $$contref = util::readfile($cfile);
+#    $file_size = length($$contref);
+
+    my ($kanji, $mtype) = apply_filter($orig_cfile, $contref, $weighted_str, $headings, $fields, $shelter_cfile, undef);
+
+    if ($English::OSNAME eq "MSWin32" && $shelter_cfile ne "") {
+        unlink $cfile;
+        $cfile = $shelter_cfile;
+    }
+
+    # Measure the text size at this time.
+    my $text_size = length($$contref) + length($$weighted_str); 
+
+    return ($file_size, $text_size, $kanji, $mtype);
+}
+
+sub apply_filter ($$$$$$$) {
+    my ($orig_cfile, $contref, $weighted_str, $headings, $fields, $shelter_cfile, $mmtype)
+      = @_;
+    my $cfile = $shelter_cfile ne "" ? $shelter_cfile : $$orig_cfile;
+
+    # Filtering process.
+    my $mtype = "";
+    my $called_dt = 0;
+    while (1) {
+	if (defined $MediaType) {
+	    $mtype = $MediaType;
+	} elsif (defined $mmtype) {
+	    $mtype = $mmtype;
+	} else {
+	    my $mtype_n = $Magic->checktype_byfilename($cfile);
+	    my $mtype_c = $Magic->checktype_data($$contref);
+	    my $mtype_m = undef;
+	    $mtype_m = $Magic->checktype_magic($$contref) 
+	      if ((! defined $mtype_c) ||
+		  $mtype_c =~ 
+		  /^(text\/html|text\/plain|application\/octet-stream)$/);
+	    $mtype_c = $mtype_m 
+		if (defined $mtype_m && 
+		    $mtype_m !~ 
+		    /^(text\/html|text\/plain|application\/octet-stream)$/);
+	    $mtype_c = 'text/plain' unless defined $mtype_c;
+	    if ($called_dt) {
+            $mtype = $mtype_c;
+	    } else {
+            $mtype = decide_type($mtype_n, $mtype_c);
+            $called_dt = 1;
+	    }
+	}
+	util::dprint(_("Detected type: ")."$mtype\n");
+
+	# Pre code conversion.
+	if ($var::REQUIRE_PRE_CODECONV{$mtype}) {
+	    util::dprint("pre_codeconv\n");
+	    codeconv_document($contref);
+	}
+
+	if (! $var::Supported{$mtype} || 
+	    $var::Supported{$mtype} ne 'yes') 
+	{
+	    util::vprint(_("Unsupported media type ")."$mtype\n");
+	    return (0, "$mtype; x-system=unsupported");
+	}
+
+	if ($var::REQUIRE_ACTIONS{$mtype}) {
+	    util::vprint(_("Using ")."$var::REQUIRE_ACTIONS{$mtype}.pl\n");
+	    require $var::REQUIRE_ACTIONS{$mtype}.'.pl'
+	        || die _("unable to require ") . 
+		    "\"$var::REQUIRE_ACTIONS{$mtype}.pl\"\n";
+	    my $err = undef;
+	    {
+		local $SIG{'PIPE'} = \&trapintr;
+		eval '$err = ' . $var::REQUIRE_ACTIONS{$mtype} .
+		  '::filter($orig_cfile, $contref, $weighted_str, $headings, $fields);';
+	    }
+	    if ($err) {
+		if ($err =~ m/; x-system=unsupported$/) {
+		    return (0, $err);
+		}
+		return (0, "$mtype; x-error=$err");
+	    }
+
+	    if ($@) {
+		util::vprint(_("Failed to call ")."$var::REQUIRE_ACTIONS{$mtype}\n$@\n");
+		return (0, "$mtype; x-error=$@");
+	    }
+
+	    # Post code conversion.
+	    if ($var::REQUIRE_POST_CODECONV{$mtype}) {
+	        util::dprint("post_codeconv\n");
+		codeconv_document($contref);
+	    }
+
+	    next if ($var::RECURSIVE_ACTIONS{$mtype});
+	}
+	last;
+    }
+
+    my $kanji = $$contref =~ tr/\xa1-\xfe/\xa1-\xfe/;  # Kanji contained?
+    $kanji += $$weighted_str =~ tr/\xa1-\xfe/\xa1-\xfe/;
+
+    return ($kanji, $mtype);
+}
+
+sub codeconv_document ($) {
+    my ($textref) = @_;
+    codeconv::toeuc($textref);
+    $$textref =~ s/\r\n/\n/g;
+    $$textref =~ s/\r/\n/g;
+    $$textref =~ tr/\x01-\x08\x0b-\x0c\x0e-\x1f\x7f/ /; # Remove control char.
+}
+
+sub prep () {
+    my $docid_base = 0;
+    my $output_dir = shift @_ ;
+    my @targets = @_ ;
+    my @flist = ();
+
+    $var::OUTPUT_DIR = $output_dir;
+
+    require_modules();
+    change_filenames();
+    check_present_index();
+
+    # if Checkpoint mode, return
+    return (0, 0) if $CheckPoint{'continue'};
+
+    check_lockfile($var::NMZ{'lock2'});
+    print _("Looking for indexing files...\n");
+    @flist = find_target(@targets);
+    ($docid_base, @flist) = append_index(@flist) 
+        if -f $var::NMZ{'r'};
+    unless (@flist) { # if @flist is empty
+        print _("No files to index.\n");
+        exit 0;
+    }
+    set_lockfile($var::NMZ{'lock2'});
+    save_flist(@flist);
+    my $total_files_num = @flist;
+
+    return ($docid_base, $total_files_num);
+}
+
+sub save_flist (@) {
+    my @flist = @_;
+    return if (@flist == 0);
+
+    my $fh_flist = util::efopen(">$var::NMZ{'_flist'}");
+    print $fh_flist join("\n", @flist), "\n";
+    util::fclose($fh_flist);
+}
+
+sub require_modules () {
+    if (util::islang("ja") && $conf::NKF =~ /^module_nkf/) {
+	require NKF || die "unable to require \"NKF\"\n";
+        util::dprint(_("code conversion: using NKF module\n"));
+	$var::USE_NKF_MODULE = 1;
+    }
+    if (util::islang("ja") && $conf::WAKATI =~ /^module_kakasi/) {
+	require Text::Kakasi || die "unable to require \"Text::Kakasi\"\n";
+        util::dprint(_("wakati: using Text::Kakasi module\n"));
+	my $res = Text::Kakasi::getopt_argv('kakasi', '-ieuc', '-oeuc', '-w');
+    }
+    if (util::islang("ja") && $conf::WAKATI =~ /^module_chasen/) {
+	require Text::ChaSen || die "unable to require \"Text::ChaSen\"\n";
+        util::dprint(_("wakati: using Text::ChaSen module\n"));
+	my @arg = ('-i', 'e', '-j', '-F', '%m ');
+	@arg    = ('-i', 'e', '-j', '-F', '%m %H\\n') if $var::Opt{'noun'};
+	my $res = Text::ChaSen::getopt_argv('chasen-perl', @arg);
+    }
+    if (util::islang("ja") && $conf::WAKATI =~ /^module_mecab/) {
+        require MeCab || die "unable to require \"MeCab\"\n";
+        util::dprint(_("wakati: using MeCab module\n"));
+    }
+}
+
+sub check_lockfile ($) {
+    # warn if check file exists in case other process is running or abnormal
+    # stop execution (later is not the major purpose, though).
+    # This is mainly for early detection before longish find_target.
+    my ($file) = @_;
+
+    if (-f $file) {
+        print "$file "._("found. Maybe this index is being updated by another process now.\nIf not, you can remove this file.\n");
+        exit 1;
+    }
+}
+
+sub set_lockfile ($) {
+    my ($file) = @_;
+
+    # make a lock file
+    if (-f $file) {
+        print "$file found. Maybe this index is being updated by another process now.\nIf not, you can remove this file.\n";
+        exit 1;
+    } else {
+        my $fh_lockfile = util::efopen(">$file");
+        print $fh_lockfile "$$"; # save pid
+        util::fclose($fh_lockfile);
+    }
+}
+
+sub remove_lockfile ($) {
+    my ($file) = @_;
+
+    # remove lock file
+    unlink $file if -f $file;
+}
+
+# check present index whether it is old type of not
+sub check_present_index () {
+    if (-f $var::NMZ{'i'} && ! -f "$var::NMZ{'wi'}") 
+    {
+        util::cdie(_("Present index is old type. it's unsupported.\n"));
+    }
+}
+
+# remain
+sub do_remain_job ($$$$) {
+    my ($total_files_size, $docid_count, $key_count, $start_time) = @_;
+
+    if ($docid_count == 0) {
+        # No files are indexed
+        if ($DeletedFilesCount > 0 || $UpdatedFilesCount > 0) {
+            update_dateindex();
+            update_registry($docid_count);
+        }
+    } else {
+        set_lockfile($var::NMZ{'lock'});
+        write_version();
+        write_body_msg();
+        write_tips_msg();
+        write_result_file();
+        update_field_index();
+        update_dateindex();
+        update_registry($docid_count);
+        write_nmz_files();
+        make_slog_file();
+        remove_lockfile($var::NMZ{'lock'});
+    }
+    make_headfoot_pages($docid_count, $key_count);
+    put_log($total_files_size, $start_time, $docid_count, $key_count);
+    util::remove_tmpfiles();
+    unlink $var::NMZ{'_flist'};
+}
+
+sub make_headfoot_pages ($$) {
+    my ($docid_count, $key_count) = @_;
+
+    for my $file (glob "$TEMPLATEDIR/NMZ.head*") {
+        if ($file =~ m!^.*/NMZ\.head(\.[-\w\.]+)?$!){
+            my $suffix = $1 ? $1 : '';
+            make_headfoot("$var::NMZ{'head'}${suffix}", $docid_count, $key_count);
+        }
+    }
+    for my $file (glob "$TEMPLATEDIR/NMZ.foot*") {
+        if ($file =~ m!^.*/NMZ\.foot(\.[-\w\.]+)?$!){
+            my $suffix = $1 ? $1 : '';
+            make_headfoot("$var::NMZ{'foot'}${suffix}", $docid_count, $key_count);
+       }
+    }
+}
+
+# Parse command line options.
+sub parse_options
+{
+    if (@ARGV == 0) {
+        show_mini_usage();
+        exit 1;
+    }
+
+    my @targets = ();
+    my $targets_loaded = 0;
+    my @argv = @ARGV;
+    my $cwd = cwd();
+
+    my $opt_dummy = 0;
+    my $opt_version = 0;
+    my $opt_help = 0;
+    my $opt_all = 0;
+    my $opt_chasen = 0;
+    my $opt_chasen_noun = 0;
+    my $opt_kakasi = 0;
+    my $opt_mecab = 0;
+    my $opt_checkpoint_sub = 0;
+    my $opt_show_config = 0;
+    my $opt_mailnews = 0;
+    my $opt_mhonarc = 0;
+    my $opt_norc = 0;
+
+    my $opt_quiet = undef;
+    my $opt_config = undef;
+    my $output_dir = undef;
+    my $update_index = undef;
+    my $include_file = undef;
+    my $target_list = undef;
+    my $index_lang = undef;
+
+    my %opt_conf = ();
+
+#    Getopt::Long::Configure('bundling');
+    Getopt::Long::config('bundling');
+    GetOptions(
+           '0|help'              => \$opt_help,
+	       '1|exclude=s'         => \$opt_conf{'EXCLUDE_PATH'},
+	       '2|deny=s'            => \$opt_conf{'DENY_FILE'},
+	       '3|allow=s'           => \$opt_conf{'ALLOW_FILE'},
+	       '4|update=s'          => \$update_index,
+	       '5|mhonarc'           => \$opt_mhonarc,
+	       '6|mtime=s'           => \$var::Opt{'mtime'},
+	       '7|html-split'        => \$var::Opt{'htmlsplit'},
+	       'C|show-config'       => \$opt_show_config,
+	       'E|no-edge-symbol'    => \$var::Opt{'noedgesymbol'},
+	       'F|target-list=s'     => \$target_list,
+	       'G|no-okurigana'      => \$var::Opt{'okurigana'},
+	       'H|no-hiragana'       => \$var::Opt{'hiragana'},
+	       'I|include=s'         => \$include_file,
+	       'K|no-symbol'         => \$var::Opt{'nosymbol'},
+	       'L|indexing-lang=s'     => \$index_lang,
+	       'M|meta'              => \$var::Opt{'meta'},
+	       'O|output-dir=s'      => \$output_dir,
+	       'S|checkpoint-sub'    => \$opt_checkpoint_sub,
+	       'T|template-dir=s'    => \$TEMPLATEDIR,
+	       'U|no-encode-uri'     => \$var::Opt{'noencodeuri'} ,
+	       'V|verbose'           => \$var::Opt{'verbose'},
+	       'Y|no-delete'         => \$var::Opt{'nodelete'},
+	       'Z|no-update'         => \$var::Opt{'noupdate'},
+	       'a|all'               => \$opt_all,
+               'b|use-mecab'         => \$opt_mecab,
+	       'c|use-chasen'        => \$opt_chasen,
+	       'd|debug'             => \$var::Opt{'debug'},
+	       'e|robots'            => \$var::Opt{'robotexclude'},
+	       'f|config=s'          => \$opt_config,
+	       'h|mailnews'          => \$opt_mailnews,
+	       'k|use-kakasi'        => \$opt_kakasi,
+	       'm|use-chasen-noun'   => \$opt_chasen_noun,
+	       'q|quiet'             => \$opt_quiet,
+	       'r|replace=s'         => \$ReplaceCode,
+	       's|checkpoint'        => \$CheckPoint{'on'},
+	       't|media-type=s'      => \$MediaType,
+	       'u|uuencode'          => \$opt_dummy, # for backward compat.
+	       'v|version'           => \$opt_version,
+	       'x|no-heading-summary'=> \$var::Opt{'noheadabst'},
+	       'z|check-filesize'    => \$var::Opt{'checkfilesize'},
+	       'decode-base64'       => \$var::Opt{'decodebase64'},
+	       'norc'                => \$opt_norc,
+	       );
+
+    if ($opt_quiet) {
+        # Make STDOUT quiet by redirecting STDOUT to null device.
+        my $devnull = util::devnull();
+        open(STDOUT, ">$devnull") || die "$devnull: $!";
+    }
+
+    if (defined $update_index) {
+	unless (-d $update_index) {
+	    print _("No such index: "), "$update_index\n";
+	    exit 1;
+	}
+
+	my $orig_status = $var::NMZ{'status'};
+	$var::NMZ{'status'} = "$update_index/$var::NMZ{'status'}";
+
+	my $argv = get_status("argv");
+	if (!defined $argv) {
+	    print _("No such index: "), "$update_index\n";
+	    exit 1;
+	}
+	@ARGV = split /\t/, $argv;
+	util::dprint(_("Inherited argv: ")."@ARGV\n");
+
+	my $cwd  = get_status("cwd");
+	if (!defined $cwd) {
+	    print _("No such index: "), "$update_index\n";
+	    exit 1;
+	}
+	chdir $cwd;
+	util::dprint(_("Inherited cwd: ")."$cwd\n");
+
+	($output_dir, @targets) = parse_options();
+	$output_dir = $update_index;
+	$var::NMZ{'status'} = $orig_status;  # See also change_filenames()
+	return ($output_dir, @targets);
+    }
+
+    if (!$opt_norc && !(defined $ENV{'MKNMZNORC'})){
+        load_rcfiles();
+    }
+    if ($opt_config) {
+        if (-f $opt_config) {
+            util::vprint(_("Reading rcfile: "));
+            load_rcfile($ConfigFile = $opt_config);
+            util::vprint(" $opt_config\n");
+        }
+    }
+
+    if ($index_lang) {
+        $util::LANG = $index_lang;
+        util::dprint("Override indexing language: $util::LANG\n");
+    }
+
+    if ($opt_help) {
+        show_usage();
+        exit 1;
+    }
+
+    if ($opt_version) {
+        show_version();
+        exit 1;
+    }
+
+    load_filtermodules(); # to make effect $opt_config, $index_lang.
+    postload_modules();
+
+    foreach my $key (keys %opt_conf){
+        if (defined ($opt_conf{$key})) { 
+            ${*{$conf::{$key}}{SCALAR}} = $opt_conf{$key};
+        }
+    }
+
+    if ($opt_mailnews) {
+        $MediaType = 'message/rfc822';
+    }
+    if ($opt_mhonarc) {
+        $MediaType = 'text/html; x-type=mhonarc';
+    }
+    if ($opt_all) {
+        $conf::ALLOW_FILE = ".*";
+    }
+    if ($opt_chasen) {
+        $conf::WAKATI = $conf::CHASEN;
+        $var::Opt{'noun'} = 0;
+    }
+    if ($opt_chasen_noun) {
+        $conf::WAKATI = $conf::CHASEN_NOUN;
+        $var::Opt{'noun'} = 1;
+    }
+    if ($opt_kakasi) {
+        $conf::WAKATI = $conf::KAKASI;
+        $var::Opt{'noun'} = 0;
+    }
+    if ($opt_mecab) {
+        $conf::WAKATI = $conf::MECAB;
+        $var::Opt{'noun'} = 0;
+    }
+    if ($include_file) {
+        do $include_file;
+        util::dprint("Included: $include_file\n");
+    }
+    if ($target_list) {
+        if ($CheckPoint{'continue'}) {
+            @targets = ("dummy");
+        } else {
+            @targets = load_target_list($target_list);
+            util::dprint(_("Loaded: ")."$target_list\n");
+        }
+        $targets_loaded = 1;
+    }
+    if ($opt_checkpoint_sub) {
+        $CheckPoint{'on'}           = 1;
+        $CheckPoint{'continue'}     = 1;
+        @argv = grep {! /^-S$/} @argv;  # remove -S
+    }
+
+    if (defined $ReplaceCode) {
+        my $orig = "/foo/bar/baz/quux.html";
+        $_ = $orig;
+        eval $ReplaceCode;
+        if ($@) {  # eval error
+            util::cdie(_("Invalid replace: ")."$ReplaceCode\n");
+        }
+        util::dprint(_("Replace: ")."$orig -> $_\n");
+    }
+
+    if ($opt_show_config) {
+        show_config();
+        exit 1;
+    }
+
+    if (@ARGV == 0 && $targets_loaded == 0) {
+        show_mini_usage();
+        exit 1;
+    }
+
+    $output_dir = $cwd unless defined $output_dir;
+    util::cdie("$output_dir: "._("invalid output directory\n"))
+        unless (-d $output_dir && -w $output_dir);
+
+    if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+        util::win32_yen_to_slash(\$output_dir);
+    }
+
+    # take remaining @ARGV as targets
+    if (@ARGV > 0 && $targets_loaded == 0) {
+        @targets = @ARGV ;
+    }
+    
+    # revert @ARGV
+    # unshift @ARGV, splice(@argv, 0, @argv - @ARGV);
+    @ARGV = @argv;
+
+    return ($output_dir, @targets);
+}
+
+sub show_config () {
+    print _("Loaded rcfile: ") . "@LoadedRcfiles\n" if @LoadedRcfiles;
+    print _("System: ") . "$English::OSNAME\n" if $English::OSNAME;
+    print _("Namazu: ") . "$var::VERSION\n" if $var::VERSION;
+    print _("Perl: ") . sprintf("%f\n", $English::PERL_VERSION);
+    print _("File-MMagic: ") . "$File::MMagic::VERSION\n" if $File::MMagic::VERSION;
+    print _("NKF: ") . "$conf::NKF\n" if $conf::NKF;
+    print _("KAKASI: ") . "$conf::KAKASI\n" if $conf::KAKASI;
+    print _("ChaSen: ") . "$conf::CHASEN\n" if $conf::CHASEN;
+    print _("MeCab: ") . "$conf::MECAB\n" if $conf::MECAB;
+    print _("Wakati: ") . "$conf::WAKATI\n" if $conf::WAKATI;
+    print _("Lang_Msg: ") . "$util::LANG_MSG\n";
+    print _("Lang: ") . "$util::LANG\n";
+    print _("Coding System: ") . "$CodingSystem\n";
+    print _("CONFDIR: ") . "$CONFDIR\n";
+    print _("LIBDIR: ") . "$LIBDIR\n";
+    print _("FILTERDIR: ") . "$FILTERDIR\n";
+    print _("TEMPLATEDIR: ") . "$TEMPLATEDIR\n";
+
+    my @all_types =     keys %var::Supported;
+    my @supported = sort grep { $var::Supported{$_} eq "yes" } @all_types;
+
+    my $num_supported = @supported;
+    my $num_unsupported = @all_types - @supported;
+    print _("Supported media types:   ") . "($num_supported)\n";
+    print _("Unsupported media types: ") . "($num_unsupported) " . _("marked with minus (-) probably missing application in your \$path.\n");
+    for my $mtype (sort keys %var::Supported) {
+        my $yn = $var::Supported{$mtype};
+        if ($yn eq 'yes') { $yn = ' ' } else {$yn = '-'};
+        print "$yn $mtype";
+        if ($var::REQUIRE_ACTIONS{$mtype}){
+            print ": $var::REQUIRE_ACTIONS{$mtype}.pl";
+        }
+        print "\n";
+    }
+}
+
+sub load_target_list ($) {
+    my ($file) = @_;
+    my $fh_targets = util::efopen($file);
+    my @targets = <$fh_targets>;
+    util::fclose($fh_targets);
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        foreach my $tmp (@targets){
+            $tmp =~ s/\r//g;
+            util::win32_yen_to_slash(\$tmp);
+        }
+    }
+    chomp @targets; 
+    return @targets;
+}
+
+# convert a relative path into an absolute path
+sub absolute_path ($$) {
+    my ($cwd, $path) = @_;
+
+    $path =~ s!^\.$!\./!;
+    $path =~ s!^\.[/\\]!$cwd/!;
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        util::win32_yen_to_slash(\$path);
+        if ($path =~ m!^//!) {
+        } elsif ($path =~ m!^/[^/]!) {
+            my $driveletter = $cwd;
+            if ($driveletter =~ m!^([A-Z]:)!i){
+                $driveletter = $1;
+            }
+            $path = "$driveletter$path";
+        } elsif ($path !~ m!^[A-Z]:/!i) {
+            $path = "$cwd/$path";
+        }
+    } else {
+        $path =~ s!^([^/])!$cwd/$1!; 
+    }
+    return $path;
+}
+
+sub find_target (@) {
+    my @targets = @_;
+
+    my $cwd = cwd();
+    @targets = map { absolute_path($cwd, $_) } @targets;
+
+    # Convert \ to / with consideration for Shift_JIS encoding.
+    if (($English::OSNAME eq "MSWin32") || ($English::OSNAME eq "os2")) {
+        foreach my $tmp (@targets){
+            util::win32_yen_to_slash(\$tmp);
+        }
+    }
+
+    # For reporting effects of --allow, --deny, --exclude, --mtime
+    # options in --verbose mode.
+    my %counts = (); 
+    $counts{'possible'} = 0;
+    $counts{'excluded'} = 0;
+    $counts{'too_old'} = 0;
+    $counts{'too_new'} = 0;
+    $counts{'not_allowed'} = 0;
+    $counts{'denied'} = 0;
+
+    # Traverse directories.
+    # This routine is not efficent but I prefer reliable logic.
+    my @flist = ();
+    my $start = time();
+    util::vprint(_("find_target starting: "). localtime($start). "\n");
+    while (@targets) {
+	my $target = shift @targets;
+
+	if ($target eq '') {
+	    print STDERR "Warning: target contains empty line, skip it\n";
+	    next;
+	}
+	
+	if (-f $target) { # target is a file.
+	    add_target($target, \@flist, \%counts);
+	} elsif (-d $target) { # target is a directory.
+	    my @subtargets = ();
+	    # Find subdirectories in target directory
+	    # because File::Find::find() does not follow symlink.
+	    if (-l $target) {
+		my $dh = new DirHandle($target);
+		while (defined(my $ent = $dh->read)) {
+		    next if ($ent =~ /^\.{1,2}$/);
+		    if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+                        next if ($ent =~ m!^($conf::DENY_DDN)$!i);
+                        my $tmp = $ent;
+                        util::win32_yen_to_slash(\$tmp);
+                        next if ($ent ne $tmp);
+                    }
+		    my $fname = "$target/$ent";
+		    next if ($fname eq '.' || $fname eq '..');
+		    if (-d $fname) {
+			push(@subtargets, $fname);
+		    } else {
+			add_target($fname, \@flist, \%counts);
+		    }
+		}
+	    } else {
+		@subtargets = ($target);
+	    }
+
+	    #
+	    # Wanted routine for File::Find's find().
+	    #
+	    my $wanted_closure = sub {
+		my $fname = "$File::Find::dir/$_";
+		add_target($fname, \@flist, \%counts);
+	    };
+
+	    find($wanted_closure, @subtargets) if (@subtargets > 0);
+	} else {
+	    print STDERR _("unsupported target: ") . $target;
+	}
+    }
+
+    {
+        # uniq @flist
+        my %mark = ();
+        @flist = grep { ! $mark{$_}++ } @flist;
+        undef(%mark);
+    }
+
+    # Sort file names with consideration for numbers.
+    @flist = map  { $_->[0] }
+	     sort { $a->[1] cmp $b->[1] } 
+	     map  { my $tmp = $_; $tmp =~ s/(\d+)/sprintf("%08d", $1)/ge; 
+		    [ $_, $tmp ] } @flist;
+
+    my $elapsed = time() - $start ;
+    $elapsed += 1 ;   # to round up and avoid 0 
+
+    # For --verbose option.
+    report_find_target($elapsed, $#flist + 1, %counts);
+
+    return @flist;
+}
+
+sub add_target ($\@\%) {
+    my ($target, $flists_ref, $counts_ref) = @_;
+
+    if ($target =~ /[\n\r\t]/) {
+        $target =~ s/[\n\r\t]//g;
+        print STDERR "Warning: $target contains LF/CR/TAB chars, skip it\n";
+        return;   # skip a file name containing LF/CR/TAB chars.
+    }
+
+    return unless -f $target;  # Only file is targeted.
+
+    $counts_ref->{'possible'}++;
+
+    unless (util::canopen($target)) {
+        util::vprint(sprintf(_("Unreadable:	%s"), $target));
+        $counts_ref->{'excluded'}++;
+        return;
+    }
+
+
+    if (defined $conf::EXCLUDE_PATH && 
+	$target =~ /$conf::EXCLUDE_PATH/ ) 
+    {
+        util::vprint(sprintf(_("Excluded:	%s"), $target));
+        $counts_ref->{'excluded'}++;
+        return; 
+    }
+
+    #
+    # Do processing just like find's  --mtime option.
+    #
+    if (defined $var::Opt{'mtime'}) {
+	my $mtime = -M $_;
+	if ($var::Opt{'mtime'} < 0) {
+
+	    # This must be `>=' not `>' for consistency with find(1).
+	    if (int($mtime) >= - $var::Opt{'mtime'}) {
+	        util::vprint(sprintf(_("Too old:	%s"), $target));
+	        $counts_ref->{'too_old'}++;
+		return;
+	    }
+	} elsif ($var::Opt{'mtime'} > 0) {
+	    if ($var::Opt{'mtime'} =~ /^\+/) {
+		if ((int($mtime) < $var::Opt{'mtime'})) {
+		    util::vprint(sprintf(_("Too new:	%s"), $target));
+		    $counts_ref->{'too_new'}++;
+		    return;
+		}
+	    } else {
+		if (int($mtime) != $var::Opt{'mtime'}) {
+		    if (int($mtime) > $var::Opt{'mtime'}) {
+		        util::vprint(sprintf(_("Too old:	%s"),$target));
+			$counts_ref->{'too_old'}++;
+		    } else {
+		        util::vprint(sprintf(_("Too new:	%s"),$target));
+			$counts_ref->{'too_new'}++;
+		    }
+		    return;
+		}
+	    }
+	} else {
+	    # $var::Opt{'mtime'} == 0 ;
+	    return;
+	}
+    }
+
+    # Extract the file name of the target.
+    $target =~ m!^.*/([^/]+)$!;
+    my $fname = $1;
+
+    if ($fname =~ m!^($conf::DENY_FILE)$!i ) {
+        util::vprint(sprintf(_("Denied:	%s"), $target));
+        $counts_ref->{'denied'}++; 
+        return;
+    }
+    if ($fname !~ m!^($conf::ALLOW_FILE)$!i) {
+        util::vprint(sprintf(_("Not allowed:	%s"), $target));
+        $counts_ref->{'not_allowed'}++; 
+        return;
+    } else{
+        util::vprint(sprintf(_("Targeted:	%s"), $target));
+        push @$flists_ref, $target;
+    }
+
+}
+
+sub report_find_target ($$%) {
+    my ($elapsed, $num_targeted, %counts) = @_;
+
+    util::vprint(_("find_target finished: ") . localtime(time()). "\n");
+    util::vprint(sprintf(_("Target Files: %d (Scan Performance: Elapsed Sec.: %d, Files/sec: %.1f)"), 
+			 $num_targeted, $elapsed, 
+			 $num_targeted /$elapsed));
+    util::vprint(sprintf(_("  Possible: %d, Not allowed: %d, Denied: %d, Excluded: %d"), 
+			 $counts{'possible'}, 
+			 $counts{'not_allowed'},  
+			 $counts{'denied'}, 
+			 $counts{'excluded'}));
+    util::vprint(sprintf(_("  MTIME too old: %d, MTIME too new: %d"),
+			 $counts{'too_old'}, 
+			 $counts{'too_new'}));
+}
+
+sub show_usage () {
+    util::dprint(_("lang_msg: ")."$util::LANG_MSG\n");
+    util::dprint(_("lang: ")."$util::LANG\n");
+
+    my $usage = $usage::USAGE;
+    $usage = _($usage);
+    printf "$usage", $var::VERSION, $var::TRAC_URI, $var::MAILING_ADDRESS;
+}
+
+sub show_mini_usage () {
+    print _("Usage: mknmz [options] <target>...\n");
+    print _("Try `mknmz --help' for more information.\n");
+}
+
+sub show_version () {
+    print $usage::VERSION_INFO;
+}
+
+#
+# check the file. No $msg is good.
+#
+sub check_file ($$$$$) {
+    my ($cfile, $cfile_size, $text_size, $mtype, $uri) = @_;
+
+    my $msg = undef;
+    if ($mtype =~ /; x-system=unsupported$/) {
+	$mtype =~ s/; x-system=unsupported$//;
+	$msg = _("Unsupported media type ")."($mtype)"._(" skipped.");
+    } elsif ($mtype =~ /; x-error=file_size_max/) {
+        $msg = _("is larger than your setup before filtered, skipped: ") . 'conf::FILE_SIZE_MAX (' . $conf::FILE_SIZE_MAX . ') < '. $cfile_size ;
+    } elsif ($mtype =~ /; x-error=.*$/) {
+	$mtype =~ s/^.*; x-error=(.*)$/$1/;
+	$msg = $mtype;
+    } elsif ($mtype =~ /^x-system/) {
+	$msg = _("system error occurred! ")."($mtype)"._(" skipped.");
+    } elsif (! -e $cfile) {
+	$msg = _("does NOT EXIST! skipped.");
+    } elsif (! util::canopen($cfile)) {
+	$msg = _("is NOT READABLE! skipped.");
+    } elsif ($text_size == 0 || $cfile_size == 0) {
+	$msg = _("is 0 size! skipped.");
+    } elsif ($mtype =~ /^application\/octet-stream/) {
+	$msg = _("may be a BINARY file! skipped.");
+    } elsif ($cfile_size > $conf::FILE_SIZE_MAX) {
+	$msg = _("is larger than your setup before filtered, skipped: ") . 'conf::FILE_SIZE_MAX (' . $conf::FILE_SIZE_MAX . ') < '. $cfile_size ;
+    } elsif ($text_size > $conf::TEXT_SIZE_MAX) {
+	$msg = _("is larger than your setup after filtered, skipped: ") . 'conf::TEXT_SIZE_MAX (' . $conf::TEXT_SIZE_MAX . ') < '. $text_size ;
+    } 
+
+    return $msg;
+}
+
+
+#
+# Write NMZ.version file.
+#
+sub write_version () {
+    unless (-f $var::NMZ{'version'}) {
+	my $fh = util::efopen(">$var::NMZ{'version'}");
+	print $fh "Namazu-Index-Version: $NAMAZU_INDEX_VERSION\n";
+        util::fclose($fh);
+    }
+}
+
+#
+# rename each temporary file to a real file name.
+#
+sub write_nmz_files () {
+    util::Rename($var::NMZ{'_i'},   $var::NMZ{'i'});
+    util::Rename($var::NMZ{'_ii'}, $var::NMZ{'ii'});
+    util::Rename($var::NMZ{'_w'},  $var::NMZ{'w'});
+    util::Rename($var::NMZ{'_wi'}, $var::NMZ{'wi'});
+    util::Rename($var::NMZ{'_p'},  $var::NMZ{'p'});
+    util::Rename($var::NMZ{'_pi'}, $var::NMZ{'pi'});
+}
+
+# output NMZ.body
+sub write_body_msg () {
+    for my $file (glob "$TEMPLATEDIR/NMZ.body*") {
+        if ($file =~ m!^.*/NMZ\.body(\.[-\w\.]+)?$!){
+            my $suffix = $1 ? $1 : '';
+            write_message("$var::NMZ{'body'}${suffix}");
+        }
+    }
+}
+
+# output NMZ.tips
+sub write_tips_msg () {
+    for my $file (glob "$TEMPLATEDIR/NMZ.tips*") {
+        if ($file =~ m!^.*/NMZ\.tips(\.[-\w\.]+)?$!){
+            my $suffix = $1 ? $1 : '';
+            write_message("$var::NMZ{'tips'}${suffix}");
+        }
+    }
+}
+
+
+# output NMZ.result.*
+sub write_result_file () {
+    my $fname = "NMZ.result.normal";
+
+    my @files = glob "$TEMPLATEDIR/NMZ.result.*";
+
+    for my $file (@files) {
+	$file =~ m!(NMZ\.result\.[^/]*)$!;
+	my $target = "$var::OUTPUT_DIR/$1";
+	if (-f $target) {  # already exist;
+	    next;
+	} else {
+	    my $buf = util::readfile($file);
+	    my $fh_file = util::efopen(">$target");
+	    print $fh_file $buf;
+            util::fclose($fh_file);
+	}
+    }
+}
+
+# write NMZ.body and etc.
+sub write_message ($) {
+    my ($msgfile) = @_;
+
+    if (! -f $msgfile) {
+	my ($template, $fname);
+	
+	$msgfile =~ m!.*/(.*)$!;
+	$fname = $1;
+	$template = "$TEMPLATEDIR/$fname";
+
+	if (-f $template) {
+	    my $buf = util::readfile($template);
+	    my $fh_output = util::efopen(">$msgfile");
+	    print $fh_output $buf;
+            util::fclose($fh_output);
+	}
+    }
+}
+
+
+#
+# Make the NMZ.slog file for logging.
+#
+sub make_slog_file () {
+    if (! -f $var::NMZ{'slog'}) {
+	my $fh = util::efopen(">$var::NMZ{'slog'}");
+        util::fclose($fh);
+        undef $fh;
+        chmod 0666, $var::NMZ{'slog'};
+    }
+    {
+	my $fh_slogfile = util::efopen(">>$var::NMZ{'slog'}");
+        util::fclose($fh_slogfile);
+    }
+}
+
+
+#
+# Concatenate $CURRENTDIR to the head of each file.
+#
+sub change_filenames ($) {
+    my $dir = $var::OUTPUT_DIR;
+
+    for my $key (sort keys %var::NMZ) {
+	next if $key =~ /^_/;    # exclude temporary file
+	$var::NMZ{$key} = "$dir/$var::NMZ{$key}";
+    }
+
+    # temporary files
+    for my $key (sort keys %var::NMZ) {
+	if ($key =~ /^_/) {
+	    $var::NMZ{$key} = util::tmpnam($var::NMZ{$key});
+	}
+    }
+
+    if ($var::Opt{'debug'}) {
+	for my $key (sort keys %var::NMZ) {
+	    util::dprint("NMZ: $var::NMZ{$key}\n");
+	}
+    }
+}
+
+
+#
+# Preparation processing for appending index files.
+#
+sub append_index (@) {
+    my @flist = @_;
+
+    my $docid_base = 0;
+    ($docid_base, @flist) = set_target_files(@flist);
+
+    unless (@flist) { 	# if @flist is empty
+        if ($DeletedFilesCount > 0 || $UpdatedFilesCount > 0) {
+            set_lockfile($var::NMZ{'lock2'});
+            update_dateindex();
+            update_registry(0);
+            make_headfoot_pages(0, get_total_keys());
+            put_log(0, 0, 0, get_total_keys());
+            make_headfoot_pages(get_status("files"), get_status("keys"));
+            util::remove_tmpfiles();
+        }
+        print _("No files to index.\n");
+        exit 0;
+    }
+
+    $APPENDMODE = 1;
+    # conserve files by copying
+    copy($var::NMZ{'i'},  $var::NMZ{'_i'});
+    copy($var::NMZ{'w'},  $var::NMZ{'_w'});
+    copy($var::NMZ{'t'},  $var::NMZ{'_t'}) 
+	unless -f $var::NMZ{'_t'}; # preupdated ?
+    copy($var::NMZ{'p'},  $var::NMZ{'_p'});
+    copy($var::NMZ{'pi'}, $var::NMZ{'_pi'});
+
+    return ($docid_base, @flist);
+}
+
+#
+# Set target files to @flist and return with the number of regiested files.
+#
+sub set_target_files () {
+    my %rdocs = ();    # 'rdocs' means 'registered documents'
+    my @found_files = @_;
+
+    # Load the list of registered documents
+    $rdocs{'name'} = load_registry();
+
+    # Pick up overlapped documents and do marking
+    my @overlapped_files = ();
+    my %mark1 = ();
+    grep {$_ !~ /^\# / && $mark1{$_}++ } @{$rdocs{'name'}};
+    $rdocs{'overlapped'} = {}; # Prepare an anonymous hash.
+    for my $overlapped (grep { $mark1{$_} } @found_files) {
+        $rdocs{'overlapped'}{$overlapped} = 1;
+       	push @overlapped_files, $overlapped;
+    };
+
+    # Pick up not overlapped documents which are files to index.
+    my @flist = grep { ! $mark1{$_} } @found_files;
+    undef(%mark1);
+	 
+    if ($var::Opt{'noupdate'}) {
+	    return (scalar @{$rdocs{'name'}}, @flist);
+    };
+
+    # Load the date index.
+    $rdocs{'mtime'} = load_dateindex();
+
+    if (@{$rdocs{'mtime'}} == 0) {
+	    return (scalar @{$rdocs{'name'}}, @flist); 
+    };
+
+    util::assert(@{$rdocs{'name'}} == @{$rdocs{'mtime'}},
+		 "NMZ.r ($#{$rdocs{'name'}}) and NMZ.t ($#{$rdocs{'mtime'}}) are not consistent!");
+
+    # Pick up deleted documents and do marking
+    # (registered in the NMZ.r but not existent in the filesystem)
+    my @deleted_documents = ();
+    unless ($var::Opt{'nodelete'}) {
+        my %mark2 = ();
+        grep { $mark2{$_}++ } @found_files;
+        for my $deleted (grep { $_ !~ /^\# / && ! $mark2{$_} && 
+				! $rdocs{'overlapped'}{$_} } 
+			 @{$rdocs{'name'}}) 
+        {
+            $rdocs{'deleted'}{$deleted} = 1;
+            push @deleted_documents, $deleted;
+        }
+        undef(%mark2);
+    }
+
+    # check filesize
+    if ($var::Opt{'checkfilesize'}) {
+        $rdocs{'size'} = load_sizefield();
+    }
+
+    # Pick up updated documents and set the missing number for deleted files.
+    my @updated_documents = pickup_updated_documents(\%rdocs);
+
+    # Append updated files to the list of files to index.
+    if (@updated_documents) {
+        push @flist, @updated_documents;
+    }
+
+    {
+        # Remove duplicates.
+        my %seen = ();
+        @flist = grep { ! $seen{$_}++ } @flist;
+        undef(%seen);
+    }
+
+    util::dprint(_("\n\n== found files ==\n"), join("\n", @found_files), "\n");
+    util::dprint(_("\n\n== registered documents ==\n"), join("\n", @{$rdocs{'name'}}), "\n");
+    util::dprint(_("\n\n== overlapped documents ==\n"), join("\n", @overlapped_files), "\n");
+    util::dprint(_("\n\n== deleted documents ==\n"), join("\n", @deleted_documents), "\n");
+    util::dprint(_("\n\n== updated documents ==\n"), join("\n", @updated_documents), "\n");
+    util::dprint(_("\n\n== files to index ==\n"), join("\n", @flist), "\n");
+
+    # Update NMZ.t with the missing number infomation and
+    # append updated files and deleted files to NMZ.r with leading '# '
+    if (@updated_documents || @deleted_documents) {
+        $DeletedFilesCount = 0;
+        $UpdatedFilesCount = 0;
+        $UpdatedFilesCount += @updated_documents;
+#        $DeletedFilesCount += @updated_documents;
+        $DeletedFilesCount += @deleted_documents;
+        preupdate_dateindex(@{$rdocs{'mtime'}});
+        preupdate_registry(@updated_documents, @deleted_documents);
+    }
+
+    # Return the number of registered documents and list of files to index.
+    return (scalar @{$rdocs{'name'}}, @flist);
+}
+
+sub preupdate_registry (@) {
+    my (@list) = @_;
+
+    my $fh_registry = util::efopen(">$var::NMZ{'_r'}");
+    @list = grep { s/(.*)/\# $1\n/ } @list;
+    print $fh_registry @list;
+    print $fh_registry &_("## deleted: ") . util::rfc822time(time()) . "\n\n";
+    util::fclose($fh_registry);
+}
+
+sub preupdate_dateindex (@) {
+    my @mtimes = @_;
+
+    # Since rewriting the entire file, it is not efficient, 
+    # but simple and reliable. this would be revised in the future.
+    my $fh_dateindex = util::efopen(">$var::NMZ{'_t'}");
+#    print "\nupdate_dateindex\n", join("\n", @mtimes), "\n\n";
+    print $fh_dateindex pack("N*", @mtimes);
+    util::fclose($fh_dateindex);
+}
+
+sub update_registry ($) {
+    my ($docid_count) = @_;
+
+    {
+	    my $fh_registry = util::efopen(">>$var::NMZ{'r'}");
+	    my $fh_registry_ = util::efopen($var::NMZ{'_r'});
+	    while (defined(my $line = <$fh_registry_>)) {
+	        print $fh_registry $line;
+	    }
+	    if ($docid_count > 0) {
+	        print $fh_registry &_("## indexed: ") . util::rfc822time(time()) . "\n\n";
+	    }
+        util::fclose($fh_registry_) if (defined $fh_registry_);
+        util::fclose($fh_registry);
+    }
+    unlink $var::NMZ{'_r'};
+}
+
+sub update_dateindex () {
+    util::Rename($var::NMZ{'_t'}, $var::NMZ{'t'});
+}
+
+sub update_field_index () {
+    my @list = glob "$var::NMZ{'field'}.*.tmp";
+    for my $tmp (@list) {
+        if ($tmp =~ m!((^.*/NMZ\.field\..+?(?:\.i)?)\.tmp$)!) {
+	    my $fname_tmp = $1;
+	    my $fname_out = $2;
+	    {
+		my $fh_field = util::efopen(">>$fname_out");
+		my $fh_tmp = util::efopen($fname_tmp);
+
+		while (defined(my $line = <$fh_tmp>)) {
+		    print $fh_field $line;
+		}
+                util::fclose($fh_tmp) if (defined $fh_tmp);
+                util::fclose($fh_field);
+	    }
+	    unlink $fname_tmp;
+	} else {
+	    util::cdie(_("update_field_index: ")."@list");
+	}
+    }
+}
+
+sub pickup_updated_documents (\%) {
+    my ($rdocs_ref) = @_;
+    my @updated_documents = ();
+
+    # To avoid duplicated outputs caused by --html-split support.
+    my %printed = ();
+    my $i = 0;
+    for my $cfile (@{$rdocs_ref->{'name'}}) {
+	if (defined($rdocs_ref->{'deleted'}{$cfile})) {
+	    unless ($printed{$cfile}) {
+		print "$cfile " . _("was deleted!\n");
+		$printed{$cfile} = 1;
+	    }
+	    $rdocs_ref->{'mtime'}[$i] = -1; # Assign the missing number.
+	} elsif (defined($rdocs_ref->{'overlapped'}{$cfile})) {
+	    my $cfile_mtime = (stat($cfile))[9];
+	    my $rfile_mtime = $rdocs_ref->{'mtime'}[$i];
+	    my ($cfile_size, $rfile_size);
+	    if ($var::Opt{'checkfilesize'}) {
+		$cfile_size = (stat($cfile))[7];
+		$rfile_size = $rdocs_ref->{'size'}[$i];
+	    }
+
+	    if ($rfile_mtime != $cfile_mtime || 
+		($var::Opt{'checkfilesize'} && ($cfile_size != $rfile_size))) {
+		# The file is updated!
+		unless ($printed{$cfile}) {
+		    print "$cfile " . _("was updated!\n");
+		    $printed{$cfile} = 1;
+		}
+		push(@updated_documents, $cfile);
+		$rdocs_ref->{'mtime'}[$i] = -1; # Assign the missing number.
+	    }
+	}
+	$i++;
+    }
+
+    return @updated_documents
+}
+
+sub load_dateindex () {
+    my $fh_dateindex = util::efopen($var::NMZ{'t'});
+
+    my $size = -s $var::NMZ{'t'};
+    my $buf  = "";
+    read($fh_dateindex, $buf, $size);
+    my @list = unpack("N*", $buf);  # load date index
+#    print "\nload_dateindex\n", join("\n", @list), "\n\n";
+
+    util::fclose($fh_dateindex);
+    return [ @list ];
+}
+
+sub load_registry () {
+    my $fh_registry = util::efopen($var::NMZ{'r'});
+
+    my @list = ();
+    my %deleted    = ();
+    my @registered = ();
+
+    while (defined(my $line = <$fh_registry>)) {
+	chomp($line);
+	next if $line =~ /^\s*$/;  # an empty line
+	next if $line =~ /^##/;    # a comment
+	if ($line =~ s/^\#\s+//) { # deleted document
+	    $deleted{$line}++;
+	} else {
+	    # Remove HTML's anchor generated by --html-split option.
+	    $line =~ s/\t.*$//g;  
+	    push @registered, $line;
+	}
+    }
+
+    util::fclose($fh_registry) if (defined $fh_registry);
+
+    # Exclude deleted documents.
+    for my $doc (@registered) {
+	if ($deleted{$doc}) {
+	    push @list, "# $doc";
+	    $deleted{$doc}--;
+	} else {
+	    push @list, $doc;
+	}
+    }
+
+    return [ @list ];
+}
+
+# get file size information from NMZ.field.size
+sub load_sizefield () {
+    my $fh_sizefield = util::efopen($var::NMZ{'field'} . '.size');
+    return [] unless defined $fh_sizefield;
+    my @ret = ();
+    while (defined(my $line = <$fh_sizefield>)) {
+        chomp $line;
+        push @ret, $line;
+    }
+    util::fclose($fh_sizefield) if (defined $fh_sizefield);
+    return \@ret;
+}
+
+sub get_total_keys () {
+    my $keys = get_status("keys");
+    $keys =~ s/,//g if (defined $keys);
+    $keys = 0 unless defined $keys;
+    return $keys;
+}
+
+sub get_total_files () {
+    my $files = get_status("files");
+    $files =~ s/,//g if (defined $files);
+    $files = 0 unless defined $files;
+    return $files;
+}
+
+sub get_status ($) {
+    my ($key) = @_;
+
+    my $fh = util::fopen($var::NMZ{'status'});
+    return undef unless defined $fh;
+
+    while (defined(my $line = <$fh>)) {
+	if ($line =~ /^$key\s+(.*)$/) {
+	    util::dprint("status: $key = $1\n");
+	    $fh->close;
+	    return $1;
+	}
+    }
+    util::fclose($fh) if (defined $fh);
+    return undef;
+}
+
+sub put_total_files ($) {
+    my ($number) = @_;
+    $number =~ tr/,//d;
+    put_status("files", $number);
+}
+
+sub put_total_keys ($) {
+    my ($number) = @_;
+    $number =~ tr/,//d;
+    put_status("keys", $number);
+}
+
+sub put_status ($$) {
+    my ($key, $value) = @_;
+
+    # remove NMZ.status file if the file has a previous value.
+    unlink $var::NMZ{'status'} if defined get_status($key);
+
+    my $fh = util::efopen(">> $var::NMZ{'status'}");
+    print $fh "$key $value\n";
+    util::fclose($fh);
+}
+
+# do logging
+sub put_log ($$$$) {
+    my ($total_files_size, $start_time, $docid_count, $total_keys_count) = @_;
+
+    my $date = localtime;
+    my $added_files_count   = $docid_count;
+    my $deleted_documents_count = $DeletedFilesCount;
+    my $updated_documents_count = $UpdatedFilesCount;
+    my $total_files_count   = get_total_files() + $docid_count
+			      - $DeletedFilesCount - $UpdatedFilesCount;
+    my $added_keys_count    = 0;
+    $added_keys_count       = $total_keys_count - get_total_keys();
+
+    my $processtime         = time - $start_time;
+    $processtime            = 0 if $start_time == 0;
+    $total_files_size       = $total_files_size;
+    $total_keys_count       = $total_keys_count;
+
+    my @logmsgs = ();
+    if ($APPENDMODE) {
+	push @logmsgs, N_("[Append]");
+    } else {
+	push @logmsgs, N_("[Base]");
+    }
+    push @logmsgs, N_("Date:"), "$date" if $date;
+    push @logmsgs, N_("Added Documents:"), util::commas("$added_files_count")
+	if $added_files_count;
+    push @logmsgs, N_("Deleted Documents:"), 
+	util::commas("$deleted_documents_count") if $deleted_documents_count;
+    push @logmsgs, N_("Updated Documents:"), 
+	util::commas("$updated_documents_count") if $updated_documents_count;
+    push @logmsgs, N_("Size (bytes):"), util::commas("$total_files_size")
+	if $total_files_size;
+    push @logmsgs, N_("Total Documents:"), util::commas("$total_files_count") 
+	if $total_files_count;
+    push @logmsgs, N_("Added Keywords:"), util::commas("$added_keys_count") 
+	if $added_keys_count;
+    push @logmsgs, N_("Total Keywords:"), util::commas("$total_keys_count") 
+	if $total_keys_count;
+    push @logmsgs, N_("Wakati:"), "$conf::WAKATI" if $conf::WAKATI;
+    push @logmsgs, N_("Time (sec):"), util::commas("$processtime")
+	if $processtime;
+    push @logmsgs, N_("File/Sec:"),  sprintf "%.2f", 
+    	(($added_files_count + $updated_documents_count) / $processtime) 
+	if $processtime;
+    push @logmsgs, N_("System:"), "$English::OSNAME" if $English::OSNAME;
+    push @logmsgs, N_("Perl:"),   sprintf("%f", $English::PERL_VERSION);
+    push @logmsgs, N_("Namazu:"), "$var::VERSION" if $var::VERSION;
+
+    my $log_for_file = "";
+
+    my $msg = shift @logmsgs;	# [Base] or [Append]
+    # To stdout, use gettext.
+    print _($msg), "\n";
+    # To log file, do not use gettext.
+    $log_for_file = $msg . "\n";
+    while (@logmsgs) {
+	my $field = shift @logmsgs;
+	my $value = shift @logmsgs;
+	printf "%-20s %s\n", _($field), "$value";
+	$log_for_file .= sprintf "%-20s %s\n", $field, "$value";
+    }
+    print "\n";
+    $log_for_file .= "\n";
+
+    put_log_to_logfile($log_for_file);
+    put_total_files($total_files_count);
+    put_total_keys($total_keys_count);
+
+    my $argv = join "\t", @ARGV;
+    my $cwd  = cwd();
+    put_status("argv", $argv);
+    put_status("cwd",  $cwd);
+}
+
+sub put_log_to_logfile ($) {
+    my ($logmsg) = @_;
+    my $fh_logfile = util::efopen(">>$var::NMZ{'log'}");
+    print $fh_logfile $logmsg;
+    util::fclose($fh_logfile);
+}
+
+sub get_year () {
+    my $year = (localtime)[5] + 1900;
+
+    return $year;
+}
+
+# Compose NMZ.head and NMZ.foot. Prepare samples if necessary.
+# Insert $docid_count, $key_count, and $month/$day/$year respectively.
+sub make_headfoot ($$$) {
+    my ($file, $docid_count, $key_count) = @_;
+
+    my $day   = sprintf("%02d", (localtime)[3]);
+    my $month = sprintf("%02d", (localtime)[4] + 1);
+    my $year  = get_year();
+    my $buf   = "";
+
+    if (-f $file) {
+	$buf = util::readfile($file);
+    } else {
+	$file =~ m!.*/(.*)$!;
+	my $fname = $1;
+	my $template = "$TEMPLATEDIR/$fname";
+
+	if (-f $template) {
+	    $buf = util::readfile($template);
+	} else {
+	    return;
+	}
+    }
+
+    my $fh_file = util::efopen(">$file");
+
+    if ($buf =~ /(<!-- FILE -->)\s*(.*)\s*(<!-- FILE -->)/) {
+        my $total_files_count = util::commas(get_total_files() + $docid_count 
+                                   - $DeletedFilesCount - $UpdatedFilesCount);
+	$buf =~ s/(<!-- FILE -->)(.*)(<!-- FILE -->)/$1 $total_files_count $3/;
+
+    }
+    if ($buf =~ /(<!-- KEY -->)\s*(.*)\s*(<!-- KEY -->)/) {
+	my $tmp = $2;
+	$tmp =~ tr/,//d;
+	$tmp = $key_count;
+	$tmp = util::commas($tmp);
+	$buf =~ s/(<!-- KEY -->)(.*)(<!-- KEY -->)/$1 $tmp $3/;
+    }
+    $buf =~ s#(<!-- DATE -->)(.*)(<!-- DATE -->)#$1 $year-$month-$day $3#gs;
+    $buf =~ s/(<!-- VERSION -->)(.*)(<!-- VERSION -->)/$1 v$var::VERSION $3/gs;
+    $buf =~ s{(<!-- ADDRESS -->)(.*)(<!-- ADDRESS -->)}
+	     {$1\n<a href="mailto:$conf::ADDRESS">$conf::ADDRESS</a>\n$3}gs;
+    $buf =~ s{(<!-- LINK-REV-MADE -->)(.*)(<!-- LINK-REV-MADE -->)}
+	     {$1\n<link rev="made" href="mailto:$conf::ADDRESS">\n$3}gs;
+
+    print $fh_file $buf;
+    util::fclose($fh_file);
+}
+
+# Make phrase hashes for NMZ.p
+# Handle two words each for calculating a hash value ranged 0-65535.
+sub make_phrase_hash ($$$) {
+    my ($docid_count, $docid_base, $contref) = @_;
+
+    my %tmp = ();
+    $$contref =~ s!\x7f */? *\d+ *\x7f!!g;  # remove tags of weight
+    $$contref =~ tr/\xa1-\xfea-z0-9 \n//cd; # remove all symbols
+    $$contref =~ s/^\s+//;
+    $$contref =~ s/\s+$//;
+    my @words = split(/\s+/, $$contref);
+    my $word_b = shift @words;
+    my $docid = $docid_count + $docid_base;
+    for my $word (@words) {
+	next if ($word eq "" || length($word) > $conf::WORD_LENG_MAX);
+	my $hash = hash($word_b . $word);
+	unless (defined $tmp{$hash}) {
+	    $tmp{$hash} = 1;
+	    $PhraseHashLast{$hash} = 0 unless defined $PhraseHashLast{$hash};
+	    $PhraseHash{$hash} .= pack("w", $docid - $PhraseHashLast{$hash});
+#	    util::dprint("<$word_b, $word> $hash\n");
+	    $PhraseHashLast{$hash} = $docid;
+	}
+	$word_b = $word;
+    }
+}
+
+# Construct NMZ.p and NMZ.pi file. this processing is rather complex.
+sub write_phrase_hash () {
+    write_phrase_hash_sub();
+    util::Rename($var::NMZ{'__p'}, $var::NMZ{'_p'});
+    util::Rename($var::NMZ{'__pi'}, $var::NMZ{'_pi'});
+}
+
+sub write_phrase_hash_sub () {
+    my $opened = 0;
+
+    return 0 if %PhraseHash eq '';    # namazu-devel-ja #3146
+    util::dprint(_("doing write_phrase_hash() processing.\n"));
+
+    my $fh_tmp_pi = util::efopen(">$var::NMZ{'__pi'}");
+    my $fh_tmp_p  = util::efopen(">$var::NMZ{'__p'}");
+
+    my $fh_phrase = util::fopen($var::NMZ{'_p'});
+    my $fh_phraseindex = undef;
+    if ($fh_phrase) {
+	$fh_phraseindex = util::efopen($var::NMZ{'_pi'});
+	$opened = 1;
+    }
+	
+    my $ptr = 0;
+    for (my $i = 0; $i < 65536; $i++) {
+
+	my $baserecord = "";
+	my $baseleng = 0;
+
+	if ($opened) {
+	    my $tmp = 0;
+	    read($fh_phraseindex, $tmp, $var::INTSIZE);
+	    $tmp = unpack("N", $tmp);
+	    if ($tmp != 0xffffffff) { # 0xffffffff
+		$baseleng = readw($fh_phrase);
+		read($fh_phrase, $baserecord, $baseleng);
+	    }
+	}
+	if (defined($PhraseHash{$i})) {
+	    if ($baserecord eq "") {
+		print $fh_tmp_pi pack("N", $ptr);
+		my $record = $PhraseHash{$i};
+		my $n2 = length($record);
+		my $data = pack("w", $n2) . $record;
+		print $fh_tmp_p $data;
+		$ptr += length($data);
+	    } else {
+		print $fh_tmp_pi pack("N", $ptr);
+		my $record = $PhraseHash{$i};
+		my $last_docid = get_last_docid($baserecord, 1);
+		my $adjrecord = adjust_first_docid($record, $last_docid);
+		check_records(\$record, \$baserecord, 1) unless defined $adjrecord; # namazu-bugs-ja#31
+		$record = $adjrecord;
+		my $n2 = length($record) + $baseleng;
+		my $data = pack("w", $n2) .  $baserecord . $record;
+		print $fh_tmp_p $data;
+		$ptr += length($data);
+	    }
+	} else {
+	    if ($baserecord eq "") {
+		# if $baserecord has no data, set to 0xffffffff
+		print $fh_tmp_pi pack("N", 0xffffffff);
+	    } else {
+		print $fh_tmp_pi pack("N", $ptr);
+		my $data = pack("w", $baseleng) . $baserecord;
+		print $fh_tmp_p $data;
+		$ptr += length($data);
+	    }
+	}
+    }
+
+    if ($opened) {
+        util::fclose($fh_phraseindex);
+    }
+    if (defined $fh_phrase) {
+        util::fclose($fh_phrase);
+    }
+    util::fclose($fh_tmp_p);
+    util::fclose($fh_tmp_pi);
+
+    %PhraseHash = ();
+    %PhraseHashLast = ();
+}
+
+# Dr. Knuth's  ``hash'' from (UNIX MAGAZINE May 1998)
+sub hash ($) {
+    my ($word) = @_;
+
+    my $hash = 0;
+    for (my $i = 0; $word ne ""; $i++) {
+	$hash ^= $Seed[$i & 0x03][ord($word)];
+        $word = substr $word, 1;
+	# $word =~ s/^.//;  is slower
+    }
+    return $hash & 65535;
+}
+
+# Count frequencies of words.
+sub count_words ($$$$) {
+    my ($docid_count, $docid_base, $contref, $kanji) = @_;
+
+    # Normalize into small letter.
+    $$contref =~ tr/A-Z/a-z/;
+
+    # Remove control char.
+    $$contref =~ tr/\x00-\x08\x0b-\x0c\x0e-\x1a/ /;
+
+    # It corresponds to -j option of ChaSen.
+    $$contref =~ s/^[ \t\f]+//gm;    # except "\r\n"
+    $$contref =~ s/[ \t\f]+$//gm;    # except "\r\n"
+    $$contref =~ s/([a-z])-\n([a-z])/$1$2/gsi;   # for hyphenation
+    if (util::islang("ja")) {
+        $$contref =~ s/([\x80-\xff])\n([\x80-\xff])/$1$2/gs;
+        $$contref =~ s/(。|、)/$1\n/gs;
+    }
+    $$contref =~ s/\n+/\n/gs;
+
+    # Do wakatigaki if necessary.
+    if (util::islang("ja")) {
+	wakati::wakatize_japanese($contref) if $kanji;
+    }
+
+    my $part1 = "";
+    my $part2 = "";
+    if ($$contref =~ /\x7f/) {
+	$part1 = substr $$contref, 0, index($$contref, "\x7f");
+	$part2 = substr $$contref, index($$contref, "\x7f");
+#	$part1 = $PREMATCH;  # $& and friends are not efficient
+#	$part2 = $MATCH . $POSTMATCH;
+    } else {
+	$part1 = $$contref;
+	$part2 = "";
+    }
+
+    # do scoring
+    my %word_count = ();
+    $part2 =~ s!\x7f *(\d+) *\x7f([^\x7f]*)\x7f */ *\d+ *\x7f!
+	wordcount_sub($2, $1, \%word_count)!ge;
+    wordcount_sub($part1, 1, \%word_count);
+
+    # Add them to whole index
+    my $docid = $docid_count + $docid_base;
+    for my $word (keys(%word_count)) {
+	next if ($word eq "" || length($word) > $conf::WORD_LENG_MAX);
+	$KeyIndexLast{$word} = 0 unless defined $KeyIndexLast{$word};
+	$KeyIndex{$word} .= pack("w2", 
+				 $docid - $KeyIndexLast{$word}, 
+				 $word_count{$word});
+	$KeyIndexLast{$word} = $docid;
+    }
+}
+
+#
+# Count words and do score weighting
+#
+sub wordcount_sub ($$\%) {
+    my ($text, $weight, $word_count) = @_;
+
+    # Remove all symbols when -K option is specified.
+    $text =~ tr/\xa1-\xfea-z0-9/   /c if $var::Opt{'nosymbol'};
+
+    # Count frequencies of words in a current document.
+    # Handle symbols as follows.
+    #
+    # tcp/ip      ->  tcp/ip,     tcp,      ip
+    # (tcp/ip)    ->  (tcp/ip),   tcp/ip,   tcp, ip
+    # ((tcpi/ip)) ->  ((tcp/ip)), (tcp/ip), tcp
+    #
+    # Don't do processing for nested symbols.
+    # NOTE: When -K is specified, all symbols are already removed.
+
+    my @words = split /\s+/, $text;
+    for my $word (@words) {
+	next if ($word eq "" || length($word) > $conf::WORD_LENG_MAX);
+	if ($var::Opt{'noedgesymbol'}) {
+	    # remove symbols at both ends
+	    $word =~ s/^[^\xa1-\xfea-z_0-9]*(.*?)[^\xa1-\xfea-z_0-9]*$/$1/g;
+	}
+	$word_count->{$word} = 0 unless defined($word_count->{$word});
+	$word_count->{$word} += $weight;
+	unless ($var::Opt{'nosymbol'}) {
+	    if ($word =~ /^[^\xa1-\xfea-z_0-9](.+)[^\xa1-\xfea-z_0-9]$/) {
+		$word_count->{$1} = 0 unless defined($word_count->{$1});
+		$word_count->{$1} += $weight;
+		next unless $1 =~ /[^\xa1-\xfea-z_0-9]/;
+	    } elsif ($word =~ /^[^\xa1-\xfea-z_0-9](.+)/) {
+		$word_count->{$1} = 0 unless defined($word_count->{$1});
+		$word_count->{$1} += $weight;
+		next unless $1 =~ /[^\xa1-\xfea-z_0-9]/;
+	    } elsif ($word =~ /(.+)[^\xa1-\xfea-z_0-9]$/) {
+		$word_count->{$1} = 0 unless defined($word_count->{$1});
+		$word_count->{$1} += $weight;
+		next unless $1 =~ /[^\xa1-\xfea-z_0-9]/;
+	    }
+	    my @words_ = split(/[^\xa1-\xfea-z_0-9]+/, $word)
+		if $word =~ /[^\xa1-\xfea-z_0-9]/;
+	    for my $tmp (@words_) {
+		next if $tmp eq "";
+		$word_count->{$tmp} = 0 unless defined($word_count->{$tmp});
+		$word_count->{$tmp} += $weight;
+	    }
+	    @words_ = ();
+	}
+    }
+    return "";
+}
+
+# Construct NMZ.i and NMZ.ii file. this processing is rather complex.
+sub write_index () {
+    my $key_count = write_index_sub();
+    util::Rename($var::NMZ{'__i'}, $var::NMZ{'_i'});
+    util::Rename($var::NMZ{'__w'}, $var::NMZ{'_w'});
+
+    return $key_count;
+}
+
+# readw: read one pack 'w' word.
+# This code was contributed by <furukawa@tcp-ip.or.jp>.
+sub readw ($) {
+    my $fh = shift;
+    my $ret = '';
+    my $c = '';
+    
+    while (read($fh, $c, 1)){
+        $ret .= $c;
+        last unless 0x80 & ord $c;
+    }
+    return unpack('w', $ret);
+}
+
+sub get_last_docid ($$) {
+    my ($record, $step) = @_;
+    my (@data) = unpack 'w*', $record;
+
+    my $sum = 0;
+    for (my $i = 0; $i < @data; $i += $step) {
+        $sum += $data[$i];
+    }
+    my $leng = @data / $step;
+    return $sum;
+}
+
+sub adjust_first_docid ($$) {
+    my ($record, $last_docid) = @_;
+    my (@data) = unpack 'w*', $record;
+
+    $data[0] = $data[0] - $last_docid;
+    return undef if ($data[0] < 0); # namazu-bug-ja#31
+    $record = pack 'w*', @data;
+    return $record;
+}
+
+sub write_index_sub () {
+    my @words = sort keys(%KeyIndex);
+    return 0 if $#words == -1;
+
+    my $cnt = 0;
+    my $ptr_i = 0;
+    my $ptr_w = 0;
+    my $key_count = 0;
+    my $baserecord = "";
+
+    util::dprint(_("doing write_index() processing.\n"));
+    my $fh_tmp_i  = util::efopen(">$var::NMZ{'__i'}");
+    my $fh_tmp_w  = util::efopen(">$var::NMZ{'__w'}");
+    my $fh_i      = util::fopen($var::NMZ{'_i'});
+    my $fh_ii     = util::efopen(">$var::NMZ{'_ii'}");
+    my $fh_w      = util::fopen($var::NMZ{'_w'});
+    my $fh_wi = util::efopen(">$var::NMZ{'_wi'}");
+
+    if ($fh_w) {
+      FOO:
+	while (defined(my $line = <$fh_w>)) {
+	    chop $line;
+	    my $current_word = $line;
+
+	    my $baseleng = readw($fh_i);
+	    read($fh_i, $baserecord, $baseleng);
+
+ 	    for (; $cnt < @words; $cnt++) {
+		last unless $words[$cnt] le $current_word;
+		my $record = $KeyIndex{$words[$cnt]};
+		my $leng = length($record);
+
+		if ($current_word eq $words[$cnt]) {
+		    my $last_docid = get_last_docid($baserecord, 2);
+		    my $adjrecord = adjust_first_docid($record, $last_docid);
+		    check_records(\$record, \$baserecord, 2) unless defined $adjrecord; # namazu-bugs-ja#31
+		    $record = $adjrecord;
+		    $leng = length($record);  # re-measure
+		    my $tmp = pack("w", $leng + $baseleng);
+
+		    my $data_i = "$tmp$baserecord$record";
+		    my $data_w = "$current_word\n";
+		    print $fh_tmp_i $data_i;
+		    print $fh_tmp_w $data_w;
+		    print $fh_ii pack("N", $ptr_i);
+		    print $fh_wi pack("N", $ptr_w);
+		    $ptr_i += length($data_i);
+		    $ptr_w += length($data_w);
+		    $key_count++;
+
+		    $cnt++;
+		    next FOO;
+		} else {
+		    my $tmp = pack("w", $leng);
+		    my $data_i = "$tmp$record";
+		    my $data_w = "$words[$cnt]\n";
+		    print $fh_tmp_i $data_i;
+		    print $fh_tmp_w $data_w;
+		    print $fh_ii pack("N", $ptr_i);
+		    print $fh_wi pack("N", $ptr_w);
+		    $ptr_i += length($data_i);
+		    $ptr_w += length($data_w);
+		    $key_count++;
+		}
+	    }
+	    my $tmp  = pack("w", $baseleng);
+	    my $data_i = "$tmp$baserecord";
+	    my $data_w = "$current_word\n";
+	    print $fh_tmp_i $data_i;
+	    print $fh_tmp_w $data_w;
+	    print $fh_ii pack("N", $ptr_i);
+	    print $fh_wi pack("N", $ptr_w);
+	    $ptr_i += length($data_i);
+	    $ptr_w += length($data_w);
+	    $key_count++;
+	}
+    }
+    while ($cnt < @words) {
+	my $leng = length($KeyIndex{$words[$cnt]});
+	my $tmp = pack("w", $leng);
+	my $record = $KeyIndex{$words[$cnt]};
+
+	my $data_i = "$tmp$record";
+	my $data_w = "$words[$cnt]\n";
+	print $fh_tmp_i $data_i;
+	print $fh_tmp_w $data_w;
+	print $fh_ii pack("N", $ptr_i);
+	print $fh_wi pack("N", $ptr_w);
+	$ptr_i += length($data_i);
+	$ptr_w += length($data_w);
+	$key_count++;
+	$cnt++;
+    }
+    %KeyIndex = ();
+    %KeyIndexLast = ();
+
+    util::fclose($fh_wi);
+    util::fclose($fh_w) if (defined $fh_w);
+    util::fclose($fh_ii);
+    util::fclose($fh_i) if (defined $fh_i);
+    util::fclose($fh_tmp_w);
+    util::fclose($fh_tmp_i);
+
+    return $key_count;
+}
+
+#
+# Decide the media type. 
+# FIXME: Very ad hoc. It's just a compromise. -- satoru
+#
+sub decide_type ($$) {
+    my ($name, $cont) = @_;
+    return $name if (!defined $cont || $name eq $cont);
+
+    util::dprint("decide_type: name: $name, cont: $cont\n");
+    if ($cont =~ m!^text/plain! && $name =~ m!^text/plain!) {
+        return $name;
+    } elsif ($cont =~ m!^application/octet-stream! &&
+             $name !~ m!^text/!) {
+        return $name;
+    } elsif ($cont =~ m!^application/(excel|powerpoint|msword)! &&
+            $name !~ m!^application/octet-stream!)  {
+        # FIXME: Currently File::MMagic 1.02's checktype_data() 
+        # is unreliable for them.
+        return $name;
+    } elsif ($cont =~ m!^application/x-zip! &&
+             $name =~ m!^application/!) {
+        # zip format is used other applications e.g. OpenOffice.
+        # It is necessary to add to check extention.
+        return $name;
+    }
+
+    return $cont;
+}
+
+#
+# Debugging code for the "negative numbers" problem.
+#
+sub check_records ($$$) {
+    my ($recref, $baserecref, $step) = @_;
+    dump_record($baserecref, $step);
+    dump_record($recref, $step);
+    print STDERR "The \x22negative number\x22 problem occurred.\n";
+    exit(1);
+}
+
+sub dump_record ($$) {
+    my ($recref, $step) = @_;
+    my (@data) = unpack 'w*', $$recref;
+    print STDERR "dump record data to NMZ.bug.info (step: $step)...";
+    my $fh_info = util::fopen(">> NMZ.bug.info");
+    print $fh_info "dumped record data (step: $step)...";
+    foreach my $elm (@data) {
+        print $fh_info sprintf(" %08x", $elm);
+    }
+    print $fh_info "\n";
+    util::fclose($fh_info);
+    return;
+}
+
+sub trapintr {
+    my ($signame) = @_;
+    print STDERR "Warning: signal $signame occured.\n";
+}
+
+#
+# For avoiding "used only once: possible typo at ..." warnings.
+#
+muda($conf::ON_MEMORY_MAX,
+     $conf::WORD_LENG_MAX, $conf::TEXT_SIZE_MAX,
+     $conf::DENY_FILE, $var::INTSIZE,
+     $conf::CHASEN_NOUN, $conf::CHASEN,
+     $conf::KAKASI, $var::Opt{'okurigana'},
+     $var::Opt{'hiragana'}, $conf::DIRECTORY_INDEX,
+     $usage::USAGE, $var::Opt{'noheadabst'}, $usage::VERSION_INFO,
+     $var::Opt{'noencodeurl'}, $conf::HTML_SUFFIX,
+     $var::RECURSIVE_ACTIONS, $conf::META_TAGS, $var::USE_NKF_MODULE,
+     $conf::ADDRESS, $var::MAILING_ADDRESS,
+     $conf::FILE_SIZE_MAX,
+     $conf::MECAB,
+     $conf::DENY_DDN,
+     $var::TRAC_URI,
+     );
+
+sub muda {}
+

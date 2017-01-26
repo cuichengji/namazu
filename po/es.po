@@ -1,0 +1,967 @@
+# Spanish Translations.
+# Copyright (C) 2001 Free Software Foundation, Inc.
+# Jose Juan Zapater Vera <compi@arrakis.es>, 2001.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Namazu 2.0.20\n"
+"Report-Msgid-Bugs-To: bugs@namazu.org\n"
+"POT-Creation-Date: 2009-02-21 09:15+0900\n"
+"PO-Revision-Date: 2001-06-26 16:55+0900\n"
+"Last-Translator: Jose Juan Zapater Vera <compi@arrakis.es>\n"
+"Language-Team: Spanish <es@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: nmz/util.c:536
+msgid "Fatal error occurred!"
+msgstr "ÅBOcurriÛ un error fatal!"
+
+#: nmz/util.c:539
+msgid "Too long query"
+msgstr "Consulta demasiado larga"
+
+#: nmz/util.c:542
+msgid "Invalid query"
+msgstr "Consulta no v·lida"
+
+#: nmz/util.c:545
+msgid "Too many query tokens"
+msgstr "Demasiados comandos en la consulta"
+
+#: nmz/util.c:548
+msgid "Too many words matched. Ignored"
+msgstr "Coinciden demasiadas palabras. Ignorado"
+
+#: nmz/util.c:551
+msgid "Too many documents hit. Ignored"
+msgstr "Coinciden demasiados documentos. Ignorado"
+
+#: nmz/util.c:554
+msgid "can't open the regex index"
+msgstr "no puedo abrir el Ìndice regex"
+
+#: nmz/util.c:557
+msgid "can't open the phrase index"
+msgstr "no puedo abrir el Ìndice de frases"
+
+#: nmz/util.c:560
+msgid "can't open the field index"
+msgstr "no puedo abrir el Ìndice de campos"
+
+#: nmz/util.c:563
+msgid "can't open the index"
+msgstr "no puedo abrir el Ìndice"
+
+#: nmz/util.c:566
+msgid "can't open the result format file"
+msgstr "no puedo abrir el fichero de formato de resultados"
+
+#: nmz/util.c:569
+msgid "You don't have a permission to access the index"
+msgstr "Tu no tienes permisos para acceder al Ìndice"
+
+#: nmz/util.c:572
+msgid "The index is locked for maintenance"
+msgstr "El Ìndice est· bloqueado para mantenimiento"
+
+#: nmz/util.c:575
+msgid "Present index is old type. it's unsupported."
+msgstr "El Ìndice actual es de un tipo antiguo. No es soportado."
+
+#: nmz/util.c:578
+msgid "Unknown error. Report bug!"
+msgstr "Error desconocido. ÅBReporta el error!"
+
+#: src/cgi.c:127 src/cgi.c:142 src/output.c:1175
+msgid "charset=ISO-8859-1"
+msgstr "charset=ISO-8859-1"
+
+#: src/cgi.c:131 src/cgi.c:146
+#, c-format
+msgid "Invalid idxname."
+msgstr "Nombre de Ìndice no v·lido."
+
+#: src/cgi.c:233
+msgid "Too long QUERY_STRING"
+msgstr "Cadena de consulta demasiado larga"
+
+#: src/output.c:561
+msgid "\t<strong>Page:</strong> "
+msgstr "\t<strong>P·gina:</strong> "
+
+#: src/output.c:606
+#, c-format
+msgid "Current List: %d"
+msgstr "Lista Actual: %d"
+
+#: src/output.c:656
+#, c-format
+msgid " [ TOTAL: %d ]"
+msgstr " [ TOTAL: %d ]"
+
+#: src/output.c:671
+msgid "\t<p><strong> Total "
+msgstr "\t<p><strong> Total "
+
+#: src/output.c:678
+msgid ""
+"\t documents matching your query.</strong></p>\n"
+"\n"
+msgstr ""
+"\t documentos cumplen tu consulta.</strong></p>\n"
+"\n"
+
+#: src/output.c:738
+#, c-format
+msgid ""
+"\t<h2>Error!</h2>\n"
+"<p>%s</p>\n"
+msgstr ""
+"\t<h2>ÅBErrorÅB</h2>\n"
+"<p>%s</p>\n"
+
+#: src/output.c:772
+msgid "\t<h2>Results:</h2>\n"
+msgstr "\t<h2>Resultados:</h2>\n"
+
+#: src/output.c:779
+#, c-format
+msgid "References: "
+msgstr "Referencias: "
+
+#: src/output.c:829
+msgid "\t<p>No document matching your query.</p>\n"
+msgstr "\t<p>No hay ning˙n documento que cumpla tu consulta.</p>\n"
+
+#: src/output.c:1178
+#, c-format
+msgid ""
+"<h2>Error</h2>\n"
+"<p>"
+msgstr ""
+"<h2>Error</h2>\n"
+"<p>"
+
+#: src/output.c:1180
+#, c-format
+msgid "</p>"
+msgstr "</p>"
+
+#: src/rcfile.c:449
+msgid "can't find string terminator"
+msgstr "no puedo encontrar el terminador de cadena"
+
+#: src/rcfile.c:570
+msgid "invalid directive name"
+msgstr "nombre de directiva no v·lida"
+
+#: src/rcfile.c:584
+msgid "can't find arguments"
+msgstr "no puedo encontrar los argumentos"
+
+#: src/rcfile.c:687
+msgid "too few arguments"
+msgstr "demasiados pocos argumentos"
+
+#: src/rcfile.c:690
+msgid "too many arguments"
+msgstr "demasiados argumentos"
+
+#: src/rcfile.c:700
+msgid "unknown directive"
+msgstr "directiva desconocida"
+
+#: src/rcfile.c:755
+#, c-format
+msgid "%s:%d: syntax error: %s"
+msgstr "%s:%d: error de sintaxis: %s"
+
+#: src/rcfile.c:887
+#, c-format
+msgid "Loaded rcfile: %s\n"
+msgstr "Fichero rc cargado: %s\n"
+
+#: src/rcfile.c:892
+#, c-format
+msgid ""
+"Index:        %s\n"
+"Logging:      %s\n"
+"Lang:         %s\n"
+"Scoring:      %s\n"
+"Template:     %s\n"
+"MaxHit:       %d\n"
+"MaxMatch:     %d\n"
+"EmphasisTags: %s\t%s\n"
+msgstr ""
+
+#: src/rcfile.c:912
+#, c-format
+msgid "Alias:   %-20s\t%s\n"
+msgstr ""
+
+#: src/rcfile.c:922
+#, c-format
+msgid "Replace: %-20s\t%s\n"
+msgstr "Reemplaza: %-20s\t%s\n"
+
+#: src/usage.c:53
+#, c-format
+msgid ""
+"namazu %s, a search program of Namazu.\n"
+"\n"
+"Usage: namazu [options] <query> [index]... \n"
+"    -n, --max=NUM        set the number of documents shown to NUM.\n"
+"    -w, --whence=NUM     set the first number of documents shown to NUM.\n"
+"    -l, --list           print the results by listing the format.\n"
+"    -s, --short          print the results in a short format.\n"
+"        --result=EXT     set NMZ.result.EXT for printing the results.\n"
+"        --late           sort the documents in late order.\n"
+"        --early          sort the documents in early order.\n"
+"        --sort=METHOD    set a sort METHOD (score, date, field:name)\n"
+"        --ascending      sort in ascending order (default: descending)\n"
+"    -a, --all            print all results.\n"
+"    -c, --count          print only the number of hits.\n"
+"    -h, --html           print in HTML format.\n"
+"    -r, --no-references  do not display the reference hit counts.\n"
+"    -H, --page           print the links of further results. \n"
+"                         (This is nearly meaningless)\n"
+"    -F, --form           force to print the <form> ... </form> region.\n"
+"    -R, --no-replace     do not replace the URI string.\n"
+"    -U, --no-decode-uri  do not decode the URI when printing in a plain "
+"format.\n"
+"    -o, --output=FILE    set the output file name to FILE.\n"
+"    -f, --config=FILE    set the config file name to FILE.\n"
+"    -C, --show-config    print the current configuration.\n"
+"    -q, --quiet          do not display extra messages except search "
+"results.\n"
+"    -d, --debug          be in debug mode.\n"
+"    -v, --version        show the namazu version and exit.\n"
+"        --help           show this help and exit.\n"
+"        --norc           do not read the personal initialization files.\n"
+"        --               Terminate option list.\n"
+"\n"
+"Report bugs to <%s>\n"
+"or <%s>.\n"
+msgstr ""
+"namazu %s, el programa de b˙squeda de Namazu.\n"
+"\n"
+"Uso: namazu [opciones] <consulta> [Ìndice]... \n"
+"    -n, --max=NUM        pone el n˙mero de documentos a mostrar a NUM.\n"
+"    -w, --whence=NUM     pone el primer n˙mero de documentos a mostrar a "
+"NUM.\n"
+"    -l, --list           imprime el resultado en formato lista.\n"
+"    -s, --short          imprime los resultados en formato corto.\n"
+"        --results=EXT    pone NMZ.result.EXT para imprimir los resultados.\n"
+"        --late           ordena los documentos por fecha antigua.\n"
+"        --early          ordena los docuemtnos por ˙ltimas fechas.\n"
+"        --sort=METODO    pone el METODO de ordenaciÛn a (score, date, field:"
+"name)\n"
+"        --ascending      ordena en orden ascendiente (defecto: "
+"descendiente)\n"
+"    -a, --all            imprime todos los resultados.\n"
+"    -c, --count          imprimir sÛlo el n˙mero de documentos.\n"
+"    -h, --html           imprime en formato HTML.\n"
+"    -r, --no-references  no visualiza el n˙mero de documentos que "
+"coinciden.\n"
+"    -H, --page           print further result links. (nearly meaningless)\n"
+"    -F, --form           fuerza a imprimir una regiÛn <form> ... </form>.\n"
+"    -R, --no-replace     no reemplaza la cadena URI.\n"
+"    -U, --no-decode-uri  no decodifica la URI cuando imprime en formato "
+"plano.\n"
+"    -o, --output=FILE    pone el nombre del fichero de salida a FILE.\n"
+"    -f, --config=FILE    pone el nombre del fichero de configuraciÛn a "
+"FILE.\n"
+"    -C, --show-config    imprime la configuraciÛn actual.\n"
+"    -q, --quiet          no visualiza mensajes extras excepto la b˙squeda "
+"results.\n"
+"    -d, --debug          modo debugger.\n"
+"    -v, --version        muestra el n˙mero de versiÛn de namazu y sale.\n"
+"        --help           muestra esta ayuda y sale\n"
+"        --norc           do not read the personal initialization files.\n"
+"        --               Terminate option list.\n"
+"\n"
+"Reporta los errores a <%s>\n"
+"o <%s>.\n"
+
+#: src/usage.c:95
+msgid "Usage: namazu [options] <query> [index]...\n"
+msgstr "Usa: namazu [opciones] <consulta> [Ìndice]...\n"
+
+#: src/usage.c:96
+msgid "Try `namazu --help' for more information.\n"
+msgstr "Intenta `namazu --help para m·s informaciÛn.\n"
+
+#: scripts/mknmz.in:113
+msgid " files are found to be indexed.\n"
+msgstr " ficheros fueron encontrados para ser indexados.\n"
+
+#: scripts/mknmz.in:131
+msgid "target file: "
+msgstr "fichero destino: "
+
+#: scripts/mknmz.in:151 scripts/mknmz.in:170
+msgid "Writing index files..."
+msgstr "Escribiendo los ficheros de Ìndices..."
+
+#: scripts/mknmz.in:254 scripts/mknmz.in:1187
+msgid "Reading rcfile: "
+msgstr "Leyendo el fichero rc: "
+
+#: scripts/mknmz.in:313
+msgid "Checkpoint reached: re-exec mknmz...\n"
+msgstr "Alcanzado el punto de chequeo: re-ejecuta mknmz...\n"
+
+#: scripts/mknmz.in:490
+msgid "after load_document: "
+msgstr "despuÈs de cargar_documento: "
+
+#: scripts/mknmz.in:846 pl/document.pl:290
+msgid "Detected type: "
+msgstr "Tipo detectado: "
+
+#: scripts/mknmz.in:857 scripts/mknmz.in:1604 pl/document.pl:348
+#: pl/filter.pl.in:98
+msgid "Unsupported media type "
+msgstr "Tipo de fichero no soportado "
+
+#: scripts/mknmz.in:862 pl/filter.pl.in:103
+msgid "Using "
+msgstr "Usando "
+
+#: scripts/mknmz.in:864 pl/filter.pl.in:105
+msgid "unable to require "
+msgstr "imposible adquirir "
+
+#: scripts/mknmz.in:880 pl/filter.pl.in:124
+msgid "Failed to call "
+msgstr "FallÛ la llamada "
+
+#: scripts/mknmz.in:925
+#, fuzzy
+msgid "Looking for indexing files...\n"
+msgstr "Escribiendo los ficheros de Ìndices..."
+
+#: scripts/mknmz.in:930 scripts/mknmz.in:1777
+msgid "No files to index.\n"
+msgstr "No hay ficheros a indexar.\n"
+
+#: scripts/mknmz.in:952
+msgid "code conversion: using NKF module\n"
+msgstr "conversiÛn de cÛdigos: usando el mÛdulo NKF\n"
+
+#: scripts/mknmz.in:957
+msgid "wakati: using Text::Kakasi module\n"
+msgstr "wakati: usando el mÛdulo Text::Kaksi\n"
+
+#: scripts/mknmz.in:962
+msgid "wakati: using Text::ChaSen module\n"
+msgstr "wakati: usando el mÛdulo Text::ChaSen\n"
+
+#: scripts/mknmz.in:969
+msgid "wakati: using MeCab module\n"
+msgstr "wakati: usando el mÛdulo MeCab\n"
+
+#: scripts/mknmz.in:980
+msgid ""
+"found. Maybe this index is being updated by another process now.\n"
+"If not, you can remove this file.\n"
+msgstr ""
+"encontrado. Puede ser que el Ìndice estÈ siendo actualizado ahora por otro "
+"proceso.\n"
+"Si no es asÌ, puedes borrar este fichero.\n"
+
+#: scripts/mknmz.in:1010
+msgid "Present index is old type. it's unsupported.\n"
+msgstr "El Ìndice actual es de un tipo antiguo. No es soportado.\n"
+
+#: scripts/mknmz.in:1153 scripts/mknmz.in:1162 scripts/mknmz.in:1170
+msgid "No such index: "
+msgstr "No es un Ìndice: "
+
+#: scripts/mknmz.in:1166
+msgid "Inherited argv: "
+msgstr "argv heredado: "
+
+#: scripts/mknmz.in:1174
+msgid "Inherited cwd: "
+msgstr "cwd heredado: "
+
+#: scripts/mknmz.in:1251
+msgid "Loaded: "
+msgstr "Cargado: "
+
+#: scripts/mknmz.in:1266
+msgid "Invalid replace: "
+msgstr "Lugar inv·lido: "
+
+#: scripts/mknmz.in:1268
+msgid "Replace: "
+msgstr "Reemplazar: "
+
+#: scripts/mknmz.in:1282
+msgid "invalid output directory\n"
+msgstr "directorio de salida no v·lido\n"
+
+#: scripts/mknmz.in:1302
+msgid "Loaded rcfile: "
+msgstr "Fichero rc cargado: "
+
+#: scripts/mknmz.in:1303
+msgid "System: "
+msgstr "Sistama: "
+
+#: scripts/mknmz.in:1304
+msgid "Namazu: "
+msgstr "Namazu: "
+
+#: scripts/mknmz.in:1305
+msgid "Perl: "
+msgstr "Perl: "
+
+#: scripts/mknmz.in:1306
+msgid "File-MMagic: "
+msgstr ""
+
+#: scripts/mknmz.in:1307
+msgid "NKF: "
+msgstr "NKF: "
+
+#: scripts/mknmz.in:1308
+msgid "KAKASI: "
+msgstr "KAKASI: "
+
+#: scripts/mknmz.in:1309
+msgid "ChaSen: "
+msgstr "ChaSen: "
+
+#: scripts/mknmz.in:1310
+msgid "MeCab: "
+msgstr ""
+
+#: scripts/mknmz.in:1311
+msgid "Wakati: "
+msgstr "Wakati: "
+
+#: scripts/mknmz.in:1312
+#, fuzzy
+msgid "Lang_Msg: "
+msgstr "Lenguaje: "
+
+#: scripts/mknmz.in:1313
+msgid "Lang: "
+msgstr "Lenguaje: "
+
+#: scripts/mknmz.in:1314
+msgid "Coding System: "
+msgstr "Sistema de codificaciÛn: "
+
+#: scripts/mknmz.in:1315
+msgid "CONFDIR: "
+msgstr "Directorio de configuraciÛn: "
+
+#: scripts/mknmz.in:1316
+msgid "LIBDIR: "
+msgstr "LIBDIR: "
+
+#: scripts/mknmz.in:1317
+msgid "FILTERDIR: "
+msgstr ""
+
+#: scripts/mknmz.in:1318
+msgid "TEMPLATEDIR: "
+msgstr ""
+
+#: scripts/mknmz.in:1325 pl/filter.pl.in:179
+msgid "Supported media types:   "
+msgstr "Tipos de formato soportados: "
+
+#: scripts/mknmz.in:1326 pl/filter.pl.in:180
+#, fuzzy
+msgid "Unsupported media types: "
+msgstr "Tipo de fichero no soportado "
+
+#: scripts/mknmz.in:1326
+msgid "marked with minus (-) probably missing application in your \\$path.\n"
+msgstr ""
+
+#: scripts/mknmz.in:1404
+msgid "find_target starting: "
+msgstr "comenzando find_target: "
+
+#: scripts/mknmz.in:1451
+msgid "unsupported target: "
+msgstr "destino no soportado: "
+
+#: scripts/mknmz.in:1488
+#, c-format
+msgid "Unreadable:\t%s"
+msgstr "No leible:\t%s"
+
+#: scripts/mknmz.in:1497
+#, c-format
+msgid "Excluded:\t%s"
+msgstr "Excluido:\t%s"
+
+#: scripts/mknmz.in:1511 scripts/mknmz.in:1525
+#, c-format
+msgid "Too old:\t%s"
+msgstr "Demasiado antiguo:\t%s"
+
+#: scripts/mknmz.in:1518 scripts/mknmz.in:1528
+#, c-format
+msgid "Too new:\t%s"
+msgstr "Demasiado nuevo:\t%s"
+
+#: scripts/mknmz.in:1545
+#, c-format
+msgid "Denied:\t%s"
+msgstr "Denegado:\t%s"
+
+#: scripts/mknmz.in:1550
+#, c-format
+msgid "Not allowed:\t%s"
+msgstr "No permitido:\t%s"
+
+#: scripts/mknmz.in:1554
+#, c-format
+msgid "Targeted:\t%s"
+msgstr "Destino:\t%s"
+
+#: scripts/mknmz.in:1563
+msgid "find_target finished: "
+msgstr "find_target terminado: "
+
+#: scripts/mknmz.in:1564
+#, c-format
+msgid "Target Files: %d (Scan Performance: Elapsed Sec.: %d, Files/sec: %.1f)"
+msgstr ""
+"Ficheros Destino: %d (Rendimiento de escaneo: Consumo Seg: %d, Ficheros/seg: "
+"%.1f)"
+
+#: scripts/mknmz.in:1567
+#, c-format
+msgid "  Possible: %d, Not allowed: %d, Denied: %d, Excluded: %d"
+msgstr " Posibles: %d, No permitidos: %d, Denegados: %d, ExcluÌdos: %d"
+
+#: scripts/mknmz.in:1572
+#, c-format
+msgid "  MTIME too old: %d, MTIME too new: %d"
+msgstr "  MTIME demasiado antiguo: %d, MTIME demasiado nuevo: %d"
+
+#: scripts/mknmz.in:1578
+#, fuzzy
+msgid "lang_msg: "
+msgstr "lenguaje: "
+
+#: scripts/mknmz.in:1579
+msgid "lang: "
+msgstr "lenguaje: "
+
+#: scripts/mknmz.in:1587
+msgid "Usage: mknmz [options] <target>...\n"
+msgstr "Uso: mknmz [opciones] <destino>...\n"
+
+#: scripts/mknmz.in:1588
+msgid "Try `mknmz --help' for more information.\n"
+msgstr "Intenta `mknmz --help para m·s informaciÛn.\n"
+
+#: scripts/mknmz.in:1604 scripts/mknmz.in:1611 pl/document.pl:348
+#: pl/document.pl:355
+msgid " skipped."
+msgstr " ignorados."
+
+#: scripts/mknmz.in:1606 scripts/mknmz.in:1621 pl/document.pl:314
+#: pl/document.pl:327 pl/document.pl:350 pl/document.pl:365
+#, fuzzy
+msgid "is larger than your setup before filtered, skipped: "
+msgstr "es un texto demasiado LARGO! ignorado."
+
+#: scripts/mknmz.in:1611 pl/document.pl:355
+msgid "system error occurred! "
+msgstr "ocurriÛ un error de sistema! "
+
+#: scripts/mknmz.in:1613 pl/document.pl:357
+msgid "does NOT EXIST! skipped."
+msgstr "NO EXISTE! ignorado."
+
+#: scripts/mknmz.in:1615 pl/document.pl:359
+msgid "is NOT READABLE! skipped."
+msgstr "no es LEIBLE! ignorado."
+
+#: scripts/mknmz.in:1617 pl/document.pl:361
+msgid "is 0 size! skipped."
+msgstr " tiene tamaÒo 0! ignorado."
+
+#: scripts/mknmz.in:1619 pl/document.pl:363
+msgid "may be a BINARY file! skipped."
+msgstr "puede no ser un fichero BINARIO! ignorado."
+
+#: scripts/mknmz.in:1623 pl/document.pl:367
+msgid "is larger than your setup after filtered, skipped: "
+msgstr "es un texto demasiado LARGO! ignorado."
+
+#: scripts/mknmz.in:1862
+msgid ""
+"\n"
+"\n"
+"== found files ==\n"
+msgstr ""
+"\n"
+"\n"
+"== encontrados ==\n"
+
+#: scripts/mknmz.in:1863
+msgid ""
+"\n"
+"\n"
+"== registered documents ==\n"
+msgstr ""
+"\n"
+"\n"
+"== documentos registrados ==\n"
+
+#: scripts/mknmz.in:1864
+#, fuzzy
+msgid ""
+"\n"
+"\n"
+"== overlapped documents ==\n"
+msgstr ""
+"\n"
+"\n"
+"== superpuestos ==\n"
+
+#: scripts/mknmz.in:1865
+#, fuzzy
+msgid ""
+"\n"
+"\n"
+"== deleted documents ==\n"
+msgstr ""
+"\n"
+"\n"
+"== borrados ==\n"
+
+#: scripts/mknmz.in:1866
+msgid ""
+"\n"
+"\n"
+"== updated documents ==\n"
+msgstr ""
+"\n"
+"\n"
+"== documentos actualizados ==\n"
+
+#: scripts/mknmz.in:1867
+msgid ""
+"\n"
+"\n"
+"== files to index ==\n"
+msgstr ""
+"\n"
+"\n"
+"== ficheros a indexar ==\n"
+
+#: scripts/mknmz.in:1891
+msgid "## deleted: "
+msgstr "## borrados: "
+
+#: scripts/mknmz.in:1916
+msgid "## indexed: "
+msgstr "## indexados: "
+
+#: scripts/mknmz.in:1946
+msgid "update_field_index: "
+msgstr ""
+
+#: scripts/mknmz.in:1961
+msgid "was deleted!\n"
+msgstr "fueron borrados!\n"
+
+#: scripts/mknmz.in:1978
+msgid "was updated!\n"
+msgstr "fueron actulizados!\n"
+
+#: scripts/mknmz.in:2127
+msgid "[Append]"
+msgstr "[AÒadido]"
+
+#: scripts/mknmz.in:2129
+msgid "[Base]"
+msgstr "[Base]"
+
+#: scripts/mknmz.in:2131
+msgid "Date:"
+msgstr "Fecha:"
+
+#: scripts/mknmz.in:2132
+msgid "Added Documents:"
+msgstr "Documentos AÒadidos:"
+
+#: scripts/mknmz.in:2134
+msgid "Deleted Documents:"
+msgstr "Documentos Borrados:"
+
+#: scripts/mknmz.in:2136
+msgid "Updated Documents:"
+msgstr "Documentos Actualizados:"
+
+#: scripts/mknmz.in:2138
+msgid "Size (bytes):"
+msgstr "TamaÒo (bytes):"
+
+#: scripts/mknmz.in:2140
+msgid "Total Documents:"
+msgstr "Total de Documentos:"
+
+#: scripts/mknmz.in:2142
+msgid "Added Keywords:"
+msgstr "Palabras clave AÒadidas:"
+
+#: scripts/mknmz.in:2144
+msgid "Total Keywords:"
+msgstr "Total de Palabras clave:"
+
+#: scripts/mknmz.in:2146
+msgid "Wakati:"
+msgstr "Wakati:"
+
+#: scripts/mknmz.in:2147
+msgid "Time (sec):"
+msgstr "Tiempo (seg):"
+
+#: scripts/mknmz.in:2149
+msgid "File/Sec:"
+msgstr "Ficheros/Seg:"
+
+#: scripts/mknmz.in:2152
+msgid "System:"
+msgstr "Sistema:"
+
+#: scripts/mknmz.in:2153
+msgid "Perl:"
+msgstr "Perl:"
+
+#: scripts/mknmz.in:2154
+msgid "Namazu:"
+msgstr "Namazu:"
+
+#: scripts/mknmz.in:2282
+msgid "doing write_phrase_hash() processing.\n"
+msgstr "haciendo el proceso de write_phrase_hash().\n"
+
+#: scripts/mknmz.in:2534
+msgid "doing write_index() processing.\n"
+msgstr "Haciendo el proceso de write_index().\n"
+
+#: pl/filter.pl.in:180
+msgid "marked with minus (-) probably missing application in your $path.\n"
+msgstr ""
+
+#: pl/util.pl:45
+msgid "Renamed: "
+msgstr "Renombrados: "
+
+#: pl/util.pl:82 pl/util.pl:137 pl/util.pl:166 pl/util.pl:188
+msgid "not an IO::File/FileHandle object!\n"
+msgstr "no es un objeto IO::File/FileHandle!\n"
+
+#: pl/util.pl:262
+msgid "Remove temporary files:"
+msgstr "Borra los ficheros temporales:"
+
+#: pl/util.pl:306
+msgid "ASSERTION ERROR!: "
+msgstr "ERROR DE ASERCIÉÇN!: "
+
+#: pl/util.pl:333 pl/util.pl:448
+msgid "Invoked: "
+msgstr ""
+
+#: pl/wakati.pl:65
+msgid "-- wakatized content --\n"
+msgstr "-- contenidos wakatizados --\n"
+
+#: pl/wakati.pl:99
+msgid "invalid wakati module: "
+msgstr "mÛdulo wakati no v·lido: "
+
+#: pl/wakati.pl:101
+msgid "-- wakatized bare content --\n"
+msgstr "-- contenido bare wakatizado --\n"
+
+#: pl/wakati.pl:105
+msgid "wakati: using "
+msgstr "wakati: usando "
+
+#: pl/usage.pl:37
+#, perl-format
+msgid ""
+"mknmz %s, an indexer of Namazu.\n"
+"\n"
+"Usage: mknmz [options] <target>...\n"
+"\n"
+"Target files:\n"
+"  -a, --all                target all files.\n"
+"  -t, --media-type=MTYPE   set the media type for all target files to "
+"MTYPE.\n"
+"  -h, --mailnews           same as --media-type='message/rfc822'\n"
+"      --mhonarc            same as --media-type='text/html; x-type=mhonarc'\n"
+"  -F, --target-list=FILE   load FILE which contains a list of target files.\n"
+"      --allow=PATTERN      set PATTERN for file names which should be "
+"allowed.\n"
+"      --deny=PATTERN       set PATTERN for file names which should be "
+"denied.\n"
+"      --exclude=PATTERN    set PATTERN for pathnames which should be "
+"excluded.\n"
+"  -e, --robots             exclude HTML files containing\n"
+"                           <meta name=\"ROBOTS\" content=\"NOINDEX\">\n"
+"  -M, --meta               handle HTML meta tags for field-specified "
+"search.\n"
+"  -r, --replace=CODE       set CODE for replacing URI.\n"
+"      --html-split         split an HTML file with <a name=\"...\"> "
+"anchors.\n"
+"      --mtime=NUM          limit by mtime just like find(1)'s -mtime "
+"option.\n"
+"                           e.g., -50 for recent 50 days, +50 for older than "
+"50.\n"
+"\n"
+"Morphological Analysis:\n"
+"  -b, --use-mecab          use MeCab for analyzing Japanese.\n"
+"  -c, --use-chasen         use ChaSen for analyzing Japanese.\n"
+"  -k, --use-kakasi         use KAKASI for analyzing Japanese.\n"
+"  -m, --use-chasen-noun    use ChaSen for extracting only nouns.\n"
+"  -L, --indexing-lang=LANG index with language specific processing.\n"
+"\n"
+"Text Operations:\n"
+"  -E, --no-edge-symbol     remove symbols on edge of word.\n"
+"  -G, --no-okurigana       remove Okurigana in word.\n"
+"  -H, --no-hiragana        ignore words consist of Hiragana only.\n"
+"  -K, --no-symbol          remove symbols.\n"
+"      --decode-base64      decode base64 bodies within multipart entities.\n"
+"\n"
+"Summarization:\n"
+"  -U, --no-encode-uri      do not encode URI.\n"
+"  -x, --no-heading-summary do not make summary with HTML's headings.\n"
+"\n"
+"Index Construction:\n"
+"      --update=INDEX       set INDEX for updating.\n"
+"  -z, --check-filesize     detect file size changed.\n"
+"  -Y, --no-delete          do not detect removed documents.\n"
+"  -Z, --no-update          do not detect update and deleted documents.\n"
+"\n"
+"Miscellaneous:\n"
+"  -s, --checkpoint         turn on the checkpoint mechanism.\n"
+"  -C, --show-config        show the current configuration.\n"
+"  -f, --config=FILE        use FILE as a config file.\n"
+"  -I, --include=FILE       include your customization FILE.\n"
+"  -O, --output-dir=DIR     set DIR to output the index.\n"
+"  -T, --template-dir=DIR   set DIR having NMZ.{head,foot,body}.*.\n"
+"  -q, --quiet              suppress status messages during execution.\n"
+"  -v, --version            show the version of namazu and exit.\n"
+"  -V, --verbose            be verbose.\n"
+"  -d, --debug              be debug mode.\n"
+"      --help               show this help and exit.\n"
+"      --norc               do not read the personal initialization files.\n"
+"      --                   Terminate option list.\n"
+"\n"
+"Report bugs to <%s>\n"
+"or <%s>.\n"
+msgstr ""
+"mknmz %s, el indizador de Namazu.\n"
+"\n"
+"Usage: mknmz [opciones] <destino>...\n"
+"\n"
+"Ficheros destino:\n"
+"  -a, --all                todos ficheros destino.\n"
+"  -t, --media-type=MTYPE   pone el tipo de formato para todos los ficheros "
+"destino a MTYPE.\n"
+"  -h, --mailnews           lo mismo que --media-type='message/rfc822'\n"
+"      --mhonarc            lo mismo que --media-type='text/html; x-"
+"type=mhonarc'\n"
+"  -F, --target-list=FILE   carga FILE el cu·l contiene una lista de los "
+"ficheros destino.\n"
+"      --allow=PATTERN      pone la PATTERN para los nombres de ficheros para "
+"los cuales debe estar permitida.\n"
+"      --deny=PATTERN       pone la PATTERN para los nombres de los ficheros "
+"para los cuales debe estar denegada.\n"
+"      --exclude=PATTERN    pone la PATTERN para los nombres de directorios "
+"para los cuales deben estar excluÌdos.\n"
+"  -e, --robots             exlude los ficheros HTML que contienen\n"
+"                           <meta name=\"ROBOTS\" content=\"NOINDEX\">\n"
+"  -M, --meta               maneja HTML meta tags para los campos "
+"especificados para buscar.\n"
+"  -r, --replace=CODE       pone CODE para reemplazar el URI.\n"
+"      --html-split         divide un fichero HTML con <a name=\"...\"> "
+"anchors.\n"
+"      --mtime=NUM          limita por mtime como con find(1)'s -mtime "
+"option.\n"
+"                           ej., -50 para los ˙ltimos 50 dÌas, +50 para los "
+"que sean m·s antiguos de 50.\n"
+"\n"
+"Analisis MorfolÛgico:\n"
+"  -b, --use-mecab          usa MeCab para analizar japonÈs.\n"
+"  -c, --use-chasen         usa ChaSen para analizar japonÈs.\n"
+"  -k, --use-kakasi         usa KAKASI para analizar japonÈs.\n"
+"  -m, --use-chasen-noun    usa ChaSen para extraer sÛlo nombres.\n"
+"  -L, --indexing-lang=LANG index with language specific processing.\n"
+"\n"
+"Operaciones de Texto:\n"
+"  -E, --no-edge-symbol     quita los sÌmbolos en los bordes de las "
+"palabras.\n"
+"  -G, --no-okurigana       kita la Okurigana en las palabras.\n"
+"  -H, --no-hiragana        ignora las palabras que sÛlo tengan Hiragana.\n"
+"  -K, --no-symbol          quitar sÌmbolos.\n"
+"      --decode-base64      decode base64 bodies within multipart entities.\n"
+"\n"
+"Summarization:\n"
+"  -U, --no-encode-uri      no codificar el URI.\n"
+"  -x, --no-heading-summary no hacer resumen con las cabeceras HTML.\n"
+"\n"
+"ConstrucciÛn del Éwndice:\n"
+"      --update=INDEX       pon el INDEX para actualizaciÛn.\n"
+"  -z, --check-filesize     detect file size changed.\n"
+"  -Y, --no-delete          no detectar documentos borrados.\n"
+"  -Z, --no-update          no detectar documentos actualizados ni borrados.\n"
+"\n"
+"Miscel·neas:\n"
+"  -s, --checkpoint         pon activo el mecanismo de punto de chequeo.\n"
+"  -C, --show-config        muestra la configuraciÛn actual.\n"
+"  -f, --config=FILE        usa el fichero FILE como fichero de "
+"configuraciÛn.\n"
+"  -I, --include=FILE       incluye tu fichero de configuraciÛn FILE.\n"
+"  -O, --output-dir=DIR     pon el directorio DIR como directorio destino del "
+"Ìndice.\n"
+"  -T, --template-dir=DIR   pon DIR teniendo los NMZ.{head,foot,body}.*.\n"
+"  -q, --quiet              suprime los mensajes de estado durante la "
+"ejecuciÛn.\n"
+"  -v, --version            muestra la versiÛn de namazu y sal.\n"
+"  -V, --verbose            modo verbose.\n"
+"  -d, --debug              modo debug.\n"
+"      --help               muestra esta ayuda y sal.\n"
+"      --norc               do not read the personal initialization files.\n"
+"      --                   Terminate option list.\n"
+"\n"
+"Reporta los errores a <%s>\n"
+"o <%s>.\n"
+
+#: pl/var.pl.in:132
+msgid "No title in original"
+msgstr "No hay tÌtulo en el original"
+
+#: filter/html.pl:91
+msgid "is excluded because of <meta name=\"robots\" ...>"
+msgstr "est· excluido porque <meta name=\"robots\" ...>"
+
+#: filter/msword.pl:148 filter/msword.pl:262
+msgid "Unsupported format: "
+msgstr "Formato no soportado: "
+
+#, fuzzy
+#~ msgid "Supported media types: ($num_supported)\n"
+#~ msgstr "Tipos de formato soportados: \n"
+
+#~ msgid "ERROR: malformed NMZ.r format!\n"
+#~ msgstr "ERROR: NMZ.r formato mal formado!\n"

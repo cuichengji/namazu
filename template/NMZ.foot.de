@@ -1,0 +1,13 @@
+<hr>
+<p>
+Dieses Suchsystem wird mit
+<strong><a href="http://www.namazu.org/">Namazu</a> <!-- VERSION --> v <!-- VERSION --></strong>
+betrieben.
+</p>
+<address>
+<!-- ADDRESS -->
+<a href="mailto:foobar@namazu.org">foobar@namazu.org</a>
+<!-- ADDRESS -->
+</address>
+</body>
+</html>

@@ -1,0 +1,237 @@
+#!%PERL% -w
+#
+# $Id: namazu-7.pl.in,v 1.1.4.2 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Tadamasa Teranishi
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+#
+
+#
+# Test for namazu.  Searching an index created with --html-split option.
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx9";
+my $NAMAZU = pltests::binpath('namazu');
+
+my @cmd;
+
+pltests::putline($LOG, "  *** starting $0");
+
+my $docnum;
+my $doc = pltests::cat("$INDEX/NMZ.status");
+unless (defined $doc) {
+    exit 1;
+}
+if ($doc =~ /^files (\d+)/m) {
+    $docnum = $1;
+} else {
+    exit 1;
+}
+
+# All parts should have "test".
+@cmd = ("$NAMAZU", "-c", "test", "$INDEX");
+my ($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $hitnum) {
+    exit 1;
+}
+chomp $hitnum;
+
+pltests::putline($LOG, "docnum: $docnum hitnum: $hitnum");
+
+if ($docnum != $hitnum) {
+    exit 1;
+}
+
+# For 1.html. Each keyword should match only one part.
+@cmd = ("$NAMAZU", "-c", "xyzzy", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "xyzzy $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "foo foo1", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"foo foo1\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "bar bar2", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"bar bar2\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "baz baz3", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"baz baz3\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "qux qux4", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"qux qux4\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "quux quux5", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"quux quux5\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+# For 2.html. Each keyword should match only one part.
+@cmd = ("$NAMAZU", "-c", "orabidoo", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "orabidoo $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "zero foo", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"zero foo\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "bar one", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"bar one\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "baz two", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"baz two\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "qux three", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"qux three\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+
+@cmd = ("$NAMAZU", "-c", "quux four", "$INDEX");
+($status, $hitnum, $conts_err) = pltests::ezsyscmd(\@cmd);
+chomp $hitnum;
+unless (defined $hitnum) {
+    exit 1;
+}
+
+pltests::putline($LOG, "\"quux four\" $hitnum");
+
+if ($hitnum != 1) {
+    exit 1;
+}
+
+exit 0;

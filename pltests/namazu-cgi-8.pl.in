@@ -1,0 +1,248 @@
+#!%PERL% -w
+#
+# $Id: namazu-cgi-8.pl.in,v 1.1.4.3 2006-01-10 19:37:18 opengl2772 Exp $
+# Copyright (C) 2004-2006 Yukio USUDA
+#               2004-2006 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+#  This file must be encoded in EUC-JP encoding
+#
+# Test for cross-site scripting vulnerability
+#
+
+use strict;
+require Cwd;
+require 'pltests.pl';
+
+my $cwd = Cwd::cwd();
+my $LOG = "$cwd/test-log";
+my $INDEX = "$cwd/idx19";
+my $NAMAZU = pltests::binpath('namazu.cgi');
+my $RC = pltests::binpath('.namazurc');
+
+my @cmd;
+
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $INDEX");
+pltests::duprcs($RC);
+
+# To make messages English
+$ENV{'LANG'} = 'C';
+$ENV{'LANGUAGE'} = 'C';
+delete $ENV{'LC_ALL'};
+delete $ENV{'LC_MESSAGES'};
+delete $ENV{'LC_CTYPE'};
+
+$ENV{'SCRIPT_NAME'} = 'namazu.cgi';
+
+pltests::putline($LOG, "  *** starting $0");
+
+# check "query"
+$ENV{'QUERY_STRING'} = 'query="<S>strike</S>';
+@cmd = ("$NAMAZU");
+my ($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+my $matched = grep { /&quot;&lt;/ } split("\n", $result);
+if ($matched != 3){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "subquery"
+$ENV{'QUERY_STRING'} = 'query=foo&subquery="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot;&lt;/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "format"
+$ENV{'QUERY_STRING'} = 'query=namazu&format="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "sort"
+$ENV{'QUERY_STRING'} = 'query=namazu&sort="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "max"
+$ENV{'QUERY_STRING'} = 'query=namazu&max="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /<S>/ } split("\n", $result);
+if ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "whence"
+$ENV{'QUERY_STRING'} = 'query=namazu&whence="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "lang"
+$ENV{'QUERY_STRING'} = 'query=namazu&lang="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "reference"
+$ENV{'QUERY_STRING'} = 'query=namazu&reference="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "submit"
+$ENV{'QUERY_STRING'} = 'query=namazu&submit="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&quot/ } split("\n", $result);
+if ($matched != 1){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "idxname"
+if (-f $RC) {
+    unlink("$RC");
+}
+pltests::putline($RC, "Index $cwd");
+pltests::duprcs($RC);
+
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1&idxname="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /<S>/ } split("\n", $result);
+if ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /<S>/ } split("\n", $result);
+if ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "idxname" with invalid path
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx1&idxname=/<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /<S>/ } split("\n", $result);
+if ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+$ENV{'QUERY_STRING'} = 'query=namazu&idxname=idx19';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /&amp;idxname/ } split("\n", $result);
+unless ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+
+# check "dbname"
+$ENV{'QUERY_STRING'} = 'query=namazu&dbname=idx1&dbname="<S>strike</S>';
+@cmd = ("$NAMAZU");
+($status, $result, $conts_err) = pltests::ezsyscmd(\@cmd);
+unless (defined $result) {
+    exit 1;
+}
+$matched = grep { /<S>/ } split("\n", $result);
+if ($matched){
+    pltests::putline($LOG, $result);
+    exit 1;
+}
+exit 0;
+
+END {
+    if (-f $RC) {
+        unlink("$RC");
+    }
+}

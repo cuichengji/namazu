@@ -1,0 +1,3 @@
+Namazu-Filter-Test: FILTERDIR
+
+This text file is for testing $FILTERDIR.

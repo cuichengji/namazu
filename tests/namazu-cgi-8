@@ -1,0 +1,177 @@
+#! /bin/sh
+#
+# Test for cross-site scripting vulnerability
+#
+LOG=`pwd`/test-log
+echo '  *** starting ' $0 >>$LOG
+. ${srcdir}/commonfuncs
+pwd=`pwd`
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd/idx19" > $tmprc
+duprcs
+
+# To make messages English
+unset LANG;        export LANG
+LANGUAGE=C;        export LANGUAGE
+LC_ALL=C;          export LC_ALL
+unset LC_MESSAGES; export LC_MESSAGES
+unset LC_CTYPE;    export LC_CTYPE
+
+# check "query"
+SCRIPT_NAME='namazu.cgi'
+QUERY_STRING='query="<S>strike</S>'
+export SCRIPT_NAME QUERY_STRING 
+
+cd ../src
+RESULT=`./namazu.cgi | grep '&quot;&lt;' | wc -l`
+if [ $RESULT -ne 3 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "subquery"
+QUERY_STRING='query=foo&subquery="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot;&lt;' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "format"
+QUERY_STRING='query=namazu&format="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "sort"
+QUERY_STRING='query=namazu&sort="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "max"
+QUERY_STRING='query=namazu&max="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '<S>' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "whence"
+QUERY_STRING='query=namazu&whence="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "lang"
+QUERY_STRING='query=namazu&lang="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "reference"
+QUERY_STRING='query=namazu&reference="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "submit"
+QUERY_STRING='query=namazu&submit="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi | grep '&quot' | wc -l`
+if [ $RESULT -ne 1 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "idxname"
+tmprc="$pwd/../src/.namazurc"
+echo "Index $pwd" > $tmprc
+duprcs
+
+QUERY_STRING='query=namazu&idxname=idx1&idxname="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi 2>&1 | grep '<S>' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+QUERY_STRING='query=namazu&idxname="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi 2>&1 | grep '<S>' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "idxname" with invalid path
+QUERY_STRING='query=namazu&idxname=idx1&idxname=/<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi 2>&1 | grep '<S>' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+QUERY_STRING='query=namazu&idxname=idx19'
+export QUERY_STRING 
+RESULT=`./namazu.cgi 2>&1 | grep '&amp;idxname' | wc -l`
+if [ $RESULT -eq 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+# check "dbname"
+QUERY_STRING='query=namazu&dbname=idx1&dbname="<S>strike</S>'
+export QUERY_STRING 
+
+RESULT=`./namazu.cgi 2>&1 | grep '<S>' | wc -l`
+if [ $RESULT -ne 0 ]
+then
+	echo $RESULT >> $LOG
+	exit 1
+fi
+
+exit 0

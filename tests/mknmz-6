@@ -1,0 +1,17 @@
+#! /bin/sh
+#
+# Make an index for testing query operations.
+#
+LOG=`pwd`/test-log
+TARGET=$srcdir/data/query
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d idx8; then
+    mkdir idx8
+else
+    rm -f idx8/NMZ.*
+fi
+
+# Simple indexing.
+../scripts/mknmz -O idx8 $TARGET >> $LOG
+exit $?

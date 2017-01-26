@@ -1,0 +1,60 @@
+This patch derived from automake CVS Repository.
+
+*** automake-1.4/automake.in.orig	Fri Jan 15 15:42:36 1999
+--- automake-1.4/automake.in	Thu Oct 14 12:42:29 1999
+***************
+*** 2367,2373 ****
+  	$output_rules .= "\t  d=\$(srcdir); \\\n";
+      }
+      $output_rules .= ("\t  if test -d \$\$d/\$\$file; then \\\n"
+! 		      . "\t    cp -pr \$\$/\$\$file \$(distdir)/\$\$file; \\\n"
+  		      . "\t  else \\\n"
+  		      . "\t    test -f \$(distdir)/\$\$file \\\n"
+  		      . "\t    || ln \$\$d/\$\$file \$(distdir)/\$\$file 2> /dev/null \\\n"
+--- 2367,2373 ----
+  	$output_rules .= "\t  d=\$(srcdir); \\\n";
+      }
+      $output_rules .= ("\t  if test -d \$\$d/\$\$file; then \\\n"
+! 		      . "\t    cp -pr \$\$d/\$\$file \$(distdir)/\$\$file; \\\n"
+  		      . "\t  else \\\n"
+  		      . "\t    test -f \$(distdir)/\$\$file \\\n"
+  		      . "\t    || ln \$\$d/\$\$file \$(distdir)/\$\$file 2> /dev/null \\\n"
+
+and here is `BSD make clean` patch.
+
+*** automake-1.4/subdirs.am.orig	Tue Dec 28 21:52:19 1999
+--- automake-1.4/subdirs.am	Tue Dec 28 21:52:32 1999
+***************
+*** 27,33 ****
+  all-recursive install-data-recursive install-exec-recursive \
+  installdirs-recursive install-recursive uninstall-recursive @INSTALLINFO@ \
+  check-recursive installcheck-recursive info-recursive dvi-recursive:
+! 	@set fnord $(MAKEFLAGS); amf=$$2; \
+  	dot_seen=no; \
+  	target=`echo $@ | sed s/-recursive//`; \
+  	list='$(SUBDIRS)'; for subdir in $$list; do \
+--- 27,33 ----
+  all-recursive install-data-recursive install-exec-recursive \
+  installdirs-recursive install-recursive uninstall-recursive @INSTALLINFO@ \
+  check-recursive installcheck-recursive info-recursive dvi-recursive:
+! 	- @set fnord $(MAKEFLAGS); amf=$$2; \
+  	dot_seen=no; \
+  	target=`echo $@ | sed s/-recursive//`; \
+  	list='$(SUBDIRS)'; for subdir in $$list; do \
+*************** check-recursive installcheck-recursive i
+*** 55,61 ****
+  ## bombs.
+  mostlyclean-recursive clean-recursive distclean-recursive \
+  maintainer-clean-recursive:
+! 	@set fnord $(MAKEFLAGS); amf=$$2; \
+  	dot_seen=no; \
+  	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+  	  rev="$$subdir $$rev"; \
+--- 55,61 ----
+  ## bombs.
+  mostlyclean-recursive clean-recursive distclean-recursive \
+  maintainer-clean-recursive:
+! 	- @set fnord $(MAKEFLAGS); amf=$$2; \
+  	dot_seen=no; \
+  	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+  	  rev="$$subdir $$rev"; \

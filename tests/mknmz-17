@@ -1,0 +1,31 @@
+#! /bin/sh
+#
+# Test for entity encoding
+#
+LOG=`pwd`/test-log
+IDX=idx20
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d $IDX; then
+    mkdir $IDX
+else
+    rm -f $IDX/NMZ.*
+fi
+
+TMPDATA=`pwd`/tmp-data
+if test -d tmp-data; then
+    rm -rf tmp-data
+fi
+mkdir tmp-data
+
+# create temprary data
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22
+do
+    echo "namazu $i" > $TMPDATA/A$i.txt
+    echo "namazu $i" > $TMPDATA/B$i.txt
+done
+
+../scripts/mknmz -O $IDX -r 's/A(\d+)\.txt$/test?foo=<>&bar=$1/' -U \
+    $TMPDATA >> $LOG 2>&1
+
+exit 0

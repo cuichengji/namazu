@@ -1,0 +1,137 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# bnamazu -- search with "namazu" and browse its results with a web browser.
+# $Id: bnamazu.in,v 1.4.8.2 2004-09-19 03:37:44 opengl2772 Exp $
+# 
+# Copyright (C) 1998 Hajime BABA. All rights reserved.
+#
+# Modified by Satoru Takabayashi, 1998-1999.  No rights reserved.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+
+use strict;
+
+my $namazu = "namazu";
+my $namazu_opts = "-h"; # default options for namazu
+my $newwindow = 0;
+my $browser = "lynx";   # default web browser
+
+my $tmpdir = ".";
+$tmpdir = "/tmp" if -d "/tmp";
+$tmpdir = $ENV{"TMPDIR"} if defined $ENV{"TMPDIR"};
+
+my $user = "unknown";
+$user = $ENV{"USER"} if defined $ENV{"USER"};
+$user = $ENV{"USERNAME"} if defined $ENV{"USERNAME"};
+
+main();
+
+sub main {
+    my @args = parse_options();
+    @args = map {"'$_'"} @args;
+
+    my $results_html = "";
+    if ($browser =~ /netscape/) {
+	# It is not good to remove a tmpfile immediately after invoking
+	# netscape. Because netscape requires the tmpfile to go back to it.
+	# So, we should remove a previous tmpfile at this time.
+	unlink_previous_netscape_tmpfile();  
+	$results_html = "$tmpdir/.bnamazu-$user-netscape-$$.html";
+    } else {
+	$results_html = "$tmpdir/.bnamazu-$user-$$.html";
+    }
+
+    # invoke namazu
+    my $cmd = "$namazu $namazu_opts @args > $results_html 2> /dev/null";
+    system $cmd;
+
+    # error handling
+    if ($?) {
+	print STDERR "$namazu: unknown error: $?\n";
+	exit 1;
+    }
+	
+    # browse the result!
+    exec_browser($results_html);
+    exit 0;
+}
+
+sub usage () {
+    print <<EOUsage;
+Usage: bnamazu [-n] [-b browser] [namazu's options] <query> [index]...
+
+  -b browser    set your faborite browser for browsing. [lynx]
+  -n            open a new window when you browse with netscape.
+
+Notes: Other options will be passed to namazu.
+EOUsage
+
+    exit 1;
+}
+
+sub parse_options () {
+    usage() if @ARGV == 0;
+
+    while (@ARGV) {
+	if ($ARGV[0] eq "-n") {
+	    $newwindow = 1;
+	    shift @ARGV;
+	} elsif ($ARGV[0] eq "-b" && defined $ARGV[1]) {
+	    $browser = $ARGV[1];
+	    shift @ARGV;
+	    shift @ARGV;
+	} elsif ($ARGV[0] =~ /^-b(.+)/) {
+	    $browser = $1;
+	    shift @ARGV;
+	} else {
+	    last;
+	}
+    }
+    return @ARGV;
+}
+
+sub exec_browser ($) {
+    my ($file) = @_;
+    
+    my $cmd = "";
+    if ($browser =~ /netscape/i) {
+	my $netscape_lockfile = "$ENV{\"HOME\"}/.netscape/lock";
+	# if symbolic link exists
+	if (-l $netscape_lockfile ) {
+	    # browse result with netscape.
+	    if ($newwindow) {
+		$cmd = "$browser -noraise -remote 'openURL($file,new-window)'";
+	    } else {
+		$cmd = "$browser -remote 'openURL($file)'";
+	    }
+	} else {
+	    # invoke new netscape as a background process.
+	    $cmd = "$browser $file &";
+	}
+    } else {
+        # remove tmpfile immediately after a browser exits.
+	$cmd = "$browser $file; rm -f $file";
+    }
+
+    # go!
+    system $cmd;
+}    
+
+sub unlink_previous_netscape_tmpfile () {
+    my @tmpfiles = glob "$tmpdir/.bnamazu-$user-netscape-[-0-9]*.html";
+    unlink @tmpfiles;
+}

@@ -1,0 +1,123 @@
+#! %PERL% -w
+# -*- Perl -*-
+#
+# nmzegrep - search namazu-indexed documents for a given pattern and 
+#            print lines matching the pattern.
+# 
+# $Id: nmzegrep.in,v 1.4.2.3 2008-06-02 09:48:13 opengl2772 Exp $
+#
+# Copyright (C) 2004 Yukio USUDA All rights reserved.
+# Copyright (C) 2004-2008 Namazu Project All rights reserved.
+#     This is free software with ABSOLUTELY NO WARRANTY.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either versions 2, or (at your option)
+#  any later version.
+# 
+#  This program is distributed in the hope that it will be useful
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+#  02111-1307, USA
+#
+
+use strict;
+use English;
+use FileHandle;
+require 5.004;
+
+my @opts = ();
+while (defined $ARGV[0] && $ARGV[0] =~ /^-/) {
+    push @opts, $ARGV[0];
+    shift @ARGV;
+}
+
+if (@ARGV == 0) {
+    print "usage: nmzegrep [egrep's options] <pattern> [index]...\n";
+    exit 1;
+}
+
+my $pattern = shift @ARGV;
+my @indices = @ARGV;
+
+my $PKGDATADIR = $ENV{'pkgdatadir'} || "@pkgdatadir@";
+my $LIBDIR     = $PKGDATADIR . "/pl";     # directory where library etc. are in.
+
+my $Document = undef;
+
+unshift @INC, $LIBDIR;
+require "util.pl" || die "unable to require \"util.pl\"\n";
+require "document.pl" || die "unable to require \"document.pl\"\n";
+require "var.pl" || die "unable to require \"var.pl\"\n";
+require "conf.pl" || die "unable to require \"conf.pl\"\n";
+require "ext.pl" || die "unable to require \"ext.pl\"\n";
+
+my $tmpdir = "/tmp/NMZ$$";
+if ($English::OSNAME eq "MSWin32") {
+    $tmpdir = "$ENV{'TMP'}/NMZ$$";
+}
+if (mkdir($tmpdir, 0700)) {
+    $var::OUTPUT_DIR = $tmpdir;
+} else {
+    die "unable to make temporary directory \"$tmpdir\"\n";
+}
+
+util::set_lang();
+if (util::islang("ja") && $conf::NKF =~ /^module_nkf/) {
+    require NKF || die "unable to require \"NKF\"\n";
+    util::dprint(_("code conversion: using NKF module\n"));
+    $var::USE_NKF_MODULE = 1;
+}
+
+$Document = mknmz::document->new();
+$Document->init();
+
+my $command = "namazu -alR $pattern @indices";
+my $fh = new FileHandle;
+$fh->open("$command |");
+if (defined $fh) {
+    my ($uri, $fname);
+    while ($fname = <$fh>) {
+	chop $fname;
+	my $content = util::readfile($fname);
+	$Document->init_doc($uri, $fname, \$content, undef);
+	my $contref= $Document->get_filtered_contentref();
+	my $tmpfile  = util::tmpnam('NMZ.nmzgrep');
+	{ 
+	    my $fh = util::efopen("> $tmpfile");
+	    print $fh $$contref;
+	    $fh->close();
+	}
+	my $fh2 = new FileHandle;
+	$fh2->open("egrep -h @opts $pattern $tmpfile |");
+	my $line;
+	while ($line = <$fh2>) {
+	    my $options = join(" ", @opts);
+	    unless ($options =~ /(-h|--no-filename)/){
+		print "$fname:";
+	    }
+	    print $line;
+	}
+	$fh2->close();
+	unlink $tmpfile;
+    }
+} else {
+    die "nmzegrep: $!";
+}
+
+rmdir $tmpdir or die "unable to remove temporary directory \"$tmpdir\"\n";
+
+exit 0;
+
+muda(
+    $var::USE_NKF_MODULE, $var::OUTPUT_DIR,
+    $conf::NKF
+    );
+
+sub muda {};
+

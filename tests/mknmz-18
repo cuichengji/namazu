@@ -1,0 +1,40 @@
+#! /bin/sh
+#
+# Test for filesize checking
+#
+LOG=`pwd`/test-log
+IDX=idx21
+echo '  *** starting ' $0 >>$LOG
+
+if test ! -d $IDX; then
+    mkdir $IDX
+else
+    rm -f $IDX/NMZ.*
+fi
+
+TMPDATA=`pwd`/tmp-data
+if test -d tmp-data; then
+    rm -rf tmp-data
+fi
+mkdir tmp-data
+
+# create temporary data
+echo "namazu 1" > $TMPDATA/tmp1.txt
+echo "namazu 2" > $TMPDATA/tmp2.txt
+touch -r $TMPDATA/tmp1.txt $TMPDATA/tmp2.txt
+../scripts/mknmz -O $IDX  $TMPDATA >> $LOG 2>&1
+
+# update tmporary data
+echo "namazu 02" > $TMPDATA/tmp2.txt
+touch -r $TMPDATA/tmp1.txt $TMPDATA/tmp2.txt
+RESULT1=`../scripts/mknmz -O $IDX  $TMPDATA 2>&1 | tee -a $LOG`
+
+#
+RESULT2=`../scripts/mknmz -O $IDX -z $TMPDATA 2>&1 | tee -a $LOG`
+
+if [ "$RESULT1" = "$RESULT2" ]
+then
+	exit 1
+fi
+
+exit 0
