@@ -48,7 +48,7 @@ my $NAMAZU_INDEX_VERSION = "2.0";
 
 my $CodingSystem = "euc";
 my $PKGDATADIR    = $ENV{'pkgdatadir'} || "@pkgdatadir@";
-my $CONFDIR       = "@CONFDIR@";     # directory where mknmzrc are in.
+my $CONFDIR       = $ENV{'confdir'} || "@CONFDIR@";     # directory where mknmzrc are in.
 my $LIBDIR        = $PKGDATADIR . "/pl";      # directory where library etc. are in.
 my $FILTERDIR     = $PKGDATADIR . "/filter";   # directory where filters are in.
 my $TEMPLATEDIR   = $PKGDATADIR . "/template"; # directory where templates are in.
@@ -1396,53 +1396,63 @@ sub find_target (@) {
     my $start = time();
     util::vprint(_("find_target starting: "). localtime($start). "\n");
     while (@targets) {
-	my $target = shift @targets;
+        my $target = shift @targets;
 
-	if ($target eq '') {
-	    print STDERR "Warning: target contains empty line, skip it\n";
-	    next;
-	}
-	
-	if (-f $target) { # target is a file.
-	    add_target($target, \@flist, \%counts);
-	} elsif (-d $target) { # target is a directory.
-	    my @subtargets = ();
-	    # Find subdirectories in target directory
-	    # because File::Find::find() does not follow symlink.
-	    if (-l $target) {
-		my $dh = new DirHandle($target);
-		while (defined(my $ent = $dh->read)) {
-		    next if ($ent =~ /^\.{1,2}$/);
-		    if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
+        if ($target eq '') {
+            print STDERR "Warning: target contains empty line, skip it\n";
+            next;
+        }
+        
+        #最後文字の表、能、申対応
+        my ($basetarget,$pathtarget,$typetarget) = fileparse("$target", qr{\..*});
+        #拡張子が無い場合ピリオドを付ける
+        my $targetfile = "$target" . ($typetarget ? "" : "\.");
+        if (-f $targetfile) { # target is a file.
+            add_target($target, \@flist, \%counts);
+        } elsif (-d $targetfile) { # target is a directory.
+            #my @subtargets = ();
+            # Find subdirectories in target directory
+            # because File::Find::find() does not follow symlink.
+            #if (-l $target) {
+                my $dh = new DirHandle($targetfile);
+                while (defined(my $ent = $dh->read)) {
+                    next if ($ent =~ /^\.{1,2}$/);
+                    if ($English::OSNAME eq "MSWin32" || $English::OSNAME eq "os2") {
                         next if ($ent =~ m!^($conf::DENY_DDN)$!i);
                         my $tmp = $ent;
                         util::win32_yen_to_slash(\$tmp);
                         next if ($ent ne $tmp);
                     }
-		    my $fname = "$target/$ent";
-		    next if ($fname eq '.' || $fname eq '..');
-		    if (-d $fname) {
-			push(@subtargets, $fname);
-		    } else {
-			add_target($fname, \@flist, \%counts);
-		    }
-		}
-	    } else {
-		@subtargets = ($target);
-	    }
+                    #最後文字の表、能、申対応
+                    my ($base,$path,$type) = fileparse("$target/$ent", qr{\..*});
+                    #拡張子が無い場合ピリオドを付ける
+                    my $fname = "$target/$ent" . ($type ? "" : "\.");
+                    my $subtarget = "$target/$ent";
 
-	    #
-	    # Wanted routine for File::Find's find().
-	    #
-	    my $wanted_closure = sub {
-		my $fname = "$File::Find::dir/$_";
-		add_target($fname, \@flist, \%counts);
-	    };
+                    next if ($fname eq '.' || $fname eq '..');
+                    if (-d $fname) {
+                        #push(@subtargets, $fname);
+                        push(@targets, $subtarget);
+                    } else {
+                        add_target($fname, \@flist, \%counts);
+                    }
+                }
+            #} else {
+            #    @subtargets = ($target);
+            #}
 
-	    find($wanted_closure, @subtargets) if (@subtargets > 0);
-	} else {
-	    print STDERR _("unsupported target: ") . $target;
-	}
+            #
+            # Wanted routine for File::Find's find().
+            #
+            #my $wanted_closure = sub {
+            #    my $fname = "$File::Find::dir/$_";
+            #    add_target($fname, \@flist, \%counts);
+            #};
+
+            #find($wanted_closure, @subtargets) if (@subtargets > 0);
+        } else {
+            print STDERR _("unsupported target: ") . $target;
+        }
     }
 
     {

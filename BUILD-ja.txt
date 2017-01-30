@@ -1,0 +1,155 @@
+============================================================================
+       日本語全文検索システム Namazu for Windows 2.0.22 ドキュメント        
+                                             -- x64 版ビルド方法 --
+
+               Copyright (C) 2010-2015 AKANEIROSOFTWARE, Tadamasa Teranishi.
+============================================================================
+                                                   Last modified: 2015.02.08
+
+
+■ 1. はじめに
+--------------
+
+  ここでは Namazu for Windows x64版 をコンパイルする方法をしめします。
+
+  Namazu for Windows をコンパイルするには、Microsoft Visual C++ 2010 が必
+  要になります。
+
+  Namazu for Windows では、GNU libiconv, GNU gettext を使用しています。この
+  ため、Namazu for Windows をコンパイルする前に GNU libiconv, GNU gettext
+  をインストールする必要があります。
+
+
+■ 2. このアーカイブ以外に必要な物
+----------------------------------
+
+* Microsoft Visual C++ 2010
+
+* Namazu Source Archvie
+  <http://www.namazu.org/stable/> にあります。
+
+* GNU libiconv
+  <http://www.akaneiro.jp/public/libiconv-1.12-ja-4.zip>にあります。
+
+* GNU gettext utilities
+  <http://www.akaneiro.jp/public/gettext-0.13.1.zip>にあります。
+
+
+■ 3. GNU libiconv のインストール
+---------------------------------
+
+  コマンドプロンプトを開き、コマンドラインでコンパイルを行うために
+  vcvarsall.bat の引数に amd64 を指定して実行します。
+
+  例) Visual C++ 2010 の場合(x64 環境)
+
+  ┌───────────────────────────────────┐
+  │C:\>cd "\Program Files (x86)\Microsoft Visual Studio 10.0\VC"         │
+  │C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC>vcvarsall amd64│
+  └───────────────────────────────────┘
+
+  libiconv-1.12-ja-4.zip を解凍し、コマンドラインから nmake を実行します。
+
+  ┌───────────────────────────────────┐
+  │C:\> cd \libiconv-1.12                                                │
+  │C:\libiconv-1.12> set MFLAGS=-MT                                      │
+  │C:\libiconv-1.12> set PREFIX=C:\usr\x64                               │
+  │C:\libiconv-1.12> set NO_NLS=1                                        │
+  │C:\libiconv-1.12> nmake /f Makefile.msvc clean                        │
+  │C:\libiconv-1.12> nmake /f Makefile.msvc                              │
+  │C:\libiconv-1.12> nmake /f Makefile.msvc install                      │
+  └───────────────────────────────────┘
+
+  C:\usr\x64\ 以下にインストールされます。
+
+
+■ 4. GNU gettext のインストール
+--------------------------------
+
+  コマンドプロンプトを開き、コマンドラインでコンパイルを行うために
+  vcvarsall.bat の引数に amd64 を指定して実行します。
+
+  例) Visual C++ 2010 の場合(x64 環境)
+
+  ┌───────────────────────────────────┐
+  │C:\>cd "\Program Files (x86)\Microsoft Visual Studio 10.0\VC"         │
+  │C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC>vcvarsall amd64│
+  └───────────────────────────────────┘
+
+  gettext-0.13.1.zip を解凍し、コマンドラインから nmake を実行します。
+
+  ┌───────────────────────────────────┐
+  │C:\> cd \gettext-0.13.1                                               │
+  │C:\gettext-0.13.1> set MFLAGS=-MT                                     │
+  │C:\gettext-0.13.1> set PREFIX=C:\usr\x64                              │
+  │C:\gettext-0.13.1> nmake /f Makefile.msvc clean                       │
+  │C:\gettext-0.13.1> nmake /f Makefile.msvc                             │
+  │C:\gettext-0.13.1> nmake /f Makefile.msvc install                     │
+  └───────────────────────────────────┘
+
+  C:\usr\x64 以下にインストールされます。
+
+  ※ GNU gettext をコンパイルするためには GNU libiconv が必要です。
+
+
+■ 5. ソースの展開
+------------------
+
+  namazu-2.0.XX.tar.gz を入手し、tarball を解凍してソースを展開します。
+
+  ┌───────────────────────────────────┐
+  │C:\> C:                                                               │
+  │C:\> cd \                                                             │
+  │C:\> tar xvzf namazu-2.0.XX.tar.gz                                    │
+  │C:\> cd namazu-2.0.XX                                                 │
+  └───────────────────────────────────┘
+
+
+■ 6. ディレクトリのコピー
+--------------------------
+
+  このアーカイブを解凍して得られた msvc ディレクトリを namazu-2.0.XX にコピー
+  します。
+
+
+■ 7. namazu.exe のコンパイル
+-----------------------------
+
+  namazu-2.0.XX\msvc\namazu.sln を Visual C++ で開きます。
+  「Release」「x64」を選択し、「namazu」プロジェクトをビルドします。
+  コンパイルに成功すると、以下の場所に namazu.exe が作成されます。
+
+  namazu-2.0.XX\msvc\x64\Release\namazu.exe
+
+
+■ 8. namazu.cgi.exe のコンパイル
+---------------------------------
+
+  namazu-2.0.XX\msvc\namazu.sln を Visual C++ で開きます。
+  「Release」「x64」を選択し、「cgi」プロジェクトをビルドします。
+  コンパイルに成功すると、以下の場所に namazu.cgi.exe が作成されます。
+
+  namazu-2.0.XX\msvc\x64\Release\namazu.cgi.exe
+
+
+■ 9. nmz.dll のコンパイル
+--------------------------
+
+  namazu-2.0.XX\msvc\namazu.sln を Visual C++ で開きます。
+  「Release」「x64」を選択し、「nmz」プロジェクトをビルドします。
+  コンパイルに成功すると、以下の場所に nmz.dll, nmz.lib が作成されます。
+
+  namazu-2.0.XX\msvc\x64\Release\nmz.dll
+  namazu-2.0.XX\msvc\x64\Release\nmz.lib
+
+
+■ 10. 免責
+-----------
+
+  本アーカイブは無保証です。頒布にあたっては、市場性及び特定目的適合性につい
+  ての暗黙の保証を含めて、いかなる保証も行ないません。
+
+
+============================================================================
+               Copyright (C) 2010-2015 AKANEIROSOFTWARE, Tadamasa Teranishi.
+                                               <URI:http://www.akaneiro.jp/>

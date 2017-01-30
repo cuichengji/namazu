@@ -1,0 +1,219 @@
+# Microsoft Developer Studio Generated Dependency File, included by libnmz.mak
+
+..\nmz\alias.c : \
+	"..\nmz\alias.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\codeconv.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\l10n-ja.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\field.c : \
+	"..\nmz\field.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\re.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\lib\getopt.c : \
+	"..\lib\getopt.h"\
+	".\include\CONFIG.H"\
+	
+
+..\lib\getopt1.c : \
+	"..\lib\getopt.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\hlist.c : \
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\score.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\i18n.c : \
+	"..\nmz\i18n.h"\
+	"..\nmz\libnamazu.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\idxname.c : \
+	"..\nmz\alias.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+"..\nmz\l10n-ja.c" : \
+	"..\nmz\i18n.h"\
+	"..\nmz\l10n-ja.h"\
+	"..\nmz\libnamazu.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\libnamazu.c : \
+	"..\nmz\alias.h"\
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\regex.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\nmzversion.c : \
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\parser.c : \
+	"..\nmz\hlist.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\query.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\re.c : \
+	"..\nmz\hlist.h"\
+	"..\nmz\l10n-ja.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\re.h"\
+	"..\nmz\regex.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\regex.c : \
+	"..\nmz\libnamazu.h"\
+	"..\nmz\regex.h"\
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\replace.c : \
+	"..\nmz\i18n.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\re.h"\
+	"..\nmz\regex.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\score.c : \
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\score.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\search.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\l10n-ja.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\re.h"\
+	"..\nmz\score.h"\
+	"..\nmz\seed.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	"..\nmz\wakati.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\strcasecmp.c : \
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\strcspn.c : \
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\strerror.c : \
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\strncasecmp.c : \
+	"..\nmz\support.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\util.c : \
+	"..\nmz\i18n.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	"..\nmz\system.h"\
+	"..\nmz\var.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\nmz\var.c : \
+	"..\nmz\libnamazu.h"\
+	"..\nmz\re.h"\
+	".\include\CONFIG.H"\
+	
+
+..\nmz\wakati.c : \
+	"..\nmz\libnamazu.h"\
+	"..\nmz\wakati.h"\
+	".\include\CONFIG.H"\
+	

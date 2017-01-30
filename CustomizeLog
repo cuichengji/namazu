@@ -1,0 +1,18 @@
+2017-01-31  Sai  <chengji.cui@dsmtc.com>
+
+        * CustomizeLog: Add this file.
+
+        * BUILD-ja.txt: Add from nmz2.0.22pre7.001-x64
+        
+        * msvc/*.*: Add VS compile file. From nmz2.0.22pre7.001-x64.
+
+        * scripts/mknmz.in: Windows環境で「表」、「能」、「申」で終わる
+        フォルダのIndex作成不可修正
+
+2017-01-26  Sai  <chengji.cui@dsmtc.com>
+
+        * cvs -d :pserver:anonymous@cvs.namazu.org:/storage/cvsroot co -r stable-2-0 namazu
+        より最新ソース取得し、カスタマイズベース作成
+        nmz2.0.22pre7.001-x64のソース
+
+

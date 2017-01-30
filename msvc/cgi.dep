@@ -1,0 +1,43 @@
+# Microsoft Developer Studio Generated Dependency File, included by cgi.mak
+
+..\src\cgi.c : \
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\system.h"\
+	"..\nmz\var.h"\
+	"..\src\cgi.h"\
+	"..\src\message.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\usage.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+"..\src\namazu-cgi.c" : \
+	"..\..\..\..\..\program files\microsoft sdk\include\basetsd.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\guiddef.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\propidl.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\reason.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\stralign.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\tvout.h"\
+	"..\..\..\..\..\program files\microsoft sdk\include\winefs.h"\
+	"..\nmz\codeconv.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\system.h"\
+	"..\src\cgi.h"\
+	"..\src\message.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\rcfile.h"\
+	"..\src\result.h"\
+	"..\src\usage.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	

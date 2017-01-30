@@ -1,0 +1,21 @@
+# Microsoft Developer Studio Generated Dependency File, included by namazu.mak
+
+"..\src\namazu-cmd.c" : \
+	"..\lib\getopt.h"\
+	"..\nmz\codeconv.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	"..\nmz\system.h"\
+	"..\nmz\var.h"\
+	"..\src\message.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\rcfile.h"\
+	"..\src\result.h"\
+	"..\src\usage.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	

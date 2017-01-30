@@ -1,0 +1,98 @@
+# Microsoft Developer Studio Generated Dependency File, included by core.mak
+
+..\src\form.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	"..\src\form.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\src\namazu.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\hlist.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\system.h"\
+	"..\nmz\var.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\src\output.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\support.h"\
+	"..\nmz\system.h"\
+	"..\nmz\var.h"\
+	"..\src\form.h"\
+	"..\src\message.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\result.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\src\rcfile.c : \
+	"..\nmz\alias.h"\
+	"..\nmz\codeconv.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\idxname.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\re.h"\
+	"..\nmz\regex.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\score.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\rcfile.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\src\result.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\field.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\l10n-ja.h"\
+	"..\nmz\libnamazu.h"\
+	"..\nmz\query.h"\
+	"..\nmz\re.h"\
+	"..\nmz\replace.h"\
+	"..\nmz\support.h"\
+	"..\nmz\var.h"\
+	"..\src\namazu.h"\
+	"..\src\output.h"\
+	"..\src\result.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
+
+..\src\usage.c : \
+	"..\nmz\codeconv.h"\
+	"..\nmz\i18n.h"\
+	"..\nmz\libnamazu.h"\
+	"..\src\message.h"\
+	"..\src\namazu.h"\
+	"..\src\usage.h"\
+	".\include\CONFIG.H"\
+	"C:\usr\include\libintl.h"\
+	
