@@ -1,0 +1,10 @@
+--- nkf.c.orig	Wed Dec  6 10:09:59 2000
++++ nkf.c	Wed Dec  6 14:23:23 2000
+@@ -1670,6 +1671,7 @@
+        if (0x21==c1) {
+            if (alpha_f&0x2) {
+                c1 = ' ';
++               c2 = 0;
+            } else if (alpha_f&0x4) {
+                 (*o_zconv)(0,' ');
+                 (*o_zconv)(0,' ');

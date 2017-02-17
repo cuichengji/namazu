@@ -1,0 +1,52 @@
+diff -urN autoconf-2.13.orig/acgeneral.m4 autoconf-2.13/acgeneral.m4
+--- autoconf-2.13.orig/acgeneral.m4	Tue Jan  5 22:27:37 1999
++++ autoconf-2.13/acgeneral.m4	Wed Oct 11 03:24:29 2000
+@@ -2489,7 +2489,7 @@
+   esac
+ 
+   # Make a symlink if possible; otherwise try a hard link.
+-  if ln -s $ac_rel_source $ac_dest 2>/dev/null ||
++  if ln $ac_rel_source $ac_dest 2>/dev/null ||
+     ln $srcdir/$ac_source $ac_dest; then :
+   else
+     AC_MSG_ERROR(can not link $ac_dest to $srcdir/$ac_source)
+diff -urN autoconf-2.13.orig/acspecific.m4 autoconf-2.13/acspecific.m4
+--- autoconf-2.13.orig/acspecific.m4	Tue Jan  5 22:27:52 1999
++++ autoconf-2.13/acspecific.m4	Wed Oct 11 03:31:18 2000
+@@ -661,10 +661,10 @@
+ [AC_MSG_CHECKING(whether ln -s works)
+ AC_CACHE_VAL(ac_cv_prog_LN_S,
+ [rm -f conftestdata
+-if ln -s X conftestdata 2>/dev/null
++if ln X conftestdata 2>/dev/null
+ then
+   rm -f conftestdata
+-  ac_cv_prog_LN_S="ln -s"
++  ac_cv_prog_LN_S="ln"
+ else
+   ac_cv_prog_LN_S=ln
+ fi])dnl
+diff -urN autoconf-2.13.orig/autoheader.sh autoconf-2.13/autoheader.sh
+--- autoconf-2.13.orig/autoheader.sh	Tue Jan  5 22:28:39 1999
++++ autoconf-2.13/autoheader.sh	Wed Oct 11 02:47:47 2000
+@@ -269,7 +269,8 @@
+     if test -f ${config_h_in} && cmp -s $tmpout ${config_h_in}; then
+       rm -f $tmpout # File didn't change, so don't update its mod time.
+     else
+-      mv -f $tmpout ${config_h_in}
++      cp -f $tmpout ${config_h_in}
++      rm -f $tmpout
+     fi
+   else
+     rm -f $tmpout
+diff -urN autoconf-2.13.orig/autoscan.pl autoconf-2.13/autoscan.pl
+--- autoconf-2.13.orig/autoscan.pl	Tue Jan  5 22:28:42 1999
++++ autoconf-2.13/autoscan.pl	Wed Oct 11 02:47:47 2000
+@@ -68,6 +68,7 @@
+ 
+     open(CONF, ">configure.scan") ||
+ 	die "$0: cannot create configure.scan: $!\n";
++    binmode(CONF);
+ }
+ 
+ # Print the version number and exit.

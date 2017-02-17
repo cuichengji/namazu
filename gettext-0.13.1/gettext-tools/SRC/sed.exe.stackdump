@@ -1,0 +1,8 @@
+MSYS-1.0.9 Build:2003-07-03 07:26
+Exception: STATUS_ACCESS_VIOLATION at eip=00000000
+eax=00000000 ebx=00000001 ecx=710AA614 edx=00000000 esi=710A516C edi=710A5174
+ebp=0022FD70 esp=0022FD54 program=G:\1.0\bin\sed.exe
+cs=001B ds=0023 es=0023 fs=0038 gs=0000 ss=0023
+Stack trace:
+Frame     Function  Args
+End of stack trace

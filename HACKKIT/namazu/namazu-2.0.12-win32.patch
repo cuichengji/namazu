@@ -1,0 +1,24 @@
+diff -urN namazu-2.0.12-orig/config.h.in namazu-2.0.12/config.h.in
+--- namazu-2.0.12-orig/config.h.in	Tue Aug 27 16:47:42 2002
++++ namazu-2.0.12/config.h.in	Tue Sep  3 16:19:20 2002
+@@ -34,7 +34,7 @@
+ #undef inline
+ 
+ /* Define to `long' if <sys/types.h> doesn't define.  */
+-#undef off_t
++/* #undef off_t */
+ 
+ /* Define to `int' if <sys/types.h> doesn't define.  */
+ #undef pid_t
+diff -urN namazu-2.0.12-orig/nmz/support.h namazu-2.0.12/nmz/support.h
+--- namazu-2.0.12-orig/nmz/support.h	Wed Jan 16 11:42:04 2002
++++ namazu-2.0.12/nmz/support.h	Tue Sep  3 16:19:20 2002
+@@ -23,7 +23,7 @@
+ #define strerror _nmz_strerror
+ #endif
+ 
+-#if defined (_WIN32) && !defined (__CYGWIN__)
++#if defined (_WIN32) && (!defined (__CYGWIN__) || defined(MSVC))
+ #define strcasecmp stricmp
+ #define strncasecmp strnicmp
+ #define snprintf _snprintf

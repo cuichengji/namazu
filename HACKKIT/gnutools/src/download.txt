@@ -1,0 +1,19 @@
+このディレクトリに、以下のアーカイヴをダウンロードします。
+
+* GNU m4-1.4 (autoconf を動作させるために必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/m4/m4-1.4.tar.gz>
+
+* GNU autoconf-2.13 (実行には m4 が必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/autoconf/autoconf-2.13.tar.gz>
+
+* GNU automake-1.4 (実行には perl が必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/automake/automake-1.4.tar.gz>
+
+* GNU libtool-1.3.5 (ライブラリ構築のためのツール)
+  <ftp://ftp.ring.gr.jp/pub/GNU/libtool/libtool-1.3.5.tar.gz>
+
+* GNU gettext-0.10.35 (多言語化を行う場合に必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/gettext/gettext-0.10.35.tar.gz>
+
+詳しくは、Namazu for Win32 に付属の HACKING.txt を参照して下さい。
+

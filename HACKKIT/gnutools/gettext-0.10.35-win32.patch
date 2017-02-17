@@ -1,0 +1,358 @@
+diff -urN gettext-0.10.35.org/aclocal.m4 gettext-0.10.35/aclocal.m4
+--- gettext-0.10.35.org/aclocal.m4	Fri May  1 14:48:20 1998
++++ gettext-0.10.35/aclocal.m4	Thu Jun 28 17:03:10 2001
+@@ -20,7 +20,7 @@
+ dnl AM_INIT_AUTOMAKE(package,version, [no-define])
+ 
+ AC_DEFUN(AM_INIT_AUTOMAKE,
+-[AC_REQUIRE([AM_PROG_INSTALL])
++[AC_REQUIRE([AC_PROG_INSTALL])
+ PACKAGE=[$1]
+ AC_SUBST(PACKAGE)
+ VERSION=[$2]
+@@ -275,7 +275,13 @@
+ if test "$ac_cv_prog_gcc" = yes; then
+   # Check if gcc -print-prog-name=ld gives a path.
+   AC_MSG_CHECKING([for ld used by GCC])
+-  ac_prog=`($CC -print-prog-name=ld) 2>&5`
++  case $host in
++  *-*-mingw*)
++    # gcc leaves a trailing carriage return which upsets mingw
++    ac_prog=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
++  *)
++    ac_prog=`($CC -print-prog-name=ld) 2>&5` ;;
++  esac
+   case "$ac_prog" in
+   # Accept absolute paths.
+   /* | [A-Za-z]:\\*)
+diff -urN gettext-0.10.35.org/configure.in gettext-0.10.35/configure.in
+--- gettext-0.10.35.org/configure.in	Fri May  1 14:46:34 1998
++++ gettext-0.10.35/configure.in	Thu Jun 28 17:02:50 2001
+@@ -12,14 +12,18 @@
+ AM_PROG_LIBTOOL
+ AC_PROG_CC
+ AC_ISC_POSIX
+-AM_PROG_INSTALL
++AC_PROG_INSTALL
+ AC_PROG_YACC
+ 
++dnl OS specific.
++AC_EXEEXT
++AC_OBJEXT
++
+ dnl Checks for libraries.
+ 
+ dnl Checks for header files.
+ AC_HEADER_STDC
+-AC_HAVE_HEADERS(limits.h malloc.h string.h unistd.h values.h)
++AC_HAVE_HEADERS(limits.h malloc.h pwd.h string.h unistd.h values.h)
+ 
+ dnl Checks for typedefs, structures, and compiler characteristics.
+ AC_C_CONST
+diff -urN gettext-0.10.35.org/intl/dcgettext.c gettext-0.10.35/intl/dcgettext.c
+--- gettext-0.10.35.org/intl/dcgettext.c	Tue Apr 28 06:12:32 1998
++++ gettext-0.10.35/intl/dcgettext.c	Thu Jun 28 17:02:50 2001
+@@ -264,7 +264,8 @@
+ 
+   if (binding == NULL)
+     dirname = (char *) _nl_default_dirname;
+-  else if (binding->dirname[0] == '/')
++  else if (binding->dirname[0] == '/' || binding->dirname[0] == '\\'
++           || (binding->dirname[1] == ':' && binding->dirname[2] == '\\'))
+     dirname = binding->dirname;
+   else
+     {
+diff -urN gettext-0.10.35.org/intl/libgettext.h gettext-0.10.35/intl/libgettext.h
+--- gettext-0.10.35.org/intl/libgettext.h	Tue Apr 28 07:11:44 1998
++++ gettext-0.10.35/intl/libgettext.h	Thu Jun 28 17:02:50 2001
+@@ -93,12 +93,14 @@
+    text).  */
+ extern char *gettext PARAMS ((const char *__msgid));
+ extern char *gettext__ PARAMS ((const char *__msgid));
++#define gettext gettext__
+ 
+ /* Look up MSGID in the DOMAINNAME message catalog for the current
+    LC_MESSAGES locale.  */
+ extern char *dgettext PARAMS ((const char *__domainname, const char *__msgid));
+ extern char *dgettext__ PARAMS ((const char *__domainname,
+ 				 const char *__msgid));
++#define dgettext dgettext__
+ 
+ /* Look up MSGID in the DOMAINNAME message catalog for the current CATEGORY
+    locale.  */
+@@ -106,6 +108,7 @@
+ 				int __category));
+ extern char *dcgettext__ PARAMS ((const char *__domainname,
+ 				  const char *__msgid, int __category));
++#define dcgettext dcgettext__
+ 
+ 
+ /* Set the current default message catalog to DOMAINNAME.
+@@ -113,6 +116,7 @@
+    If DOMAINNAME is "", reset to the default of "messages".  */
+ extern char *textdomain PARAMS ((const char *__domainname));
+ extern char *textdomain__ PARAMS ((const char *__domainname));
++#define textdomain textdomain__
+ 
+ /* Specify that the DOMAINNAME message catalog will be found
+    in DIRNAME rather than in the system locale data base.  */
+@@ -120,6 +124,7 @@
+ 				  const char *__dirname));
+ extern char *bindtextdomain__ PARAMS ((const char *__domainname,
+ 				    const char *__dirname));
++#define bindtextdomain bindtextdomain__
+ 
+ #if ENABLE_NLS
+ 
+diff -urN gettext-0.10.35.org/intl/loadmsgcat.c gettext-0.10.35/intl/loadmsgcat.c
+--- gettext-0.10.35.org/intl/loadmsgcat.c	Wed Apr 29 08:12:40 1998
++++ gettext-0.10.35/intl/loadmsgcat.c	Thu Jun 28 17:02:50 2001
+@@ -51,6 +51,19 @@
+ # define munmap __munmap
+ #endif
+ 
++#ifdef NATIVE_WIN32
++# include <io.h>
++# define stat _stat
++#endif
++
++#ifndef _O_BINARY
++#define _O_BINARY 0
++#endif 
++
++#ifndef O_RDONLY
++#define O_RDONLY _O_RDONLY
++#endif
++
+ /* We need a sign, whether a new catalog was loaded, which can be associated
+    with all translations.  This is important if the translations are
+    cached by one of GCC's features.  */
+@@ -85,7 +98,7 @@
+     return;
+ 
+   /* Try to open the addressed file.  */
+-  fd = open (domain_file->filename, O_RDONLY);
++  fd = open (domain_file->filename, O_RDONLY | _O_BINARY);
+   if (fd == -1)
+     return;
+ 
+diff -urN gettext-0.10.35.org/intl/localealias.c gettext-0.10.35/intl/localealias.c
+--- gettext-0.10.35.org/intl/localealias.c	Thu Apr 30 01:42:42 1998
++++ gettext-0.10.35/intl/localealias.c	Thu Jun 28 17:02:50 2001
+@@ -190,11 +190,11 @@
+ 	{
+ 	  const char *start;
+ 
+-	  while (locale_alias_path[0] == ':')
++	  while (locale_alias_path[0] == ':' || locale_alias_path[0] == ';')
+ 	    ++locale_alias_path;
+ 	  start = locale_alias_path;
+ 
+-	  while (locale_alias_path[0] != '\0' && locale_alias_path[0] != ':')
++	  while (locale_alias_path[0] != '\0' && locale_alias_path[0] != ':' && locale_alias_path[0] != ';')
+ 	    ++locale_alias_path;
+ 
+ 	  if (start < locale_alias_path)
+diff -urN gettext-0.10.35.org/lib/alloca.c gettext-0.10.35/lib/alloca.c
+--- gettext-0.10.35.org/lib/alloca.c	Mon Apr  7 03:03:38 1997
++++ gettext-0.10.35/lib/alloca.c	Thu Jun 28 17:02:50 2001
+@@ -28,7 +28,7 @@
+ #ifdef HAVE_STRING_H
+ #include <string.h>
+ #endif
+-#ifdef HAVE_STDLIB_H
++#ifdef STDC_HEADERS
+ #include <stdlib.h>
+ #endif
+ 
+diff -urN gettext-0.10.35.org/lib/error.c gettext-0.10.35/lib/error.c
+--- gettext-0.10.35.org/lib/error.c	Tue Apr 14 08:53:38 1998
++++ gettext-0.10.35/lib/error.c	Thu Jun 28 17:02:50 2001
+@@ -88,7 +88,9 @@
+ # else
+ #  if HAVE_STRERROR
+ #   ifndef strerror		/* On some systems, strerror is a macro */
++#    ifndef NATIVE_WIN32	/* MSVCRT defines it with linkage and shit */
+ char *strerror ();
++#    endif
+ #   endif
+ #  else
+ static char *
+diff -urN gettext-0.10.35.org/lib/obstack.c gettext-0.10.35/lib/obstack.c
+--- gettext-0.10.35.org/lib/obstack.c	Fri Sep  5 11:58:18 1997
++++ gettext-0.10.35/lib/obstack.c	Thu Jun 28 17:02:50 2001
+@@ -90,7 +90,7 @@
+ #endif
+ 
+ /* Exit value used when `print_and_abort' is used.  */
+-#if defined __GNU_LIBRARY__ || defined HAVE_STDLIB_H
++#if defined __GNU_LIBRARY__ || defined STDC_HEADERS
+ #include <stdlib.h>
+ #endif
+ #ifndef EXIT_FAILURE
+diff -urN gettext-0.10.35.org/lib/stpncpy.c gettext-0.10.35/lib/stpncpy.c
+--- gettext-0.10.35.org/lib/stpncpy.c	Sat Feb 15 13:30:42 1997
++++ gettext-0.10.35/lib/stpncpy.c	Thu Jun 28 17:02:50 2001
+@@ -24,6 +24,8 @@
+ # include <config.h>
+ #endif
+ 
++#include <stdlib.h>
++
+ #ifdef _LIBC
+ # include <string.h>
+ #else
+diff -urN gettext-0.10.35.org/lib/system.h gettext-0.10.35/lib/system.h
+--- gettext-0.10.35.org/lib/system.h	Wed Apr 29 11:12:12 1998
++++ gettext-0.10.35/lib/system.h	Thu Jun 28 17:02:50 2001
+@@ -52,10 +52,16 @@
+ extern size_t parse_printf_format PARAMS ((const char *__fmt, size_t __n,
+ 					   int *__argtypes));
+ extern int asprintf PARAMS ((char **, const char *, ...));
++#ifndef HAVE_STRCASECMP
+ extern int strcasecmp PARAMS ((const char *__s1, const char *__s2));
++#endif
++#ifndef HAVE_STRNCASECMP
+ extern int strncasecmp PARAMS ((const char *__s1, const char *__s2,
+ 				size_t __n));
++#endif
++#ifndef HAVE_STRSTR
+ extern char *strstr PARAMS ((const char *__str, const char *__sub));
++#endif
+ 
+ #if STDC_HEADERS || HAVE_STRING_H
+ # include <string.h>
+diff -urN gettext-0.10.35.org/lib/vasprintf.c gettext-0.10.35/lib/vasprintf.c
+--- gettext-0.10.35.org/lib/vasprintf.c	Tue Jul 18 09:20:08 1995
++++ gettext-0.10.35/lib/vasprintf.c	Thu Jun 28 17:02:50 2001
+@@ -22,6 +22,9 @@
+ 
+ #include <stdio.h>
+ #include <string.h>
++#ifdef STDC_HEADERS
++#include <stdlib.h>
++#endif
+ 
+ #if __STDC__
+ # include <stdarg.h>
+@@ -32,9 +35,6 @@
+ #ifdef TEST
+ int global_total_width;
+ #endif
+-
+-unsigned long strtoul ();
+-char *malloc ();
+ 
+ static int
+ int_vasprintf (result, format, args)
+diff -urN gettext-0.10.35.org/src/message.c gettext-0.10.35/src/message.c
+--- gettext-0.10.35.org/src/message.c	Fri May  1 13:42:16 1998
++++ gettext-0.10.35/src/message.c	Thu Jun 28 17:02:50 2001
+@@ -902,7 +902,7 @@
+ 	  {
+ 	    lex_pos_ty *pp = &mp->filepos[j];
+ 	    char *cp = pp->file_name;
+-	    while (cp[0] == '.' && cp[1] == '/')
++	    while (cp[0] == '.' && (cp[1] == '/' || cp[1] == '\\'))
+ 	      cp += 2;
+ 	    /* There are two Sun formats to choose from: SunOS and
+ 	       Solaris.  Use the Solaris form here.  */
+@@ -924,7 +924,7 @@
+ 
+ 	      pp = &mp->filepos[j];
+ 	      cp = pp->file_name;
+-	      while (cp[0] == '.' && cp[1] == '/')
++	      while (cp[0] == '.' && (cp[1] == '/' || cp[1] == '\\'))
+ 		cp += 2;
+ 	      sprintf (buffer, "%ld", (long) pp->line_number);
+ 	      len = strlen (cp) + strlen (buffer) + 2;
+diff -urN gettext-0.10.35.org/src/msgfmt.c gettext-0.10.35/src/msgfmt.c
+--- gettext-0.10.35.org/src/msgfmt.c	Fri May  1 06:16:00 1998
++++ gettext-0.10.35/src/msgfmt.c	Thu Jun 28 17:02:50 2001
+@@ -24,7 +24,9 @@
+ #include <errno.h>
+ #include <getopt.h>
+ #include <stdio.h>
++#ifdef HAVE_SYS_PARAM_H
+ #include <sys/param.h>
++#endif
+ #include <sys/types.h>
+ 
+ #ifdef STDC_HEADERS
+@@ -314,7 +316,7 @@
+ 	      fname = strict_uniforum ? add_mo_suffix (domain->domain_name)
+ 				      : domain->domain_name;
+ 
+-	      output_file = fopen (fname, "w");
++	      output_file = fopen (fname, "wb");
+ 	      if (output_file == NULL)
+ 		{
+ 		  error (0, errno,
+diff -urN gettext-0.10.35.org/src/msgunfmt.c gettext-0.10.35/src/msgunfmt.c
+--- gettext-0.10.35.org/src/msgunfmt.c	Tue Apr 28 06:49:42 1998
++++ gettext-0.10.35/src/msgunfmt.c	Thu Jun 28 17:02:50 2001
+@@ -24,7 +24,9 @@
+ #include <errno.h>
+ #include <getopt.h>
+ #include <stdio.h>
++#ifdef HAVE_SYS_PARAM_H
+ #include <sys/param.h>
++#endif
+ #include <sys/types.h>
+ 
+ #ifdef STDC_HEADERS
+diff -urN gettext-0.10.35.org/src/open-po.c gettext-0.10.35/src/open-po.c
+--- gettext-0.10.35.org/src/open-po.c	Wed Jun  5 04:09:28 1996
++++ gettext-0.10.35/src/open-po.c	Thu Jun 28 17:02:50 2001
+@@ -66,7 +66,11 @@
+   const char *dir;
+   const char *ext;
+ 
+-  if (strcmp (input_name, "-") == 0 || strcmp (input_name, "/dev/stdin") == 0)
++  if (strcmp (input_name, "-") == 0 
++#ifndef NATIVE_WIN32
++      || strcmp (input_name, "/dev/stdin") == 0
++#endif
++					       )
+     {
+       *file_name = xstrdup (_("<stdin>"));
+       return stdin;
+@@ -74,7 +78,8 @@
+ 
+   /* We have a real name for the input file.  If the name is absolute,
+      try the various extensions, but ignore the directory search list.  */
+-  if (*input_name == '/')
++  if (*input_name == '/' || *input_name == '\\'
++      || (*(input_name +1) == ':' && *(input_name +2) == '\\'))
+     {
+       for (k = 0; k < SIZEOF (extension); ++k)
+ 	{
+diff -urN gettext-0.10.35.org/src/xget-lex.c gettext-0.10.35/src/xget-lex.c
+--- gettext-0.10.35.org/src/xget-lex.c	Fri May  1 13:45:12 1998
++++ gettext-0.10.35/src/xget-lex.c	Thu Jun 28 17:02:50 2001
+@@ -151,7 +151,8 @@
+       logical_file_name = xstrdup (new_name);
+       fp = stdin;
+     }
+-  else if (*fn == '/')
++  else if (*fn == '/' || *fn == '\\'
++           || (*(fn +1) == ':' && *(fn +2) == '\\'))
+     {
+       new_name = xstrdup (fn);
+       fp = fopen (fn, "r");
+diff -urN gettext-0.10.35.org/src/xgettext.c gettext-0.10.35/src/xgettext.c
+--- gettext-0.10.35.org/src/xgettext.c	Thu Apr 30 01:57:50 1998
++++ gettext-0.10.35/src/xgettext.c	Thu Jun 28 17:02:50 2001
+@@ -23,8 +23,12 @@
+ #include <ctype.h>
+ #include <errno.h>
+ #include <getopt.h>
++#ifdef HAVE_SYS_PARAM_H
+ #include <sys/param.h>
++#endif
++#ifdef HAVE_PWD_H
+ #include <pwd.h>
++#endif
+ #include <stdio.h>
+ #include <time.h>
+ #include <sys/types.h>

@@ -1,0 +1,19 @@
+このディレクトリに、以下のアーカイヴをダウンロードします。
+
+* File-MMagic-1.15 (ファイルの種類を推定する Perl モジュール)
+  <http://www.cpan.org/authors/id/K/KN/KNOK/File-MMagic-1.15.tar.gz>
+
+* NKF-1.92 (ネットワーク用漢字コード変換フィルタ)
+  <ftp://ftp.ie.u-ryukyu.ac.jp/pub/software/kono/nkf192.shar>
+
+* Text-Kakasi-1.05 (Kakasi を Perl から利用するためのモジュール)
+  <http://www.daionet.gr.jp/~knok/kakasi/Text-Kakasi-1.05.tar.gz>
+
+* Search-Namazu-0.92 (Namazu を Perl から利用するためのモジュール)
+  <http://www.namazu.org/~knok/Search-Namazu-0.92.tar.gz>
+
+Windows ActivePerl 専用の Perlモジュールをコンパイルするには、
+Microsoft Visual C++ 5.0 or later が必要となります。
+
+詳しくは、Namazu for Win32 に付属の HACKING.txt を参照して下さい。
+

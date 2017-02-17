@@ -1,0 +1,536 @@
+----------------------------------------------------------------------------
+
+              Namazu 2.0.12 for Win32 のコンパイル環境の構築について
+
+                                                    Last modified 2002.09.03
+                                                       Created at 2001.08.10
+----------------------------------------------------------------------------
+                         Written by Yoshinori TAKESAKO <takesako@namazu.org>
+
+■ 1. はじめに
+--------------
+  本文書は、Namazu 2.0.12 for Win32 のコンパイル環境の構築を Windowsで行うた
+めに必要な作業を記したものです。 Namazu のコンパイルには、ある程度の UNIX の
+知識が必要となります。また、ソースを理解するには C 言語, Perl の知識が必要と
+なりますが、これらについては特に記述していませんので、予めご了承ください。
+
+  本作業を進めるにあたって、以下の前提知識が必要となります。
+
+  *** 前提知識 ***
+
+  ・MS-DOS や UNIX 上のシェルなどでコマンドの操作ができる。
+  ・UNIX 環境で、Namazu をインストール・設定したことがある。
+  ・今までに、Windows 上で Cygwin をインストールして使ったことがある。
+
+
+■ 2. Namazu の最新のソースコードを追いかける
+---------------------------------------------
+　最新のソースコードを取得するには、次の2つの方法があります。
+
+[1] 安定版のソースコードを入手する
+-----------------------------------
+　Namazu の安定版のソースコードは、以下の URL からダウンロードできます。
+
+  <http://www.namazu.org/stable/>
+  <ftp://ftp.namazu.org/namazu/stable/>
+
+
+[2] cvs による最新のソースコードの入手方法
+------------------------------------------
+　Windows で動作する cvs が必要です。
+
+  * CVS on Windows 95/NT
+    <http://www.cvshome.org/dev/codewindow.html>
+
+  * WinCVS / cvs knjwrp ダウンロードなページ
+    <http://www.linkclub.or.jp/~tumibito/soft-an/cvs/download.html>
+
+    などから入手する事が出来ます。
+
+  cvs を入手したら以下のコマンドを実行する事によって、
+  Namazu の最新版のソースコードを入手する事が出来ます。
+
+    % cvs -d :pserver:guest@cvs.namazu.org:/storage/cvsroot login
+    CVS password: guest
+    % cvs -d :pserver:guest@cvs.namazu.org:/storage/cvsroot co -P namazu
+
+  安定版のソースを入手したい場合には以下のようにしてください。
+
+    % cvs -d :pserver:guest@cvs.namazu.org:/storage/cvsroot login
+    CVS password: guest
+    % cvs -d :pserver:guest@cvs.namazu.org:/storage/cvsroot co -r stable-2-0 namazu
+
+
+■ 3. Namazu の実行環境を整える
+-------------------------------
+  まず最初に、Namazu の実行環境を整えます。最低限必要なものは、ActivePerl 
+と Kakasi の辞書ファイルです。これらのソフトウェアのインストールの詳細につ
+いては、Namazu for Win32 の README.TXT を参照して下さい。
+
+[1] 基準ディレクトリの作成
+--------------------------
+  各ソフトウェアをインストールする基準ディレクトリを以下として説明します。
+違うディレクトリにインストールしたい場合は、これらのディレクトリを
+読み替えてください。
+
+* Cygwin をインストールするディレクトリ
+  d:/cygwin
+
+* Cygwin 上の /usr/local の実ディレクトリ
+  d:/usr/local
+
+* ActivePerl build 522 をインストールするディレクトリ
+  d:/usr/perl5xx
+
+* ActivePerl build 633 をインストールするディレクトリ
+  d:/usr/perl6xx
+
+* MinGW をインストールするディレクトリ
+  d:/usr/mingw
+
+* Kakasi をインストールするディレクトリ
+  d:/usr/kakasi
+
+
+[2] ActivePerl のインストール
+-----------------------------
+  Windows 上で動作する Perl にはいくつか種類がありますが、実際に利用する
+ユーザの事を考えて、ここでは ActivePerl を利用します。ActivePerl のバイ
+ナリには、5.005 系 (build 500) と5.6 系 (build 600) のものがあります。
+最新のものを利用したい場合は 5.6 系をダウンロードして使いますが、まだ
+古いバージョンを使っているユーザもいますので、両方の実行環境をそろえて
+おくと良いでしょう。以下の URL からソフトウェアをダウンロードします。
+
+* APi522e.exe (5.2MB) 02-Nov-1999
+  <http://downloads.activestate.com/ActivePerl/Windows/5.005/Intel/>
+
+* ActivePerl-5.6.1.633-MSWin32-x86.msi (8.6MB) 20-Jun-2002
+  <http://downloads.activestate.com/ActivePerl/Windows/5.6/>
+
+それぞれ、インストール先のディレクトリを d:/usr/perl5xx と d:/usr/perl6xx 
+にして、実際にどちらの Perl を利用するかは、環境変数 PATH の優先順位によっ
+て切り替えられるようにしておくと便利です。
+
+[3] ActivePerl 用モジュールのインストール
+-----------------------------------------
+  インデックスを作成するコマンド mknmz は、Perl スクリプトによって書かれて
+いて、いくつかの Perl モジュールを利用しています。mknmz 実行時に必須となる
+File::MMagic モジュールは、ActivePerl をインストールしただけの状態では、含
+まれていません。また、Namazu 2.0以降から利用されるようになったText::Kakasi
+モジュールや、NKF モジュールなどを利用することによって、mknmz の実行時間を
+短縮することができます。
+
+  既に ActivePerl がインストールされている状態で、namazu\ppm\ ディレクトリ
+で、以下のコマンドを実行して、Namazu の実行に必要な Perl モジュールをイン
+ストールして下さい。これらのファイルは Namazu 2.0.6 for Win32 以降の配布に
+含まれています。Namazu for Win32 を C:\namazu にインストールしている場合、
+
+  C:\> cd \namazu\ppm
+  C:\namazu\ppm> PPM-INSTALL.BAT
+
+上記コマンドを実行することによって、File::MMagic モジュールや、Text::Kakasi
+モジュール、NKF モジュールなどを簡単にインストールすることができます。
+
+※ 詳しくは、namazu\ppm\PPM-README-ja.txt のドキュメントをご参照下さい。
+
+
+[4] Kakasi のインストール
+-------------------------
+  以下の URL から Kakasi をダウンロードして、d:\usr\kakasi に展開します。
+
+* kakasi-2.3.4.zip - 07-Sep-2001 (1.0MB)
+  <http://kakasi.namazu.org/win32/>
+
+ファイルの展開が終わったら、環境変数 PATH に d:\usr\kakasi\bin を追加して、
+コマンドラインから kakasi.exe が使えるようにします。また、辞書ファイル
+kanwadict, itaijidict の置いてあるディレクトリを環境変数 KANWADICTPATH,
+ITAIJIDICTPATH に設定します。
+
+デフォルトのディレクトリの例では
+  SET KANWADICTPATH=C:\kakasi\share\kakasi\kanwadict
+  SET ITAIJIDICTPATH=C:\kakasi\share\kakasi\itaijidict
+ですが、ここでは
+  SET KANWADICTPATH=d:\usr\kakasi\share\kakasi\kanwadict
+  SET ITAIJIDICTPATH=d:\usr\kakasi\share\kakasi\itaijidict
+とします。
+
+
+■ 4. Cygwin のインストール
+---------------------------
+　Windows 上に、Cygwin をインストールすることによって、UNIX に *似た* 作業
+環境を構築することができます。ここでは、Cygwin をインストールし、Namazu を
+Windows 環境でコンパイルできる環境を構築します。
+
+[1] Cygwin の入手先
+-------------------
+  以下の URL から最新のソフトウェアを入手します。
+
+* Cygwin : GNU development tools and utilities for Windows
+  <http://cygwin.com/setup.exe>
+
+  最新の setup.exe ファイルが用意できたら、
+  以下の手順に従ってソフトウェアのインストールを行います。
+
+[2] Cygwin のインストール
+-------------------------
+　入手した最新の setup.exe を実行すると、Cygwin Setup が起動するので、エラー
+メッセージが出なければ、Next-> を押して次の画面を表示させます。すると、
+
+  * Download from Internet to Current Directory
+  * Install from Internet
+  * Install from Current Directory
+
+といった選択肢が出てきます。インターネットに接続されている回線の容量が大きけ
+れば、２番目を選択して直接インターネットからインストールを行っても良いのです
+が、ここではまず１番目を選択し、カレントディレクトリにダウンロードして、その
+後３番目を選択し、インストールを実行することにします。
+
+※ すべてのパッケージをダウンロードするには 約55MB程度の空き容量が必要です。
+　 また すべてのインストールを行うためには 約170MB程度の空き容量が必要です。
+
+次にインストール先の指定を行う画面が表示されますが、私はそのまま
+  ----------------------------------------
+  ルートディレクトリ：d:\cygwin
+  Default Text File Type: (*) DOS * Unix
+  Install For: * All (*) Just Me
+  ----------------------------------------
+として実行しました。
+
+しばらくして Installation Complete の画面が出れば O.K. です。
+
+[3] Cygwin 上で実行される Perl の設定
+-------------------------------------
+　Cygwin を実行して、perl -v として表示される内容を確認します。
+
+→ ※ Cygwin 付属の perl の場合
+──────────────────────────────────────
+This is perl, v5.6.1 built for cygwin
+(with 1 registered patch, see perl -V for more detail)
+
+Copyright 1987-2000, Larry Wall
+
+Perl may be copied only under the terms of either the Artistic License or the
+GNU General Public License, which may be found in the Perl 5 source kit.
+
+Complete documentation for Perl, including FAQ lists, should be found on
+this system using `man perl' or `perldoc perl'.  If you have access to the
+Internet, point your browser at http://www.perl.com/, the Perl Home Page.
+──────────────────────────────────────
+  そのまま次の作業に進んで構いませんが、場合によっては Cygwin 付属の Perl で
+はなく、優先的に ActivePerl を実行する必要があるときも考えられます。
+そのときは、以下のように Cygwin Perl を別名にしておくとよいと思います。
+
+  $ mv /bin/perl.exe /bin/perl-cygwin.exe
+
+
+→ ※ ActiveState 社の ActivePerl の場合
+──────────────────────────────────────
+This is perl, v5.6.1 built for MSWin32-x86-multi-thread
+(with 1 registered patch, see perl -V for more detail)
+
+Copyright 1987-2001, Larry Wall
+
+Binary build 633 provided by ActiveState Tool Corp. http://www.ActiveState.com
+Built 21:33:05 Jun 17 2002
+──────────────────────────────────────
+  多少の設定が必要になります。ActivePerl が d:\usr\perl6xx のディレクトリに
+インストールされている場合は、Cygwin を実行してシンボリックリンクをはってお
+きます。
+
+  $ ln -s d:/usr/perl6xx/bin/perl.exe /usr/bin/perl
+
+上記のようにしてシンボリックリンクをはったら、以下のコマンドを実行して、
+
+  $ hash -r
+  $ type perl
+
+"perl is /usr/bin/perl" と表示されることを確認します。
+
+
+■ 5. MinGW のインストール
+--------------------------
+　MinGW をインストールし、Cygwin の使用するエミュレーション DLL の必要ない
+実行ファイルをコンパイルできる mingw32-gcc 環境を構築します。
+
+[1] MinGW の入手先
+------------------
+  以下の URL から最新のソフトウェアを入手します。
+
+* MinGW: Minimalist GNU For Windows 
+  <http://download.sourceforge.net/mingw/MinGW-1.1.tar.gz>
+
+  上記のファイルが用意できたら、
+  以下の手順に従ってソフトウェアのインストールを行います。
+
+[2] MinGW のインストール
+------------------------
+　MinGW-1.1.tar.gz を d:\usr\mingw のディレクトリに展開します。
+tar.gz の圧縮ファイルを展開するアーカイバがない場合は、Cygwin を実行して、
+ダウンロードしたファイルのあるディレクトリに移動して、
+
+  $ mkdir d:/usr/mingw
+  $ gzip -cd MinGW-1.1.tar.gz | tar - xvf -C d:/usr/mingw
+
+とすれば展開されるはずです。
+
+[3] Cygwin でのマウント設定
+---------------------------
+  このままでは、Cygwin からは d:/usr/mingw と指定しなければ MinGW 
+のファイルが参照できないので、以下のコマンドを実行してマウントの設定を行い
+ます。
+
+  $ mount -b -s d:\\usr\\mingw /usr/mingw
+  $ mount
+  ─────────────────────────
+  d:\cygwin\bin on /usr/bin type system (binmode)
+  d:\cygwin\lib on /usr/lib type system (binmode)
+  d:\usr\mingw on /usr/mingw type system (binmode)
+  d:\cygwin on / type system (binmode)
+  c: on /cygdrive/c type user (binmode,noumount)
+  d: on /cygdrive/d type user (binmode,noumount)
+  ─────────────────────────
+　上のような表示が出れば O.K. です。
+
+※Cygwin のデフォルトでは、ルートディレクトリ / が d:\cygwin に相当していま
+  す。後でインストールする automake というプログラムは、Perl によって書かれ
+  ているのですが、Cygwin でコンパイルした Perl ではなく、ActiveState 社の
+  ActivePerl を使用しているときに、パスの相違による問題が生じるためです。
+
+同様にして、d:\usr\local ディレクトリを /usr/local にマウントします。
+
+  $ mkdir d:/usr/local
+  $ mount -b -s d:\\usr\\local /usr/local
+
+Cygwin 上のパスと実際のパスに相違があると、うまく動かないソフトウェアもあり
+ますので、そのときは /usr/local/src のように、さらにサブディレクトリを作成
+して、その下で作業すると大丈夫だと思います。
+
+Namazu のインストール先のディレクトリも、以下のようにマウントしておきます。
+
+  $ mkdir /cygdrive/c/namazu
+  $ mount -b -s C:\\namazu /namazu
+
+ちなみに、私の環境で mount コマンドを実行すると、以下の結果になります。
+
+  ─────────────────────────
+  d:\cygwin\bin on /usr/bin type system (binmode)
+  d:\cygwin\lib on /usr/lib type system (binmode)
+  d:\usr\mingw on /usr/mingw type system (binmode)
+  d:\usr\local on /usr/local type system (binmode)
+  d:\cygwin on / type system (binmode)
+  c: on /cygdrive/c type user (binmode,noumount)
+  d: on /cygdrive/d type user (binmode,noumount)
+  ─────────────────────────
+
+
+[4] Cygwin での PATH 環境変数について
+-------------------------------------
+　Cygwin で、/etc/profile のデフォルトの設定では、
+
+  PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
+となっているので、/mingw 以下に MinGW をインストールした場合は、Cygwin 付属
+の gcc ではなく、MinGW 付属の gcc や make などが優先されて実行されるように、
+
+  PATH="/usr/mingw/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+と、/etc/profile を編集します。もちろん、一部のユーザだけにこの設定を有効に
+したい場合は、/etc/profile の代わりに、ユーザの HOME ディレクトリの .bashrc
+を編集しても構いません。
+
+※MinGW 付属の gcc ではなく、Cygwin 付属の gcc の実行を優先させたいときは、
+　PATH の順序を変更するか、umount -s /mingw などとして、一時的に MinGW の
+  gcc の実行を無効にすれば大丈夫だと思います。
+
+
+■ 6. GNU m4, autoconf, automake, libtool, gettext のインストール
+-----------------------------------------------------------------
+  cvs 版の Namazu のソースをコンパイルするには、以下のツールが必要になりま
+す。正式リリース版や snapshot 版をコンパイルする場合は、GNU m4, autoconf, 
+automake , libtool は無くてもかまいません。
+
+* GNU m4-1.4 (autoconf を動作させるために必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/m4/m4-1.4.tar.gz>
+
+* GNU autoconf-2.13 (実行には m4 が必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/autoconf/autoconf-2.13.tar.gz>
+
+* GNU automake-1.4 (実行には perl が必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/automake/automake-1.4.tar.gz>
+
+* GNU libtool-1.3.5 (ライブラリ構築のためのツール)
+  <ftp://ftp.ring.gr.jp/pub/GNU/libtool/libtool-1.3.5.tar.gz>
+
+* GNU gettext-0.10.35 (多言語化を行う場合に必要)
+  <ftp://ftp.ring.gr.jp/pub/GNU/gettext/gettext-0.10.35.tar.gz>
+
+これらを MinGW 環境でコンパイルし、動作させるための最低限のパッチとして、
+
+  HACKKIT/gnu-tools/m4-1.4-win32.patch
+  HACKKIT/gnu-tools/autoconf-2.13-win32.patch
+  HACKKIT/gnu-tools/automake-1.4-win32.patch
+  HACKKIT/gnu-tools/libtool-1.3.5-win32.patch
+  HACKKIT/gnu-tools/gettext-0.10.35-win32.patch
+
+があります。これらのパッチは同梱の HACKKIT.tgz に含まれています。
+
+基本的には、各ソースファイルの top directory にて、
+
+  $ patch -p1 < パッチファイル
+  $ CFLAGS=-O2 ./configure --host=i386-mingw32 --prefix=/usr/mingw
+  $ make
+  $ make install
+
+とすることによって、コンパイルとインストールができます。
+
+ここで、注意する点としては、一つのソフトウェアをインストールする毎に、
+
+  $ hash -r
+
+を実行して、bash の PATH キャッシュをクリアするようにします。つまり、以前
+からインストールされていた Cygwin 付属のコマンドではなく、MinGW で新しく
+コンパイルされたプログラムが実行されるようにして下さい。
+
+  例) /bin/autoconf (旧)  →  /mingw/bin/autoconf (新)
+
+実際のインストールの手順は、HACKKIT/gnu-tools/make-gnutools.sh に書かれて
+いますので興味のある方はご覧になって下さい。もっと簡単に作業したい場合は、
+ダウンロードしたソースとパッチを同じディレクトリに置いておき、このスクリプ
+トを実行することで、自動的にコンパイルとインストールが行われます。
+環境によっては、若干シェルスクリプトを変更する必要があるかもしれません。
+
+※ ちょっとしたノウハウ
+-----------------------
+トラブル[1]: /mingw/bin/make の実行に失敗することがある。
+解決方法[1]: mv /mingw/bin/make.exe /mingw/bin/mingw32-make.exe 
+             などとして、Cygwin の make を使用するようにする。
+
+
+■ 7. Namazu のコンパイル
+-------------------------
+　以上の作業で、Windows 版の Namazu をコンパイルできる環境を構築することが
+できました。
+
+[1] MinGW 版 gcc を使ってコンパイルする
+---------------------------------------
+  Windows 版の Namazu をコンパイルするには、Cygwin を実行して、
+以下のようなコマンドを実行します。
+
+  $ export ac_cv_prog_LN_S=ln
+  $ gzip -dc namazu-2.0.12.tar.gz | tar xvf -
+  $ cd namazu-2.0.12
+  $ patch -p1 < ../namazu-2.0.12-win32.patch        # ← パッチがある場合
+  $ CFLAGS=-O2 LIBS=-lintl ./configure --host=i386-mingw32 --prefix=/namazu
+  $ make
+  $ make install
+
+以前の作業で gettext がうまくインストールされていれば、環境変数によって
+表示言語の切り替えを英語や日本語などにすることができます。Namazu の出力
+するメッセージが日本語にならない場合は、これらの設定を再確認して下さい。
+
+実際の Namazu for Win32 のリリースで用いられているシェルスクリプトを
+
+  HACKKIT/namazu/make-namazu.sh    ... Namazu for Win32 の構築
+  HACKKIT/namazu/make-nmz-dll.sh   ... nmz.dll の構築 (VisualC++が必要)
+
+に用意していますので、興味のある方はご覧ください。
+
+[2] Cygwin 版 gcc を使ってコンパイルする
+----------------------------------------
+  また、Cygwin だけで win32 native なバイナリを構築する場合は、
+
+  $ CC="gcc -mno-cygwin" ./configure
+
+とすることによって、簡単にコンパイルすることができます。
+ただし、この場合は、表示言語の切り替えを行う gettext がうまく動かずに、
+Namazu の出力するメッセージが英語になってしまうことがあります。
+
+[3] よくあるコンパイル時の問題について
+--------------------------------------
+  Namazu のコンパイルで、以下のようなエラーが表示される場合は、
+
+  In file included from alias.c:50:
+  i18n.h:8: libintl.h: No such file or directory
+
+  ./configure 時に、ln -s コマンドではなく、ln もしくは cp コマンドで、
+  intl/libintl.h ファイルを生成するように、
+
+  $ export ac_cv_prog_LN_S=ln
+  $ ./configure --prefix=/namazu
+
+  としてから、make してみて下さい。
+
+  これは、Cygwin で作成した symlink を解釈できるのは Cygwin gcc だけで、
+  MinGW gcc は ln -s で作成した symlink を解釈できないのが原因です。
+
+
+■ 8. ActivePerl 専用の Perlモジュールのコンパイル
+--------------------------------------------------
+  Microsoft Visual C++ 5.0 or later が必要となります。
+（残念ながら、これは Free では入手できません）
+
+* File-MMagic-1.13 (ファイルの種類を推定する Perl モジュール)
+  <http://www.cpan.org/authors/id/K/KN/KNOK/File-MMagic-1.13.tar.gz>
+
+* NKF-1.92 (ネットワーク用漢字コード変換フィルタ)
+  <ftp://ftp.ie.u-ryukyu.ac.jp/pub/software/kono/nkf192.shar>
+
+* Text-Kakasi-1.05 (Kakasi を Perl から利用するためのモジュール)
+  <http://www.daionet.gr.jp/~knok/kakasi/Text-Kakasi-1.05.tar.gz>
+
+* Search-Namazu-0.92 (Namazu を Perl から利用するためのモジュール)
+  <http://www.namazu.org/~knok/Search-Namazu-0.92.tar.gz>
+
+基本的には、各ソースファイルの top directory にて、
+
+  $ perl Makefile.PL 
+  $ nmake 
+  $ nmake install 
+
+とすることによって、ActivePerl用モジュールの構築とインストールができます。
+
+ただし、古い ActivePerl (build 5xx) のモジュールを構築する場合は、
+
+  $ perl Makefile.PL CAPI=TRUE
+
+として、Makefile を作成する必要があります。ActivePerl (build 6xx) 用の
+モジュールを構築する場合は、CAPI=TRUE をつける必要はありません。
+ただし、Search-Namazu-0.13 の構築では POLLUTE=1 をつける必要があります。
+
+実際の Namazu for Win32 のリリースで用いられているスクリプトを
+
+  HACKKIT/ppm/build-package.sh        ... 共通ライブラリ
+  HACKKIT/ppm/make-file-mmagic.sh     ... File-MMagic の構築
+  HACKKIT/ppm/make-nkf.sh             ... NKF の構築
+  HACKKIT/ppm/make-text-kakasi.sh     ... Text-Kakasi の構築
+  HACKKIT/ppm/make-search-namazu.sh   ... Search-Namazu の構築
+
+に用意していますので、興味のある方はご覧になってみてください。
+Windows 環境でビルドするために必要な最低限のパッチも同梱してあります。
+
+注意する点として、これらのシェルスクリプトは、
+- ActivePerl build 522 が d:/usr/perl5xx 以下のディレクトリに
+- ActivePerl build 633 が d:/usr/perl6xx 以下のディレクトリに
+それぞれインストールされていることを前提にして書かれています。
+利用される場合は、実際の環境にあわせて、build-package.sh の
+内容を適切に書き換えるようにして下さい。
+
+
+■ 9. 最後に (広瀬さんのお言葉)
+-------------------------------
+  ここに書いてある事は、ヒントもしくは最低限の事だけですが、これをきっかけに
+フリーソフト (無料のソフトと言う意味ではありません。* 自由 * なソフトです。)
+の偉大さを実感していただければ幸いです。
+
+この文は、一人でも多くの方が開発に参加していただければと思い書いています。
+ちなみにパッチの作り方は...
+
+$ diff -urN <original source top directory> <modified source top directory>
+
+で作る事が出来ます。
+
+是非、バグフィックスパッチや追加機能や改善のパッチをどんどん送ってください。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          Copyright (C) 2000-2002 Namazu Project <URI:http://www.namazu.org/>
+               Windows パッケージ担当: 竹迫 良範 <E-mail:takesako@namazu.org>

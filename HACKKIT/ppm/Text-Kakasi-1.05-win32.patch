@@ -1,0 +1,29 @@
+diff -urN Text-Kakasi-1.05.orig/Kakasi.xs Text-Kakasi-1.05/Kakasi.xs
+--- Text-Kakasi-1.05.orig/Kakasi.xs	Wed Apr 11 16:58:38 2001
++++ Text-Kakasi-1.05/Kakasi.xs	Fri Aug 10 20:28:58 2001
+@@ -110,7 +110,7 @@
+ 			tmp ++;
+ 			cur ++;
+ 		}
+-		free(rtmp);
++		kakasi_free(rtmp);
+ 	} while (cur < slen);
+ 	if (ret != NULL) {
+ 		RETVAL = newSVpv(ret, rcur - 1);
+diff -urN Text-Kakasi-1.05.orig/Makefile.PL Text-Kakasi-1.05/Makefile.PL
+--- Text-Kakasi-1.05.orig/Makefile.PL	Wed Sep 29 18:25:44 1999
++++ Text-Kakasi-1.05/Makefile.PL	Fri Aug 10 20:26:52 2001
+@@ -3,7 +3,11 @@
+ WriteMakefile(
+ 	      'NAME' => 'Text::Kakasi',
+ 	      'VERSION_FROM' => 'Kakasi.pm',
+-	      'INC' => '-I/usr/local/include',
+-	      'LIBS' => ['-L/usr/local/lib -lkakasi'],
++	      'INC' => '-Id:/usr/kakasi/include',
++	      'LIBS' => ['-Ld:/usr/kakasi/lib -llibkakasi'],
+ 	      'DEFINE' => '-DWAKATIGAKI',
++	      ($] ge '5.005') ? (
++	      'AUTHOR' => 'NOKUBI Takatsugu (knok@daionet.gr.jp)',
++	      'ABSTRACT' => 'kakasi library module for perl',
++	      ) : (),
+ );

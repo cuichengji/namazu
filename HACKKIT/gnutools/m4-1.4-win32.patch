@@ -1,0 +1,156 @@
+diff -urN m4-1.4.org/src/Makefile.in m4-1.4/src/Makefile.in
+--- m4-1.4.org/src/Makefile.in	Wed Nov  2 10:39:26 1994
++++ m4-1.4/src/Makefile.in	Thu Oct 12 00:05:02 2000
+@@ -31,6 +31,7 @@
+ LDFLAGS = @LDFLAGS@
+ LIBS = @LIBS@
+ STACKOVF = @STACKOVF@
++EXEEXT = .exe
+ 
+ prefix = @prefix@
+ exec_prefix = @exec_prefix@
+@@ -85,10 +86,10 @@
+ 
+ install: all
+ 	$(srcdir)/../mkinstalldirs $(bindir)
+-	$(INSTALL_PROGRAM) m4 $(bindir)/`echo m4 | sed '$(transform)'`
++	$(INSTALL_PROGRAM) m4$(EXEEXT) $(bindir)/`echo m4$(EXEEXT) | sed '$(transform)'`
+ 
+ uninstall:
+-	rm -f $(bindir)/`echo m4 | sed '$(transform)'`
++	rm -f $(bindir)/`echo m4$(EXEEXT) | sed '$(transform)'`
+ 
+ tags: TAGS
+ 
+@@ -99,7 +100,7 @@
+ 	rm -f *.o *._c *._o core core.*
+ 
+ clean: mostlyclean
+-	rm -f m4
++	rm -f m4$(EXEEXT)
+ 
+ distclean: clean
+ 	rm -f Makefile ansi2knr
+diff -urN m4-1.4.org/src/ansi2knr.c m4-1.4/src/ansi2knr.c
+--- m4-1.4.org/src/ansi2knr.c	Mon Oct 31 23:33:49 1994
++++ m4-1.4/src/ansi2knr.c	Thu Oct 12 00:05:02 2000
+@@ -141,13 +141,13 @@
+ 		out = stdout;
+ 		break;
+ 	case 3:
+-		out = fopen(argv[2], "w");
++		out = fopen(argv[2], "wb");
+ 		if ( out == NULL )
+ 		   {	fprintf(stderr, "Cannot open output file %s\n", argv[2]);
+ 			exit(1);
+ 		   }
+ 	   }
+-	in = fopen(argv[1], "r");
++	in = fopen(argv[1], "rb");
+ 	if ( in == NULL )
+ 	   {	fprintf(stderr, "Cannot open input file %s\n", argv[1]);
+ 		exit(1);
+diff -urN m4-1.4.org/src/builtin.c m4-1.4/src/builtin.c
+--- m4-1.4.org/src/builtin.c	Thu Sep  1 01:45:12 1994
++++ m4-1.4/src/builtin.c	Thu Oct 12 00:05:02 2000
+@@ -765,7 +765,7 @@
+     return;
+ 
+   debug_flush_files ();
+-  pin = popen (ARG (1), "r");
++  pin = popen (ARG (1), "rb");
+   if (pin == NULL)
+     {
+       M4ERROR ((warning_status, errno,
+diff -urN m4-1.4.org/src/debug.c m4-1.4/src/debug.c
+--- m4-1.4.org/src/debug.c	Mon Oct 31 05:47:50 1994
++++ m4-1.4/src/debug.c	Thu Oct 12 00:05:02 2000
+@@ -185,7 +185,7 @@
+     debug_set_file (NULL);
+   else
+     {
+-      fp = fopen (name, "a");
++      fp = fopen (name, "ab");
+       if (fp == NULL)
+ 	return FALSE;
+ 
+diff -urN m4-1.4.org/src/freeze.c m4-1.4/src/freeze.c
+--- m4-1.4.org/src/freeze.c	Thu Nov  3 01:17:03 1994
++++ m4-1.4/src/freeze.c	Thu Oct 12 00:05:02 2000
+@@ -53,7 +53,7 @@
+   symbol *sym;
+   const builtin *bp;
+ 
+-  if (file = fopen (name, "w"), !file)
++  if (file = fopen (name, "wb"), !file)
+     {
+       M4ERROR ((warning_status, errno, name));
+       return;
+diff -urN m4-1.4.org/src/m4.c m4-1.4/src/m4.c
+--- m4-1.4.org/src/m4.c	Wed Nov  2 12:14:28 1994
++++ m4-1.4/src/m4.c	Thu Oct 12 00:18:46 2000
+@@ -19,7 +19,10 @@
+ #include "m4.h"
+ 
+ #include <getopt.h>
+-#include <sys/signal.h>
++#include <signal.h>
++#ifdef __MINGW32__
++#include <fcntl.h>
++#endif
+ 
+ static void usage _((int));
+ 
+@@ -261,6 +264,10 @@
+ 
+   include_init ();
+   debug_init ();
++#ifdef __MINGW32__
++  setmode(fileno(stdout), O_BINARY);
++  setmode(fileno(stdin), O_BINARY);
++#endif
+ #ifdef USE_STACKOVF
+   setup_stackovf_trap (argv, envp, stackovf_handler);
+ #endif
+diff -urN m4-1.4.org/src/output.c m4-1.4/src/output.c
+--- m4-1.4.org/src/output.c	Fri Sep  2 15:27:40 1994
++++ m4-1.4/src/output.c	Thu Oct 12 00:05:02 2000
+@@ -113,7 +113,7 @@
+ mkstemp (const char *tmpl)
+ {
+   mktemp (tmpl);
+-  return open (tmpl, O_RDWR | O_TRUNC | O_CREAT, 0600);
++  return open (tmpl, O_RDWR | O_BINARY | O_TRUNC | O_CREAT, 0600);
+ }
+ 
+ #endif /* not HAVE_MKSTEMP */
+@@ -132,7 +132,7 @@
+     return NULL;
+ 
+   unlink (buf);
+-  return fdopen (fd, "w+");
++  return fdopen (fd, "wb+");
+ }
+ 
+ #endif /* not HAVE_TMPFILE */
+diff -urN m4-1.4.org/src/path.c m4-1.4/src/path.c
+--- m4-1.4.org/src/path.c	Sun Aug 28 09:56:28 1994
++++ m4-1.4/src/path.c	Thu Oct 12 00:05:02 2000
+@@ -104,7 +104,7 @@
+   char *name;			/* buffer for constructed name */
+ 
+   /* Look in current working directory first.  */
+-  fp = fopen (dir, "r");
++  fp = fopen (dir, "rb");
+   if (fp != NULL)
+     return fp;
+ 
+@@ -124,7 +124,7 @@
+       fprintf (stderr, "path_search (%s) -- trying %s\n", dir, name);
+ #endif
+ 
+-      fp = fopen (name, "r");
++      fp = fopen (name, "rb");
+       if (fp != NULL)
+ 	{
+ 	  if (debug_level & DEBUG_TRACE_PATH)
